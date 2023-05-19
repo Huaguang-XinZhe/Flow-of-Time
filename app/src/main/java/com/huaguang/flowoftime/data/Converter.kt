@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.data
 
-import android.util.Log
 import androidx.room.TypeConverter
 import java.time.Duration
 import java.time.LocalDateTime
@@ -8,7 +7,6 @@ import java.time.LocalDateTime
 class LocalDateTimeConverter {
     @TypeConverter
     fun fromLocalDateTime(dateTime: LocalDateTime?): String? {
-        Log.i("打标签喽", "fromLocalDateTime 内部执行！")
         return dateTime?.toString()
     }
 
