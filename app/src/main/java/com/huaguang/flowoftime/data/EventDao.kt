@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface EventDao {
@@ -22,4 +23,8 @@ interface EventDao {
 
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEvent(eventId: Long)
+
+    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
+            "AND duration IS NOT NULL")
+    suspend fun getFilteredEvents(names: List<String>, currentDate: LocalDate): List<Event>
 }

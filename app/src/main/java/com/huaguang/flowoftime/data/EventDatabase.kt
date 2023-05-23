@@ -5,7 +5,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(entities = [Event::class], version = 1)
-@TypeConverters(LocalDateTimeConverter::class, DurationConverter::class)
+@TypeConverters(LocalDateTimeConverter::class, DurationConverter::class,
+    DurationConverter.LocalDateConverter::class)
 abstract class EventDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
 }

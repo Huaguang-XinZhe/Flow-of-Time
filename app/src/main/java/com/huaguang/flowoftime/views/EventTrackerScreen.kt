@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -51,6 +54,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
     val buttonText by viewModel.buttonText.observeAsState()
     val isTracking by viewModel.isTracking.observeAsState()
     val scrollIndex by viewModel.scrollIndex.observeAsState()
+    val isAlarmSet by viewModel.isAlarmSet.observeAsState()
 
     LaunchedEffect(scrollIndex) {
         scrollIndex?.let { index ->
@@ -66,6 +70,13 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (isAlarmSet == true) {
+            Icon(
+                imageVector = Icons.Default.AddCircle,
+                contentDescription = null
+            )
+        }
+
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -87,7 +98,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
                 )
 
                 Button(onClick = {
-                    viewModel.onConfirm(textState, context)
+                    viewModel.onConfirm(textState)
                 }) {
                     Text("确认")
                 }

@@ -6,9 +6,6 @@ import com.huaguang.flowoftime.data.EventDatabase
 
 class TimeStreamApplication : Application() {
 
-//    lateinit var database: EventDatabase
-//        private set
-
     val database: EventDatabase by lazy {
         Room.databaseBuilder(
             this,
@@ -17,12 +14,4 @@ class TimeStreamApplication : Application() {
         ).build()
     }
 
-//    override fun onCreate() {
-//        super.onCreate()
-//        database = Room.databaseBuilder(
-//            applicationContext,
-//            EventDatabase::class.java,
-//            "event_database"
-//        ).build()
-//    }
 }

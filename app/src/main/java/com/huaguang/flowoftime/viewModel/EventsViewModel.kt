@@ -1,30 +1,41 @@
 package com.huaguang.flowoftime.viewModel
 
-import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.MutableState
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.huaguang.flowoftime.AlarmHelper
+import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.Event
-import com.huaguang.flowoftime.data.EventDao
-import com.huaguang.flowoftime.utils.SPHelper
+import com.huaguang.flowoftime.data.EventRepository
+import com.huaguang.flowoftime.data.SPHelper
+import com.huaguang.flowoftime.hourThreshold
+import com.huaguang.flowoftime.hourThreshold2
+import com.huaguang.flowoftime.minutesThreshold
+import com.huaguang.flowoftime.names
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 
 class EventsViewModel(
-    private val eventDao: EventDao,
-    private val spHelper: SPHelper) : ViewModel() {
+    private val repository: EventRepository,
+    private val spHelper: SPHelper,
+    application: TimeStreamApplication
+) : AndroidViewModel(application) {
 
+    private val eventDao = repository.eventDao
     val events = eventDao.getAllEvents()
     val isTracking = MutableLiveData(false)
     private var currentEvent: Event? = null
     val buttonText = MutableLiveData("开始")
     private val newEventName = MutableLiveData("新事件")
     val scrollIndex = MutableLiveData<Int>()
-    private var eventCount = 0
+    var eventCount = 0
+    private val alarmHelper = AlarmHelper(application)
+    val isAlarmSet = MutableLiveData(false)
+    private var remainingDuration: Duration? = null
 
     init {
         // 从SharedPreferences中恢复滚动索引
@@ -33,6 +44,8 @@ class EventsViewModel(
             scrollIndex.value = savedScrollIndex
             eventCount = savedScrollIndex + 1
         }
+        // 从 SP 中恢复 remainingDuration
+        remainingDuration = spHelper.getRemainingDuration()
     }
 
     fun onClick() {
@@ -48,13 +61,18 @@ class EventsViewModel(
         }
     }
 
-    fun onConfirm(textState: MutableState<String>, context: Context) {
+    fun onConfirm(textState: MutableState<String>) {
         if (textState.value.isEmpty()) {
-            Toast.makeText(context, "你还没有输入呢？", Toast.LENGTH_SHORT).show()
+            Toast.makeText(getApplication(), "你还没有输入呢？", Toast.LENGTH_SHORT).show()
             return
         }
         newEventName.value = textState.value
+
+        // 以下两个函数调用内部都开了协程，所以会并行执行，且不会阻塞主线程。
         updateEventName()
+        Log.i("打标签喽", "eventName = ${newEventName.value}")
+        checkAndSetAlarm(newEventName.value!!)
+
         textState.value = ""
         newEventName.value = ""
         isTracking.value = false
@@ -71,7 +89,11 @@ class EventsViewModel(
 
     private fun startNewEvent() {
         val startTime = LocalDateTime.now()
-        val newEvent = Event(name = newEventName.value!!, startTime = startTime)
+        val newEvent = Event(
+            name = newEventName.value!!,
+            startTime = startTime,
+            eventDate = repository.getEventDate(startTime)
+        )
         Log.i("打标签喽", "startTime = $startTime")
         viewModelScope.launch {
             val eventId = eventDao.insertEvent(newEvent)
@@ -90,10 +112,43 @@ class EventsViewModel(
         currentEvent?.let {
             it.endTime = LocalDateTime.now()
             it.duration = Duration.between(it.startTime, it.endTime)
+
+            // 只要包含，remainingDuration 就会得到设置，一定不为 null
+            if (names.contains(it.name)) {
+                remainingDuration = remainingDuration!!.minus(it.duration)
+                spHelper.saveRemainingDuration(remainingDuration!!)
+
+                if (isAlarmSet.value == true && remainingDuration!! > minutesThreshold) {
+                    alarmHelper.cancelAlarm()
+                    isAlarmSet.value = false
+                }
+            }
+
             viewModelScope.launch {
                 eventDao.updateEvent(it)
             }
         }
         currentEvent = null
     }
+
+    private fun checkAndSetAlarm(name: String) {
+        Log.i("打标签喽", "checkAndSetAlarm 执行！！！")
+        if (!names.contains(name)) return
+
+        viewModelScope.launch {
+            remainingDuration = if (remainingDuration == null) {
+                // 数据库操作，查询并计算
+                val totalDuration = repository.calculateTotalDuration()
+                hourThreshold.minus(totalDuration)
+            } else remainingDuration
+            Log.i("打标签喽", "checkAndSetAlarm 中：remainingDuration = $remainingDuration")
+
+            if (remainingDuration!! < hourThreshold2) {
+                // 一般事务一次性持续时间都不超过 4 小时
+                alarmHelper.setAlarm(remainingDuration!!.toMillis())
+                isAlarmSet.value = true
+            }
+        }
+    }
+
 }
