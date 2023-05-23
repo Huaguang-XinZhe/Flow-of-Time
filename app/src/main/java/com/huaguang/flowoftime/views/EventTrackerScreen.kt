@@ -18,6 +18,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -84,6 +85,8 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
             )
         }
 
+        DurationSlider(viewModel = viewModel)
+
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
                 modifier = Modifier.align(Alignment.BottomCenter),
@@ -121,6 +124,34 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
         }
     }
 }
+
+@Composable
+fun DurationSlider(viewModel: EventsViewModel) {
+    val rate by viewModel.rate.collectAsState()
+    val remainingDuration by viewModel.remainingDuration.collectAsState()
+    
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Slider(
+            value = rate ?: 1f,
+            enabled = false,
+            onValueChange = {  },
+            modifier = Modifier.weight(1f)
+        )
+
+        Text(
+            text = "%.1f%%".format(rate?.times(100) ?: 100.0),
+            modifier = Modifier.padding(start = 8.dp)
+        )
+
+        Text(
+            text = remainingDuration?.let { formatDuration(it) } ?: "8 小时",
+            modifier = Modifier.padding(start = 8.dp, end = 8.dp)
+        )
+    }
+}
+
 
 @Composable
 fun EventItem(event: Event) {

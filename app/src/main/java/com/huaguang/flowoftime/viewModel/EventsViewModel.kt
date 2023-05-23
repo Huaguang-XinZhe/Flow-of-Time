@@ -15,6 +15,11 @@ import com.huaguang.flowoftime.hourThreshold
 import com.huaguang.flowoftime.hourThreshold2
 import com.huaguang.flowoftime.minutesThreshold
 import com.huaguang.flowoftime.names
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
@@ -35,7 +40,14 @@ class EventsViewModel(
     var eventCount = 0
     private val alarmHelper = AlarmHelper(application)
     val isAlarmSet = MutableLiveData(false)
-    private var remainingDuration: Duration? = spHelper.getRemainingDuration()
+    private val _remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
+    val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
+    val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
+        remainingDuration?.let {
+            it.toMillis().toFloat() / hourThreshold.toMillis()
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+
 
     init {
         // 从SharedPreferences中恢复滚动索引
@@ -126,10 +138,10 @@ class EventsViewModel(
 
                 // 只要包含，remainingDuration 就会得到设置，一定不为 null
                 if (names.contains(it.name)) {
-                    remainingDuration = remainingDuration!!.minus(it.duration)
-                    spHelper.saveRemainingDuration(remainingDuration!!)
+                    _remainingDuration.value = _remainingDuration.value?.minus(it.duration)
+                    spHelper.saveRemainingDuration(_remainingDuration.value!!)
 
-                    if (isAlarmSet.value == true && remainingDuration!! > minutesThreshold) {
+                    if (isAlarmSet.value == true && _remainingDuration.value!! > minutesThreshold) {
                         alarmHelper.cancelAlarm()
                         isAlarmSet.value = false
                     }
@@ -145,16 +157,15 @@ class EventsViewModel(
         if (!names.contains(name)) return
 
         viewModelScope.launch {
-            remainingDuration = if (remainingDuration == null) {
+            _remainingDuration.value = if (_remainingDuration.value == null) {
                 // 数据库操作，查询并计算
                 val totalDuration = repository.calculateTotalDuration()
                 hourThreshold.minus(totalDuration)
-            } else remainingDuration
-            Log.i("打标签喽", "checkAndSetAlarm 中：remainingDuration = $remainingDuration")
+            } else _remainingDuration.value
 
-            if (remainingDuration!! < hourThreshold2) {
+            if (_remainingDuration.value!! < hourThreshold2) {
                 // 一般事务一次性持续时间都不超过 4 小时
-                alarmHelper.setAlarm(remainingDuration!!.toMillis())
+                alarmHelper.setAlarm(_remainingDuration.value!!.toMillis())
                 isAlarmSet.value = true
             }
         }
