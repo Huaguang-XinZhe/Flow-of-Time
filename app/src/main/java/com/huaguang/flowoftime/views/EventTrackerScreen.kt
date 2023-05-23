@@ -38,6 +38,7 @@ import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.utils.formatDuration
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.viewModel.EventsViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -48,6 +49,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
 
     val textState = remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
+    val firstLaunch = remember { mutableStateOf(true) }
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     val events by viewModel.events.collectAsState(emptyList())
@@ -57,10 +59,13 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
     val isAlarmSet by viewModel.isAlarmSet.observeAsState()
 
     LaunchedEffect(scrollIndex) {
-        Log.i("打标签喽", "scrollIndex（Composable 里面）= $scrollIndex")
         scrollIndex?.let { index ->
             scope.launch {
-                Log.i("打标签喽", "listState = $listState")
+                // 如果是首次启动，添加延迟
+                if (firstLaunch.value) {
+                    delay(200)
+                    firstLaunch.value = false
+                }
                 listState.animateScrollToItem(index)
                 Log.i("打标签喽", "滚动到索引：$index")
             }
