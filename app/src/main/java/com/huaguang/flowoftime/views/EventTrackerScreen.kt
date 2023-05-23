@@ -57,8 +57,10 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
     val isAlarmSet by viewModel.isAlarmSet.observeAsState()
 
     LaunchedEffect(scrollIndex) {
+        Log.i("打标签喽", "scrollIndex（Composable 里面）= $scrollIndex")
         scrollIndex?.let { index ->
             scope.launch {
+                Log.i("打标签喽", "listState = $listState")
                 listState.animateScrollToItem(index)
                 Log.i("打标签喽", "滚动到索引：$index")
             }

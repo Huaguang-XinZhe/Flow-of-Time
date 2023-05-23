@@ -5,6 +5,14 @@ import java.time.Duration
 
 class SPHelper(private val sharedPreferences: SharedPreferences) {
 
+    fun saveButtonText(text: String) {
+        sharedPreferences.edit().putString("button_text", text).apply()
+    }
+
+    fun getButtonText(): String {
+        return sharedPreferences.getString("button_text", "开始") ?: "开始"
+    }
+
     fun saveScrollIndex(index: Int) {
         sharedPreferences.edit().putInt("scroll_index", index).apply()
     }

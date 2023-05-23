@@ -27,4 +27,8 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
             "AND duration IS NOT NULL")
     suspend fun getFilteredEvents(names: List<String>, currentDate: LocalDate): List<Event>
+
+    @Query("SELECT * FROM events ORDER BY id DESC LIMIT 1")
+    suspend fun getLastEvent(): Event
+
 }

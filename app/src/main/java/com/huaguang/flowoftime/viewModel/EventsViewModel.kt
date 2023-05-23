@@ -29,13 +29,13 @@ class EventsViewModel(
     val events = eventDao.getAllEvents()
     val isTracking = MutableLiveData(false)
     private var currentEvent: Event? = null
-    val buttonText = MutableLiveData("开始")
+    val buttonText = MutableLiveData(spHelper.getButtonText())
     private val newEventName = MutableLiveData("新事件")
     val scrollIndex = MutableLiveData<Int>()
     var eventCount = 0
     private val alarmHelper = AlarmHelper(application)
     val isAlarmSet = MutableLiveData(false)
-    private var remainingDuration: Duration? = null
+    private var remainingDuration: Duration? = spHelper.getRemainingDuration()
 
     init {
         // 从SharedPreferences中恢复滚动索引
@@ -44,8 +44,6 @@ class EventsViewModel(
             scrollIndex.value = savedScrollIndex
             eventCount = savedScrollIndex + 1
         }
-        // 从 SP 中恢复 remainingDuration
-        remainingDuration = spHelper.getRemainingDuration()
     }
 
     fun onClick() {
@@ -59,6 +57,7 @@ class EventsViewModel(
                 buttonText.value = "开始"
             }
         }
+        spHelper.saveButtonText(buttonText.value!!)
     }
 
     fun onConfirm(textState: MutableState<String>) {
@@ -109,25 +108,35 @@ class EventsViewModel(
     }
 
     private fun stopCurrentEvent() {
-        currentEvent?.let {
-            it.endTime = LocalDateTime.now()
-            it.duration = Duration.between(it.startTime, it.endTime)
+        viewModelScope.launch {
+            if (currentEvent == null) {
+                currentEvent = eventDao.getLastEvent()
+            }
 
-            // 只要包含，remainingDuration 就会得到设置，一定不为 null
-            if (names.contains(it.name)) {
-                remainingDuration = remainingDuration!!.minus(it.duration)
-                spHelper.saveRemainingDuration(remainingDuration!!)
+            Log.i("打标签喽", "currentEvent 获取后 = $currentEvent")
 
-                if (isAlarmSet.value == true && remainingDuration!! > minutesThreshold) {
-                    alarmHelper.cancelAlarm()
-                    isAlarmSet.value = false
+            currentEvent?.let {
+                Log.i("打标签喽", "let 块里边，执行！")
+                it.endTime = LocalDateTime.now()
+                it.duration = Duration.between(it.startTime, it.endTime)
+
+                viewModelScope.launch {
+                    eventDao.updateEvent(it)
+                }
+
+                // 只要包含，remainingDuration 就会得到设置，一定不为 null
+                if (names.contains(it.name)) {
+                    remainingDuration = remainingDuration!!.minus(it.duration)
+                    spHelper.saveRemainingDuration(remainingDuration!!)
+
+                    if (isAlarmSet.value == true && remainingDuration!! > minutesThreshold) {
+                        alarmHelper.cancelAlarm()
+                        isAlarmSet.value = false
+                    }
                 }
             }
-
-            viewModelScope.launch {
-                eventDao.updateEvent(it)
-            }
         }
+
         currentEvent = null
     }
 
