@@ -1,9 +1,10 @@
-package com.huaguang.flowoftime
+package com.huaguang.flowoftime.utils
 
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import com.huaguang.flowoftime.MyAlarmReceiver
 
 class AlarmHelper(private val context: Context) {
 

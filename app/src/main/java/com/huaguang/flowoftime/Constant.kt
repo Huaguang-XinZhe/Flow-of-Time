@@ -13,3 +13,8 @@ val names = listOf(
 val minutesThreshold: Duration = Duration.ofMinutes(20L)
 val hourThreshold: Duration = Duration.ofHours(8)
 val hourThreshold2: Duration = Duration.ofHours(5)
+
+enum class EventType {
+    MAIN,
+    SUB
+}

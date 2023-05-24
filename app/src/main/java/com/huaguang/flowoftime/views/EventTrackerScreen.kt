@@ -20,9 +20,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -33,7 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.utils.formatDuration
@@ -42,28 +44,23 @@ import com.huaguang.flowoftime.viewModel.EventsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventTrackerScreen(viewModel: EventsViewModel) {
-    Log.i("打标签喽", "页面重组！！！")
-    val context = LocalContext.current
-
     val textState = remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
+    val isTracking by viewModel.isTracking.observeAsState()
+    val isAlarmSet by viewModel.isAlarmSet.observeAsState()
+    val scrollIndex by viewModel.scrollIndex.observeAsState()
+    val scope = rememberCoroutineScope()
     val firstLaunch = remember { mutableStateOf(true) }
     val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-    val events by viewModel.events.collectAsState(emptyList())
-    val buttonText by viewModel.buttonText.observeAsState()
-    val isTracking by viewModel.isTracking.observeAsState()
-    val scrollIndex by viewModel.scrollIndex.observeAsState()
-    val isAlarmSet by viewModel.isAlarmSet.observeAsState()
+    val eventsWithSubEvents by viewModel.eventsWithSubEvents.collectAsState(emptyList())
 
     LaunchedEffect(scrollIndex) {
         scrollIndex?.let { index ->
             scope.launch {
                 // 如果是首次启动，添加延迟
                 if (firstLaunch.value) {
+                    Log.i("打标签喽", "定位延迟！！！")
                     delay(200)
                     firstLaunch.value = false
                 }
@@ -78,12 +75,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (isAlarmSet == true) {
-            Icon(
-                imageVector = Icons.Default.AddCircle,
-                contentDescription = null
-            )
-        }
+        AlarmSetIcon(isAlarmSet == true)
 
         DurationSlider(viewModel = viewModel)
 
@@ -92,38 +84,81 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
                 modifier = Modifier.align(Alignment.BottomCenter),
                 state = listState
             ) {
-                items(events) { event ->
-                    EventItem(event)
+                items(eventsWithSubEvents) {(event, subEvents) ->
+                    EventItem(event, subEvents)
                 }
             }
         }
 
         if (isTracking == true) {
-            Row {
-                TextField(
-                    value = textState.value,
-                    onValueChange = { textState.value = it },
-                    label = { Text("事件名称") },
-                    modifier = Modifier.focusRequester(focusRequester)
-                )
+            EventInputField(textState) { viewModel.onConfirm(it) }
+        }
 
-                Button(onClick = {
-                    viewModel.onConfirm(textState)
-                }) {
-                    Text("确认")
-                }
-            }
+        EventButtons(viewModel)
+    }
+}
 
-            LaunchedEffect(isTracking) {
-                focusRequester.requestFocus()
+@Composable
+fun AlarmSetIcon(isAlarmSet: Boolean) {
+    if (isAlarmSet) {
+        Icon(
+            imageVector = Icons.Default.AddCircle,
+            contentDescription = null
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EventInputField(
+    textState: MutableState<String>,
+    onConfirm: (MutableState<String>) -> Unit
+) {
+    val focusRequester = remember { FocusRequester() }
+
+    Row {
+        TextField(
+            value = textState.value,
+            onValueChange = { textState.value = it },
+            label = { Text("事件名称") },
+            modifier = Modifier.focusRequester(focusRequester)
+        )
+
+        Button(onClick = { onConfirm(textState) }) {
+            Text("确认")
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+}
+
+@Composable
+fun EventButtons(viewModel: EventsViewModel) {
+    val mainEventButtonText by viewModel.mainEventButtonText.observeAsState()
+    val subEventButtonText by viewModel.subEventButtonText.observeAsState()
+    val mainButtonShow by viewModel.mainButtonShow.observeAsState()
+    val subButtonShow by viewModel.subButtonShow.observeAsState()
+
+    Row {
+        if (mainButtonShow == true) {
+            Button(onClick = { viewModel.toggleMainEvent() }) {
+                Text(text = mainEventButtonText ?: "开始")
             }
         }
 
-        Button(onClick = { viewModel.onClick() }) {
-            Text(text = buttonText ?: "开始")
+        if (subButtonShow == true) {
+            TextButton(
+                onClick = { viewModel.toggleSubEvent() },
+                modifier = Modifier.padding(start = 5.dp)
+            ) {
+                Text(text = subEventButtonText ?: "插入")
+            }
         }
     }
 }
+
 
 @Composable
 fun DurationSlider(viewModel: EventsViewModel) {
@@ -159,7 +194,53 @@ fun DurationSlider(viewModel: EventsViewModel) {
 
 
 @Composable
-fun EventItem(event: Event) {
+fun EventItemRow(
+    event: Event,
+    showTime: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        if (showTime) {
+            Text(
+                text = formatLocalDateTime(event.startTime),
+                modifier = Modifier.padding(end = 5.dp)
+            )
+        }
+
+        Text(
+            text = if (showTime) event.name else "……${event.name}",
+            style = MaterialTheme.typography.titleMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+
+        if (showTime) {
+            Text(
+                text = event.endTime?.let { formatLocalDateTime(it) } ?: "...",
+                modifier = Modifier.padding(start = 5.dp)
+            )
+        }
+
+        Text(
+            text = event.duration?.let { formatDuration(it) } ?: "...",
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+
+        if (event.hasTriggeredReminder && showTime) {
+            Text(
+                text = "⏰",
+                modifier = Modifier.padding(start = 8.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun EventItem(event: Event, subEvents: List<Event> = listOf()) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier.padding(4.dp)
@@ -167,14 +248,16 @@ fun EventItem(event: Event) {
         Column(
             modifier = Modifier.padding(10.dp)
         ) {
-            Text(
-                text = "事件名称: ${event.name}",
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(text = "开始时间: ${ formatLocalDateTime(event.startTime) }")
-            Text(text = "结束时间: ${ event.endTime?.let { formatLocalDateTime(it) } ?: "正在进行中..." }")
-            Text(text = "用时: ${ event.duration?.let { formatDuration(it) } }")
-            Text(text = "是否触发过提醒: ${ if (event.hasTriggeredReminder) "是" else "否" }")
+            EventItemRow(event = event, showTime = true)
+
+            // 插入的临时事件的 UI
+            for (subEvent in subEvents) {
+                EventItemRow(
+                    event = subEvent,
+                    showTime = false,
+                    modifier = Modifier.padding(start = 30.dp)  // 添加了一些左侧的 padding 以便缩进
+                )
+            }
         }
     }
 }

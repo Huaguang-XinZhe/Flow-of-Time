@@ -6,7 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.huaguang.flowoftime.AlarmHelper
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventRepository
@@ -15,6 +15,7 @@ import com.huaguang.flowoftime.hourThreshold
 import com.huaguang.flowoftime.hourThreshold2
 import com.huaguang.flowoftime.minutesThreshold
 import com.huaguang.flowoftime.names
+import com.huaguang.flowoftime.utils.AlarmHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -31,10 +32,13 @@ class EventsViewModel(
 ) : AndroidViewModel(application) {
 
     private val eventDao = repository.eventDao
-    val events = eventDao.getAllEvents()
+    val eventsWithSubEvents = eventDao.getEventsWithSubEvents()
     val isTracking = MutableLiveData(false)
     private var currentEvent: Event? = null
-    val buttonText = MutableLiveData(spHelper.getButtonText())
+    val mainEventButtonText = MutableLiveData(spHelper.getButtonText())
+    val subEventButtonText = MutableLiveData("插入")
+    val mainButtonShow = MutableLiveData(true)
+    val subButtonShow = MutableLiveData(false)
     private val newEventName = MutableLiveData("新事件")
     val scrollIndex = MutableLiveData<Int>()
     var eventCount = 0
@@ -59,18 +63,36 @@ class EventsViewModel(
         }
     }
 
-    fun onClick() {
-        when (buttonText.value) {
+    fun toggleMainEvent() {
+        when (mainEventButtonText.value) {
             "开始" -> {
                 startNewEvent()
-                buttonText.value = "结束"
+                mainEventButtonText.value = "结束"
+                subButtonShow.value = true
             }
             "结束" -> {
                 stopCurrentEvent()
-                buttonText.value = "开始"
+                mainEventButtonText.value = "开始"
+                subButtonShow.value = false
             }
         }
-        spHelper.saveButtonText(buttonText.value!!)
+        spHelper.saveButtonText(mainEventButtonText.value!!)
+    }
+
+    fun toggleSubEvent() {
+        when (subEventButtonText.value) {
+            "插入" -> {
+                startNewEvent(EventType.SUB)
+                subEventButtonText.value = "插入结束"
+                mainButtonShow.value = false
+            }
+            "插入结束" -> {
+                stopCurrentEvent(EventType.SUB)
+                subEventButtonText.value = "插入"
+                mainButtonShow.value = true
+            }
+        }
+
     }
 
     fun onConfirm(textState: MutableState<String>) {
@@ -99,17 +121,22 @@ class EventsViewModel(
         }
     }
 
-    private fun startNewEvent() {
+    private fun startNewEvent(type: EventType = EventType.MAIN) {
         val startTime = LocalDateTime.now()
         val newEvent = Event(
             name = newEventName.value!!,
             startTime = startTime,
             eventDate = repository.getEventDate(startTime)
         )
-        Log.i("打标签喽", "startTime = $startTime")
+
         viewModelScope.launch {
+            val mainEventId = if (type == EventType.SUB) {
+                eventDao.getLastMainEventId()
+            } else null
+            // 必须放在后边，要不然获取 mainEventId 会出错
             val eventId = eventDao.insertEvent(newEvent)
-            currentEvent = newEvent.copy(id = eventId)
+
+            currentEvent = newEvent.copy(id = eventId, parentId = mainEventId)
             isTracking.value = true
             // 更新事件数量
             eventCount++
@@ -120,7 +147,7 @@ class EventsViewModel(
         }
     }
 
-    private fun stopCurrentEvent() {
+    private fun stopCurrentEvent(type: EventType = EventType.MAIN) {
         viewModelScope.launch {
             if (currentEvent == null) {
                 currentEvent = eventDao.getLastEvent()
@@ -129,9 +156,13 @@ class EventsViewModel(
             Log.i("打标签喽", "currentEvent 获取后 = $currentEvent")
 
             currentEvent?.let {
-                Log.i("打标签喽", "let 块里边，执行！")
+                // 如果是主事件，就计算从数据库中获取子事件列表，并计算其间隔总和
+                val subEventsDuration = if (it.parentId == null) {
+                    repository.calculateSubEventsDuration(it.id)
+                } else Duration.ZERO
+
                 it.endTime = LocalDateTime.now()
-                it.duration = Duration.between(it.startTime, it.endTime)
+                it.duration = Duration.between(it.startTime, it.endTime).minus(subEventsDuration)
 
                 viewModelScope.launch {
                     eventDao.updateEvent(it)
@@ -148,9 +179,12 @@ class EventsViewModel(
                     }
                 }
             }
+
+            currentEvent = if (type == EventType.SUB) {
+                eventDao.getEvent(currentEvent!!.parentId!!)
+            } else null
         }
 
-        currentEvent = null
     }
 
     private fun checkAndSetAlarm(name: String) {

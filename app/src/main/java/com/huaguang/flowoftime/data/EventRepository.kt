@@ -27,4 +27,9 @@ class EventRepository(val eventDao: EventDao) {
         return totalDuration
     }
 
+    suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {
+        val subEvents = eventDao.getSubEventsForMainEvent(mainEventId)
+        return subEvents.fold(Duration.ZERO) { total, event -> total.plus(event.duration) }
+    }
+
 }

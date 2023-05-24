@@ -14,5 +14,7 @@ data class Event(
     var endTime: LocalDateTime? = null,
     var duration: Duration? = null,
     var hasTriggeredReminder: Boolean = false,
-    var eventDate: LocalDate? = null // 新增字段，用于存储事件发生的日期
+    var eventDate: LocalDate? = null, // 用于存储事件发生的日期
+    var parentId: Long? = null  // 用于存储该事件关联的主事件的ID，如果该事件是主事件，则此字段为null
 )
+
