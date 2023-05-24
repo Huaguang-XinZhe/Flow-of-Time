@@ -16,6 +16,7 @@ import com.huaguang.flowoftime.hourThreshold2
 import com.huaguang.flowoftime.minutesThreshold
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.AlarmHelper
+import com.huaguang.flowoftime.utils.copyToClipboard
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -45,6 +46,8 @@ class EventsViewModel(
     private val alarmHelper = AlarmHelper(application)
     val isAlarmSet = MutableLiveData(false)
     private val _remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
+    val isExportButtonEnabled = MutableLiveData(true)
+
     val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
     val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
         remainingDuration?.let {
@@ -52,7 +55,6 @@ class EventsViewModel(
             1 - remainingRate
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
-
 
     init {
         // 从SharedPreferences中恢复滚动索引
@@ -63,17 +65,29 @@ class EventsViewModel(
         }
     }
 
+    fun exportEvents() {
+        if (isExportButtonEnabled.value == true) {
+            viewModelScope.launch {
+                val exportText = repository.exportEvents()
+                copyToClipboard(getApplication(), exportText)
+                Toast.makeText(getApplication(), "导出数据已复制到剪贴板", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
     fun toggleMainEvent() {
         when (mainEventButtonText.value) {
             "开始" -> {
                 startNewEvent()
                 mainEventButtonText.value = "结束"
                 subButtonShow.value = true
+                isExportButtonEnabled.value = false
             }
             "结束" -> {
                 stopCurrentEvent()
                 mainEventButtonText.value = "开始"
                 subButtonShow.value = false
+                isExportButtonEnabled.value = true
             }
         }
         spHelper.saveButtonText(mainEventButtonText.value!!)

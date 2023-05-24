@@ -24,7 +24,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -38,7 +37,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.Event
-import com.huaguang.flowoftime.utils.formatDuration
+import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.viewModel.EventsViewModel
 import kotlinx.coroutines.delay
@@ -46,9 +45,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun EventTrackerScreen(viewModel: EventsViewModel) {
-    val textState = remember { mutableStateOf("") }
     val isTracking by viewModel.isTracking.observeAsState()
-    val isAlarmSet by viewModel.isAlarmSet.observeAsState()
     val scrollIndex by viewModel.scrollIndex.observeAsState()
     val scope = rememberCoroutineScope()
     val firstLaunch = remember { mutableStateOf(true) }
@@ -75,9 +72,9 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        AlarmSetIcon(isAlarmSet == true)
+        OtherRow(viewModel)
 
-        DurationSlider(viewModel = viewModel)
+        DurationSlider(viewModel)
 
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
@@ -91,7 +88,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
         }
 
         if (isTracking == true) {
-            EventInputField(textState) { viewModel.onConfirm(it) }
+            EventInputField(viewModel)
         }
 
         EventButtons(viewModel)
@@ -99,21 +96,38 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
 }
 
 @Composable
-fun AlarmSetIcon(isAlarmSet: Boolean) {
-    if (isAlarmSet) {
-        Icon(
-            imageVector = Icons.Default.AddCircle,
-            contentDescription = null
-        )
+fun OtherRow(viewModel: EventsViewModel) {
+    val isAlarmSet by viewModel.isAlarmSet.observeAsState()
+    val isExportButtonEnabled by viewModel.isExportButtonEnabled.observeAsState()
+
+    Row {
+        if (isAlarmSet == true) {
+            Icon(
+                imageVector = Icons.Default.AddCircle,
+                contentDescription = null
+            )
+        }
+
+        Button(
+            onClick = { /*TODO*/ },
+        ) {
+            Text("导入")
+        }
+
+        Button(
+            onClick = { viewModel.exportEvents() },
+            enabled = isExportButtonEnabled ?: true,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Text("导出")
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventInputField(
-    textState: MutableState<String>,
-    onConfirm: (MutableState<String>) -> Unit
-) {
+fun EventInputField(viewModel: EventsViewModel) {
+    val textState = remember { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
 
     Row {
@@ -124,7 +138,7 @@ fun EventInputField(
             modifier = Modifier.focusRequester(focusRequester)
         )
 
-        Button(onClick = { onConfirm(textState) }) {
+        Button(onClick = { viewModel.onConfirm(textState) }) {
             Text("确认")
         }
     }
@@ -186,7 +200,7 @@ fun DurationSlider(viewModel: EventsViewModel) {
         )
 
         Text(
-            text = remainingDuration?.let { formatDuration(it) } ?: "8 小时",
+            text = remainingDuration?.let { formatDurationInText(it) } ?: "8 小时",
             modifier = Modifier.padding(start = 8.dp, end = 8.dp)
         )
     }
@@ -225,7 +239,7 @@ fun EventItemRow(
         }
 
         Text(
-            text = event.duration?.let { formatDuration(it) } ?: "...",
+            text = event.duration?.let { formatDurationInText(it) } ?: "...",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(start = 8.dp)
         )

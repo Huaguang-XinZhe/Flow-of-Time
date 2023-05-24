@@ -36,6 +36,11 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE parentId IS NULL")
     fun getEventsWithSubEvents(): Flow<List<EventWithSubEvents>>
 
+    @Transaction
+    @Query("SELECT * FROM events WHERE parentId IS NULL")
+    suspend fun getEventsWithSubEventsImmediate(): List<EventWithSubEvents>
+
+
     @Query("SELECT * FROM events WHERE parentId = :mainEventId")
     suspend fun getSubEventsForMainEvent(mainEventId: Long): List<Event>
 

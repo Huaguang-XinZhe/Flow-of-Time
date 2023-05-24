@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.data
 
 import com.huaguang.flowoftime.names
+import com.huaguang.flowoftime.utils.EventSerializer
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -30,6 +31,16 @@ class EventRepository(val eventDao: EventDao) {
     suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {
         val subEvents = eventDao.getSubEventsForMainEvent(mainEventId)
         return subEvents.fold(Duration.ZERO) { total, event -> total.plus(event.duration) }
+    }
+
+    suspend fun exportEvents(): String {
+        val eventsWithSubEvents = eventDao.getEventsWithSubEventsImmediate()
+        val eventsWithSubEventsAsPairs = eventsWithSubEvents.map { convertToPair(it) }
+        return EventSerializer.exportEvents(eventsWithSubEventsAsPairs)
+    }
+
+    private fun convertToPair(eventWithSubEvents: EventWithSubEvents): Pair<Event, List<Event>> {
+        return Pair(eventWithSubEvents.event, eventWithSubEvents.subEvents)
     }
 
 }

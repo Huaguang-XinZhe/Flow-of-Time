@@ -1,5 +1,7 @@
 package com.huaguang.flowoftime.utils
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -12,7 +14,7 @@ fun formatLocalDateTime(dateTime: LocalDateTime): String {
     return dateTime.format(formatter)
 }
 
-fun formatDuration(duration: Duration): String {
+fun formatDurationInText(duration: Duration): String {
     val hours = duration.toHours()
     val remainingMinutes = duration.minusHours(hours).toMinutes()
     return when {
@@ -21,6 +23,18 @@ fun formatDuration(duration: Duration): String {
         remainingMinutes == 0L -> "${hours}小时"
         else -> "${hours}小时${remainingMinutes}分钟"
     }
+}
+
+fun formatDuration(duration: Duration): String {
+    val hours = duration.toHours()
+    val minutes = duration.toMinutes() - hours * 60
+    return "%02d:%02d".format(hours, minutes)
+}
+
+fun copyToClipboard(context: Context, text: String) {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = ClipData.newPlainText("Copied Text", text)
+    clipboard.setPrimaryClip(clip)
 }
 
 fun vibrate(context: Context) {
