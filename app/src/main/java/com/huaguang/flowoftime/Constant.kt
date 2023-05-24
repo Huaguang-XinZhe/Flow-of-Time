@@ -12,4 +12,4 @@ val names = listOf(
 // TODO: 允许集中自定义
 val minutesThreshold: Duration = Duration.ofMinutes(20L)
 val hourThreshold: Duration = Duration.ofHours(8)
-val hourThreshold2: Duration = Duration.ofHours(4)
+val hourThreshold2: Duration = Duration.ofHours(5)

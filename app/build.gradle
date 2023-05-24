@@ -70,6 +70,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
     // 解决重复的 kotlin 标准库问题
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10"
+    // For Kotlin + Coroutines（WorkManager）
+    implementation "androidx.work:work-runtime-ktx:2.7.1"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
@@ -81,4 +83,6 @@ dependencies {
 
     //郭神的数据库可视化库——Glance
     debugImplementation 'com.guolindev.glance:glance:1.1.0'
+    // For Testing（WorkManager）
+    androidTestImplementation "androidx.work:work-testing:2.7.1"
 }

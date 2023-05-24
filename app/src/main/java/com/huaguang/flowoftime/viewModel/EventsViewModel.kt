@@ -164,7 +164,7 @@ class EventsViewModel(
             } else _remainingDuration.value
 
             if (_remainingDuration.value!! < hourThreshold2) {
-                // 一般事务一次性持续时间都不超过 4 小时
+                // 一般事务一次性持续时间都不超过 5 小时
                 alarmHelper.setAlarm(_remainingDuration.value!!.toMillis())
                 isAlarmSet.value = true
             }
