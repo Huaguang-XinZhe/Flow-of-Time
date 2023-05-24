@@ -133,15 +133,20 @@ fun DurationSlider(viewModel: EventsViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Text(
+            text = "当下核心事务：",
+            modifier = Modifier.padding(start = 8.dp)
+        )
+
         Slider(
-            value = rate ?: 1f,
+            value = rate ?: 0f,
             enabled = false,
             onValueChange = {  },
             modifier = Modifier.weight(1f)
         )
 
         Text(
-            text = "%.1f%%".format(rate?.times(100) ?: 100.0),
+            text = rate?.let { "%.1f".format(it.times(100)) + "%" } ?: "0%",
             modifier = Modifier.padding(start = 8.dp)
         )
 

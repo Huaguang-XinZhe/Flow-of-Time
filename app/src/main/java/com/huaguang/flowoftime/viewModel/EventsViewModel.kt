@@ -44,7 +44,8 @@ class EventsViewModel(
     val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
     val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
         remainingDuration?.let {
-            it.toMillis().toFloat() / hourThreshold.toMillis()
+            val remainingRate = it.toMillis().toFloat() / hourThreshold.toMillis()
+            1 - remainingRate
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 

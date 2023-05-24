@@ -15,10 +15,11 @@ fun formatLocalDateTime(dateTime: LocalDateTime): String {
 fun formatDuration(duration: Duration): String {
     val hours = duration.toHours()
     val remainingMinutes = duration.minusHours(hours).toMinutes()
-    return if (hours == 0L) {
-        "${remainingMinutes}分钟"
-    } else {
-        "${hours}小时${remainingMinutes}分钟"
+    return when {
+        hours == 0L && remainingMinutes == 0L -> ""
+        hours == 0L -> "${remainingMinutes}分钟"
+        remainingMinutes == 0L -> "${hours}小时"
+        else -> "${hours}小时${remainingMinutes}分钟"
     }
 }
 
