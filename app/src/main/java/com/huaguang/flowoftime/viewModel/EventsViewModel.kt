@@ -46,7 +46,7 @@ class EventsViewModel(
     private val alarmHelper = AlarmHelper(application)
     val isAlarmSet = MutableLiveData(false)
     private val _remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
-    val isExportButtonEnabled = MutableLiveData(true)
+    val isImportExportEnabled = MutableLiveData(true)
 
     val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
     val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
@@ -66,7 +66,7 @@ class EventsViewModel(
     }
 
     fun exportEvents() {
-        if (isExportButtonEnabled.value == true) {
+        if (isImportExportEnabled.value == true) {
             viewModelScope.launch {
                 val exportText = repository.exportEvents()
                 copyToClipboard(getApplication(), exportText)
@@ -75,19 +75,23 @@ class EventsViewModel(
         }
     }
 
+    fun importEvents(text: String) {
+        Toast.makeText(getApplication(), "导入成功！", Toast.LENGTH_SHORT).show()
+    }
+
     fun toggleMainEvent() {
         when (mainEventButtonText.value) {
             "开始" -> {
                 startNewEvent()
                 mainEventButtonText.value = "结束"
                 subButtonShow.value = true
-                isExportButtonEnabled.value = false
+                isImportExportEnabled.value = false
             }
             "结束" -> {
                 stopCurrentEvent()
                 mainEventButtonText.value = "开始"
                 subButtonShow.value = false
-                isExportButtonEnabled.value = true
+                isImportExportEnabled.value = true
             }
         }
         spHelper.saveButtonText(mainEventButtonText.value!!)

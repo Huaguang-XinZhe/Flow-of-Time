@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -12,6 +13,9 @@ import java.time.LocalDate
 interface EventDao {
     @Insert
     suspend fun insertEvent(event: Event): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(events: List<Event>)
 
     @Update
     suspend fun updateEvent(event: Event)
@@ -43,6 +47,13 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE parentId = :mainEventId")
     suspend fun getSubEventsForMainEvent(mainEventId: Long): List<Event>
+
+    @Transaction
+    suspend fun insertEventWithSubEvents(eventWithSubEvents: EventWithSubEvents) {
+        insertEvent(eventWithSubEvents.event)
+        insertAll(eventWithSubEvents.subEvents)
+    }
+
 
 
 }

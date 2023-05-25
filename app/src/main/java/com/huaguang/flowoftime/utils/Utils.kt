@@ -6,7 +6,9 @@ import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 fun formatLocalDateTime(dateTime: LocalDateTime): String {
@@ -30,6 +32,12 @@ fun formatDuration(duration: Duration): String {
     val minutes = duration.toMinutes() - hours * 60
     return "%02d:%02d".format(hours, minutes)
 }
+
+fun parseToLocalDateTime(timeStr: String, date: LocalDate): LocalDateTime {
+    val time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"))
+    return LocalDateTime.of(date, time)
+}
+
 
 fun copyToClipboard(context: Context, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
