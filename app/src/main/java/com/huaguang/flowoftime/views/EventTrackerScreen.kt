@@ -1,6 +1,8 @@
 package com.huaguang.flowoftime.views
 
 import android.util.Log
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.AlertDialog
@@ -43,6 +46,7 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
@@ -148,18 +152,18 @@ fun OtherRow(viewModel: EventsViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventInputField(viewModel: EventsViewModel) {
-    val textState = remember { mutableStateOf("") }
+    val newEventName by viewModel.newEventName.observeAsState()
     val focusRequester = remember { FocusRequester() }
 
     Row {
         TextField(
-            value = textState.value,
-            onValueChange = { textState.value = it },
+            value = newEventName ?: "",
+            onValueChange = { newValue -> viewModel.newEventName.value = newValue },
             label = { Text("事件名称") },
             modifier = Modifier.focusRequester(focusRequester)
         )
 
-        Button(onClick = { viewModel.onConfirm(textState) }) {
+        Button(onClick = { viewModel.onConfirm() }) {
             Text("确认")
         }
     }
@@ -235,9 +239,11 @@ fun EventItemRow(
     viewModel: EventsViewModel,
     modifier: Modifier = Modifier
 ) {
+    Log.i("打标签喽", "EventItemRow 重组了！")
     var startTime by remember { mutableStateOf(event.startTime) }
     var endTime by remember { mutableStateOf(event.endTime) }
     var duration by remember { mutableStateOf(event.duration) }
+    val selectedEventIdsMap by viewModel.selectedEventIdsMap.observeAsState(mutableMapOf())
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -267,7 +273,17 @@ fun EventItemRow(
             text = if (showTime) event.name else "……${event.name}",
             style = MaterialTheme.typography.titleMedium,
             maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.clickable {
+                viewModel.onNameTextClicked(event)
+            }.let { modifier ->
+                Log.i("打标签喽", "let 块执行了！")
+                if (selectedEventIdsMap[event.id] == true) {
+                    modifier
+                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp))
+                        .padding(3.dp)
+                } else modifier
+            }
         )
 
         if (showTime) {

@@ -2,7 +2,6 @@ package com.huaguang.flowoftime.viewModel
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.MutableState
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -42,7 +41,7 @@ class EventsViewModel(
     val subEventButtonText = MutableLiveData("插入")
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
-    private val newEventName = MutableLiveData("新事件")
+    val newEventName = MutableLiveData("")
     val scrollIndex = MutableLiveData<Int>()
     var eventCount = 0
     private val alarmHelper = AlarmHelper(application)
@@ -50,6 +49,7 @@ class EventsViewModel(
     private val _remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
     val isImportExportEnabled = MutableLiveData(true)
     private var updateJob: Job? = null
+    val selectedEventIdsMap = MutableLiveData<MutableMap<Long, Boolean>>(mutableMapOf())
 
     val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
     val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
@@ -125,21 +125,29 @@ class EventsViewModel(
 
     }
 
-    fun onConfirm(textState: MutableState<String>) {
-        if (textState.value.isEmpty()) {
+    fun onConfirm() {
+        if (newEventName.value == "") {
             Toast.makeText(getApplication(), "你还没有输入呢？", Toast.LENGTH_SHORT).show()
             return
         }
-        newEventName.value = textState.value
 
-        // 以下两个函数调用内部都开了协程，所以会并行执行，且不会阻塞主线程。
         updateEventName()
-        Log.i("打标签喽", "eventName = ${newEventName.value}")
-        checkAndSetAlarm(newEventName.value!!)
 
-        textState.value = ""
+        // 当前事项条目的名称部分没被点击，没有对应的状态（为 null），反之，点过了的话，对应的状态就为 true
+        if (selectedEventIdsMap.value!![currentEvent!!.id] == null) {
+            checkAndSetAlarm(newEventName.value!!)
+        }
+
         newEventName.value = ""
         isTracking.value = false
+
+        viewModelScope.launch {
+            // 延迟一下，让边框再飞一会儿
+            delay(800)
+            Log.i("打标签喽", "延迟结束，子弹该停停了！")
+            selectedEventIdsMap.value = mutableMapOf()
+            currentEvent = null
+        }
     }
 
     private fun updateEventName() {
@@ -234,6 +242,19 @@ class EventsViewModel(
                 isAlarmSet.value = true
             }
         }
+    }
+
+    fun onNameTextClicked(event: Event) {
+        isTracking.value = true
+        currentEvent = event
+        // 点击的事项条目的状态会被设为 true
+        toggleSelectedId(event.id)
+    }
+
+    private fun toggleSelectedId(eventId: Long) {
+        val map = selectedEventIdsMap.value!!
+        map[eventId] = !(map[eventId] ?: false)
+        selectedEventIdsMap.value = map
     }
 
 }
