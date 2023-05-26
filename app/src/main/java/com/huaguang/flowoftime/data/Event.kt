@@ -10,7 +10,7 @@ import java.time.LocalDateTime
 data class Event(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     var name: String,
-    val startTime: LocalDateTime,
+    var startTime: LocalDateTime,
     var endTime: LocalDateTime? = null,
     var duration: Duration? = null,
     var hasTriggeredReminder: Boolean = false,

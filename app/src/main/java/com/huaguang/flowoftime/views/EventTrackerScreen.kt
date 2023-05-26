@@ -1,6 +1,9 @@
 package com.huaguang.flowoftime.views
 
 import android.util.Log
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.draggable
+import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,6 +53,7 @@ import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.viewModel.EventsViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.Duration
 
 @Composable
 fun EventTrackerScreen(viewModel: EventsViewModel) {
@@ -89,7 +94,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
                 state = listState
             ) {
                 items(eventsWithSubEvents) {(event, subEvents) ->
-                    EventItem(event, subEvents)
+                    EventItem(event, subEvents, viewModel)
                 }
             }
         }
@@ -227,16 +232,34 @@ fun DurationSlider(viewModel: EventsViewModel) {
 fun EventItemRow(
     event: Event,
     showTime: Boolean,
+    viewModel: EventsViewModel,
     modifier: Modifier = Modifier
 ) {
+    var startTime by remember { mutableStateOf(event.startTime) }
+    var endTime by remember { mutableStateOf(event.endTime) }
+    var duration by remember { mutableStateOf(event.duration) }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
     ) {
         if (showTime) {
-            Text(
-                text = formatLocalDateTime(event.startTime),
-                modifier = Modifier.padding(end = 5.dp)
+            DraggableText(
+                text = formatLocalDateTime(startTime),
+                modifier = Modifier.padding(end = 5.dp),
+                onDragDelta = { dragValue ->
+                    startTime = startTime.plusMinutes(dragValue.toLong())
+
+                    if (duration != null) {
+                        val delta = Duration.between(startTime, event.startTime)
+                        Log.i("打标签喽", "delta = $delta")
+                        duration = event.duration!! + delta
+                    }
+                },
+                onDragStopped = {
+                    val updatedEvent = event.copy(startTime = startTime, duration = duration)
+                    viewModel.updateTimeToDB(updatedEvent)
+                }
             )
         }
 
@@ -248,14 +271,26 @@ fun EventItemRow(
         )
 
         if (showTime) {
-            Text(
-                text = event.endTime?.let { formatLocalDateTime(it) } ?: "...",
-                modifier = Modifier.padding(start = 5.dp)
+            DraggableText(
+                text = endTime?.let { formatLocalDateTime(it) } ?: "...",
+                modifier = Modifier.padding(start = 5.dp),
+                onDragDelta = { dragValue ->
+                    // 还没有结束时间的时候禁止拖动
+                    if (endTime != null) {
+                        endTime = endTime!!.plusMinutes(dragValue.toLong())
+                        val delta = Duration.between(endTime, event.endTime)
+                        duration = event.duration!! - delta
+                    }
+                },
+                onDragStopped = {
+                    val updatedEvent = event.copy(endTime = endTime, duration = duration)
+                    viewModel.updateTimeToDB(updatedEvent)
+                }
             )
         }
 
         Text(
-            text = event.duration?.let { formatDurationInText(it) } ?: "...",
+            text = duration?.let { formatDurationInText(it) } ?: "...",
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(start = 8.dp)
         )
@@ -270,7 +305,11 @@ fun EventItemRow(
 }
 
 @Composable
-fun EventItem(event: Event, subEvents: List<Event> = listOf()) {
+fun EventItem(
+    event: Event,
+    subEvents: List<Event> = listOf(),
+    viewModel: EventsViewModel
+) {
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
         modifier = Modifier.padding(4.dp)
@@ -278,14 +317,15 @@ fun EventItem(event: Event, subEvents: List<Event> = listOf()) {
         Column(
             modifier = Modifier.padding(10.dp)
         ) {
-            EventItemRow(event = event, showTime = true)
+            EventItemRow(event = event, showTime = true, viewModel)
 
             // 插入的临时事件的 UI
             for (subEvent in subEvents) {
                 EventItemRow(
                     event = subEvent,
                     showTime = false,
-                    modifier = Modifier.padding(start = 30.dp)  // 添加了一些左侧的 padding 以便缩进
+                    viewModel = viewModel,  // 添加了一些左侧的 padding 以便缩进
+                    modifier = Modifier.padding(start = 30.dp)
                 )
             }
         }
@@ -327,4 +367,49 @@ fun ImportEventsDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }
+
+
+@Composable
+fun DraggableText(
+    text: String,
+    onDragDelta: (Float) -> Unit,
+    onDragStopped: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val speedList = remember { mutableStateListOf<Float>() }
+    val lastDragTime = remember { mutableStateOf<Long?>(null) }
+    val lastDelta = remember { mutableStateOf(0f) }
+
+    Text(
+        text = text,
+        modifier = modifier.draggable(
+            orientation = Orientation.Horizontal,
+            state = rememberDraggableState { delta ->
+                val currentTime = System.currentTimeMillis()
+                val timeDiff = if (lastDragTime.value != null) currentTime - lastDragTime.value!! else 0
+                lastDragTime.value = currentTime
+
+                val speed = if (timeDiff != 0L) delta / timeDiff else 0f
+                speedList.add(speed)
+
+                lastDelta.value = delta
+            },
+            onDragStarted = { speedList.clear() },
+            onDragStopped = {
+                val maxSpeed = speedList.maxOrNull() ?: 0f
+                Log.i("打标签喽", "maxSpeed = $maxSpeed")
+                val dragCoefficient = if (maxSpeed > 6) 10f else 2f
+                val direction = if (lastDelta.value > 0) 1 else -1
+                val dragValue = dragCoefficient * direction
+                onDragDelta(dragValue)
+
+                onDragStopped()
+            }
+        )
+    )
+}
+
+
+
+
 

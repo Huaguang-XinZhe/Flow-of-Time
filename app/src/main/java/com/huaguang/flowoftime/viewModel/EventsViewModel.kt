@@ -17,6 +17,8 @@ import com.huaguang.flowoftime.minutesThreshold
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.copyToClipboard
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -47,6 +49,7 @@ class EventsViewModel(
     val isAlarmSet = MutableLiveData(false)
     private val _remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
     val isImportExportEnabled = MutableLiveData(true)
+    private var updateJob: Job? = null
 
     val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
     val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
@@ -62,6 +65,15 @@ class EventsViewModel(
         if (savedScrollIndex != -1) {
             scrollIndex.value = savedScrollIndex
             eventCount = savedScrollIndex + 1
+        }
+    }
+
+    fun updateTimeToDB(event: Event) {
+        updateJob?.cancel()
+        updateJob = viewModelScope.launch {
+            delay(2000) // Wait for 2 seconds
+            eventDao.updateEvent(event)
+            Toast.makeText(getApplication(), "调整已更新到数据库", Toast.LENGTH_SHORT).show()
         }
     }
 
