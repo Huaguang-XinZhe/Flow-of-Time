@@ -8,8 +8,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
-import com.huaguang.flowoftime.viewModel.EventsViewModel
-import com.huaguang.flowoftime.viewModel.EventsViewModelFactory
+import com.huaguang.flowoftime.viewmodels.EventsViewModel
+import com.huaguang.flowoftime.viewmodels.EventsViewModelFactory
 import com.huaguang.flowoftime.views.EventTrackerScreen
 
 class MainActivity : ComponentActivity() {

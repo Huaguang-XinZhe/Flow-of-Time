@@ -21,10 +21,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         return sharedPreferences.getInt("scroll_index", -1)
     }
 
-    fun clearScrollIndex() {
-        sharedPreferences.edit().remove("scroll_index").apply()
-    }
-
     fun saveRemainingDuration(duration: Duration) {
         val durationMillis = duration.toMillis()
         sharedPreferences.edit().putLong("remaining_duration", durationMillis).apply()
@@ -34,9 +30,7 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         val durationMillis = sharedPreferences.getLong("remaining_duration", -1L)
         return if (durationMillis != -1L) {
             Duration.ofMillis(durationMillis)
-        } else {
-            null
-        }
+        } else null
     }
 
 }

@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.viewModel
+package com.huaguang.flowoftime.viewmodels
 
 import android.util.Log
 import android.widget.Toast
@@ -134,25 +134,31 @@ class EventsViewModel(
 
         updateEventName()
 
+        viewModelScope.launch {
+            handleConfirmProcess()
+        }
+
+        newEventName.value = ""
+        isTracking.value = false
+    }
+
+    private suspend fun handleConfirmProcess() {
+        setRemainingDuration()
+
         // 当前事项条目的名称部分没被点击，没有对应的状态（为 null），反之，点过了的话，对应的状态就为 true
         if (selectedEventIdsMap.value!![currentEvent!!.id] == null) {
             Log.i("打标签喽", "事件输入部分，点击确定，一般流程分支。")
             checkAndSetAlarm(newEventName.value!!)
         } else {
             // 点击修改事项名称进行的分支
-            viewModelScope.launch {
-                // 延迟一下，让边框再飞一会儿
-                delay(800)
-                Log.i("打标签喽", "延迟结束，子弹该停停了！")
-                selectedEventIdsMap.value = mutableMapOf()
-                currentEvent = null
-            }
+            // 延迟一下，让边框再飞一会儿
+            delay(800)
+            Log.i("打标签喽", "延迟结束，子弹该停停了！")
+            selectedEventIdsMap.value = mutableMapOf()
+            currentEvent = null
         }
-
-        newEventName.value = ""
-        isTracking.value = false
-
     }
+
 
     private fun updateEventName() {
         currentEvent?.let {
@@ -231,22 +237,22 @@ class EventsViewModel(
 
     }
 
+    private suspend fun setRemainingDuration() {
+        _remainingDuration.value = if (_remainingDuration.value == null) {
+            // 数据库操作，查询并计算
+            val totalDuration = repository.calculateTotalDuration()
+            hourThreshold.minus(totalDuration)
+        } else _remainingDuration.value
+    }
+
     private fun checkAndSetAlarm(name: String) {
         Log.i("打标签喽", "checkAndSetAlarm 执行！！！")
         if (!names.contains(name)) return
 
-        viewModelScope.launch {
-            _remainingDuration.value = if (_remainingDuration.value == null) {
-                // 数据库操作，查询并计算
-                val totalDuration = repository.calculateTotalDuration()
-                hourThreshold.minus(totalDuration)
-            } else _remainingDuration.value
-
-            if (_remainingDuration.value!! < hourThreshold2) {
-                // 一般事务一次性持续时间都不超过 5 小时
-                alarmHelper.setAlarm(_remainingDuration.value!!.toMillis())
-                isAlarmSet.value = true
-            }
+        if (_remainingDuration.value!! < hourThreshold2) {
+            // 一般事务一次性持续时间都不超过 5 小时
+            alarmHelper.setAlarm(_remainingDuration.value!!.toMillis())
+            isAlarmSet.value = true
         }
     }
 

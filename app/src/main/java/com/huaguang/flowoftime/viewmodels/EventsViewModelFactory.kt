@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.viewModel
+package com.huaguang.flowoftime.viewmodels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider

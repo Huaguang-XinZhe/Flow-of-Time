@@ -37,8 +37,8 @@ interface EventDao {
     suspend fun getLastMainEventId(): Long?
 
     @Transaction
-    @Query("SELECT * FROM events WHERE parentId IS NULL")
-    fun getEventsWithSubEvents(): Flow<List<EventWithSubEvents>>
+    @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate = :eventDate")
+    fun getEventsWithSubEvents(eventDate: LocalDate = LocalDate.now()): Flow<List<EventWithSubEvents>>
 
     @Transaction
     @Query("SELECT * FROM events WHERE parentId IS NULL")
