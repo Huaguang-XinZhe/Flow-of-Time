@@ -5,6 +5,17 @@ import java.time.Duration
 
 class SPHelper(private val sharedPreferences: SharedPreferences) {
 
+    fun getIsTracking(): Boolean {
+        return sharedPreferences.getBoolean("isTracking", false)
+    }
+
+    fun setIsTracking(isTracking: Boolean) {
+        with(sharedPreferences.edit()) {
+            putBoolean("isTracking", isTracking)
+            apply()
+        }
+    }
+
     fun saveButtonText(text: String) {
         sharedPreferences.edit().putString("button_text", text).apply()
     }

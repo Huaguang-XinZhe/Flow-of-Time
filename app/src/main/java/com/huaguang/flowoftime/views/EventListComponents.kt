@@ -29,10 +29,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventWithSubEvents
+import com.huaguang.flowoftime.names
+import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import java.time.Duration
+import java.time.LocalDateTime
 
 @Composable
 fun EventList(
@@ -59,9 +62,22 @@ fun EventItem(
     subEvents: List<Event> = listOf(),
     viewModel: EventsViewModel
 ) {
+    val cardColors = if (names.contains(event.name)) {
+        CardDefaults.cardColors(
+            containerColor = DarkGray24,
+            contentColor = Color.White
+        )
+    } else {
+        CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface
+        )
+    }
+
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
-        modifier = Modifier.padding(4.dp)
+        modifier = Modifier.padding(4.dp),
+        colors = cardColors
     ) {
         Column(
             modifier = Modifier.padding(10.dp)
@@ -88,11 +104,21 @@ fun EventItemRow(
     viewModel: EventsViewModel,
     modifier: Modifier = Modifier
 ) {
-    Log.i("打标签喽", "EventItemRow 重组执行！id = ${event.id}")
     var startTime by remember { mutableStateOf(event.startTime) }
     var endTime by remember { mutableStateOf(event.endTime) }
     var duration by remember { mutableStateOf(event.duration) }
     val selectedEventIdsMap by viewModel.selectedEventIdsMap.observeAsState(mutableMapOf())
+
+    val endTimeText = if (endTime != null) {
+        if (endTime == LocalDateTime.MIN) "" else {
+            formatLocalDateTime(endTime!!)
+        }
+    } else "..."
+    val durationText = if (duration != null) {
+        if (duration == Duration.ZERO) "" else {
+            formatDurationInText(duration!!)
+        }
+    } else "..."
 
     LaunchedEffect(event.endTime, event.duration) {
         endTime = event.endTime
@@ -141,7 +167,7 @@ fun EventItemRow(
 
         if (showTime) {
             DraggableText(
-                text = endTime?.let { formatLocalDateTime(it) } ?: "...",
+                text = endTimeText,
                 modifier = Modifier.padding(start = 5.dp),
                 onDragDelta = { dragValue ->
                     // 还没有结束时间的时候禁止拖动
@@ -159,7 +185,7 @@ fun EventItemRow(
         }
 
         Text(
-            text = duration?.let { formatDurationInText(it) } ?: "...",
+            text = durationText,
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(start = 8.dp)
         )

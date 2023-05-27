@@ -29,13 +29,13 @@ import java.time.LocalDateTime
 
 class EventsViewModel(
     private val repository: EventRepository,
-    private val spHelper: SPHelper,
+    val spHelper: SPHelper,
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
     private val eventDao = repository.eventDao
     val eventsWithSubEvents = eventDao.getEventsWithSubEvents()
-    val isTracking = MutableLiveData(false)
+    val isTracking = MutableLiveData(spHelper.getIsTracking())
     private var currentEvent: Event? = null
     val mainEventButtonText = MutableLiveData(spHelper.getButtonText())
     val subEventButtonText = MutableLiveData("插入")
@@ -46,13 +46,15 @@ class EventsViewModel(
     var eventCount = 0
     private val alarmHelper = AlarmHelper(application)
     val isAlarmSet = MutableLiveData(false)
-    private val _remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
+    val remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
     val isImportExportEnabled = MutableLiveData(true)
     private var updateJob: Job? = null
     val selectedEventIdsMap = MutableLiveData<MutableMap<Long, Boolean>>(mutableMapOf())
+    private val isCurrentItemNotClicked: Boolean
+        get() = currentEvent?.let { selectedEventIdsMap.value!![it.id] == null } ?: true
 
-    val remainingDuration: StateFlow<Duration?> get() = _remainingDuration
-    val rate: StateFlow<Float?> get() = _remainingDuration.map { remainingDuration ->
+
+    val rate: StateFlow<Float?> get() = remainingDuration.map { remainingDuration ->
         remainingDuration?.let {
             val remainingRate = it.toMillis().toFloat() / hourThreshold.toMillis()
             1 - remainingRate
@@ -134,11 +136,24 @@ class EventsViewModel(
 
         updateEventName()
 
+        Log.i("打标签喽", "isCurrentItemNotClicked = $isCurrentItemNotClicked")
+        if (newEventName.value == "起床" && isCurrentItemNotClicked) {
+            // 按钮文本直接还原为开始，不需要结束
+            mainEventButtonText.value = "开始"
+            // 不需要显示结束时间和间隔
+            updateEventEndTimeAndDuration()
+        }
+
         viewModelScope.launch {
             handleConfirmProcess()
         }
 
-        newEventName.value = ""
+        viewModelScope.launch {
+            // 等一会儿再置空，让 updateEventName 中的数据库操作先执行完！
+            delay(200)
+            newEventName.value = ""
+        }
+
         isTracking.value = false
     }
 
@@ -146,7 +161,7 @@ class EventsViewModel(
         setRemainingDuration()
 
         // 当前事项条目的名称部分没被点击，没有对应的状态（为 null），反之，点过了的话，对应的状态就为 true
-        if (selectedEventIdsMap.value!![currentEvent!!.id] == null) {
+        if (isCurrentItemNotClicked) {
             Log.i("打标签喽", "事件输入部分，点击确定，一般流程分支。")
             checkAndSetAlarm(newEventName.value!!)
         } else {
@@ -161,8 +176,25 @@ class EventsViewModel(
 
 
     private fun updateEventName() {
+        viewModelScope.launch {
+            currentEvent = if (currentEvent == null) {
+                eventDao.getLastEvent()
+            } else currentEvent
+
+            Log.i("打标签喽", "updateEventName 块内：currentEvent = $currentEvent")
+
+            currentEvent!!.let {
+                it.name = newEventName.value!!
+                Log.i("打标签喽", "updateEventName 块内：newEventName.value = ${newEventName.value}")
+                eventDao.updateEvent(it)
+            }
+        }
+    }
+
+    private fun updateEventEndTimeAndDuration() {
         currentEvent?.let {
-            it.name = newEventName.value!!
+            it.endTime = LocalDateTime.MIN
+            it.duration = Duration.ZERO
             viewModelScope.launch {
                 eventDao.updateEvent(it)
             }
@@ -220,10 +252,10 @@ class EventsViewModel(
 
                 // 只要包含，remainingDuration 就会得到设置，一定不为 null
                 if (names.contains(it.name)) {
-                    _remainingDuration.value = _remainingDuration.value?.minus(it.duration)
-                    spHelper.saveRemainingDuration(_remainingDuration.value!!)
+                    remainingDuration.value = remainingDuration.value?.minus(it.duration)
+                    spHelper.saveRemainingDuration(remainingDuration.value!!)
 
-                    if (isAlarmSet.value == true && _remainingDuration.value!! > minutesThreshold) {
+                    if (isAlarmSet.value == true && remainingDuration.value!! > minutesThreshold) {
                         alarmHelper.cancelAlarm()
                         isAlarmSet.value = false
                     }
@@ -238,20 +270,20 @@ class EventsViewModel(
     }
 
     private suspend fun setRemainingDuration() {
-        _remainingDuration.value = if (_remainingDuration.value == null) {
+        remainingDuration.value = if (remainingDuration.value == null) {
             // 数据库操作，查询并计算
             val totalDuration = repository.calculateTotalDuration()
             hourThreshold.minus(totalDuration)
-        } else _remainingDuration.value
+        } else remainingDuration.value
     }
 
     private fun checkAndSetAlarm(name: String) {
         Log.i("打标签喽", "checkAndSetAlarm 执行！！！")
         if (!names.contains(name)) return
 
-        if (_remainingDuration.value!! < hourThreshold2) {
+        if (remainingDuration.value!! < hourThreshold2) {
             // 一般事务一次性持续时间都不超过 5 小时
-            alarmHelper.setAlarm(_remainingDuration.value!!.toMillis())
+            alarmHelper.setAlarm(remainingDuration.value!!.toMillis())
             isAlarmSet.value = true
         }
     }

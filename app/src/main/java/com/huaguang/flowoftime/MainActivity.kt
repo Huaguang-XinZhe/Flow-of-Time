@@ -13,6 +13,9 @@ import com.huaguang.flowoftime.viewmodels.EventsViewModelFactory
 import com.huaguang.flowoftime.views.EventTrackerScreen
 
 class MainActivity : ComponentActivity() {
+
+    lateinit var viewModel: EventsViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -23,9 +26,10 @@ class MainActivity : ComponentActivity() {
             val sharedPreferences = getSharedPreferences("my_preferences", Context.MODE_PRIVATE)
             val spHelper = SPHelper(sharedPreferences)
 
-            val viewModel by viewModels<EventsViewModel> {
+            val eVM by viewModels<EventsViewModel> {
                 EventsViewModelFactory(repository, spHelper, myApplication)
             }
+            viewModel = eVM
 
             Log.i("打标签喽", "eventCount = ${viewModel.eventCount}")
 
@@ -33,5 +37,11 @@ class MainActivity : ComponentActivity() {
             
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        viewModel.spHelper.setIsTracking(viewModel.isTracking.value!!)
+    }
+
 }
 

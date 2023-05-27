@@ -137,7 +137,9 @@ fun EventInputField(viewModel: EventsViewModel) {
     val newEventName by viewModel.newEventName.observeAsState()
     val focusRequester = remember { FocusRequester() }
 
-    Row {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         TextField(
             value = newEventName ?: "",
             onValueChange = { newValue -> viewModel.newEventName.value = newValue },
