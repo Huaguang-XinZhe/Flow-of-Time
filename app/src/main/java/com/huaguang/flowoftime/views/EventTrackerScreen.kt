@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.views
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -232,6 +233,7 @@ fun DurationSlider(viewModel: EventsViewModel) {
 }
 
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun EventItemRow(
     event: Event,
@@ -239,11 +241,16 @@ fun EventItemRow(
     viewModel: EventsViewModel,
     modifier: Modifier = Modifier
 ) {
-    Log.i("打标签喽", "EventItemRow 重组了！")
+    Log.i("打标签喽", "EventItemRow 重组执行！id = ${event.id}")
     var startTime by remember { mutableStateOf(event.startTime) }
     var endTime by remember { mutableStateOf(event.endTime) }
     var duration by remember { mutableStateOf(event.duration) }
     val selectedEventIdsMap by viewModel.selectedEventIdsMap.observeAsState(mutableMapOf())
+
+    LaunchedEffect(event.endTime, event.duration) {
+        endTime = event.endTime
+        duration = event.duration
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -277,7 +284,6 @@ fun EventItemRow(
             modifier = Modifier.clickable {
                 viewModel.onNameTextClicked(event)
             }.let { modifier ->
-                Log.i("打标签喽", "let 块执行了！")
                 if (selectedEventIdsMap[event.id] == true) {
                     modifier
                         .border(2.dp, Color.Green, RoundedCornerShape(8.dp))

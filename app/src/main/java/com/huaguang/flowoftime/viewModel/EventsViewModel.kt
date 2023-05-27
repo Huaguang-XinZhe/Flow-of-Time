@@ -69,6 +69,7 @@ class EventsViewModel(
     }
 
     fun updateTimeToDB(event: Event) {
+        Log.i("打标签喽", "拖拽后结束后更新数据到数据库。")
         updateJob?.cancel()
         updateJob = viewModelScope.launch {
             delay(2000) // Wait for 2 seconds
@@ -135,19 +136,22 @@ class EventsViewModel(
 
         // 当前事项条目的名称部分没被点击，没有对应的状态（为 null），反之，点过了的话，对应的状态就为 true
         if (selectedEventIdsMap.value!![currentEvent!!.id] == null) {
+            Log.i("打标签喽", "事件输入部分，点击确定，一般流程分支。")
             checkAndSetAlarm(newEventName.value!!)
+        } else {
+            // 点击修改事项名称进行的分支
+            viewModelScope.launch {
+                // 延迟一下，让边框再飞一会儿
+                delay(800)
+                Log.i("打标签喽", "延迟结束，子弹该停停了！")
+                selectedEventIdsMap.value = mutableMapOf()
+                currentEvent = null
+            }
         }
 
         newEventName.value = ""
         isTracking.value = false
 
-        viewModelScope.launch {
-            // 延迟一下，让边框再飞一会儿
-            delay(800)
-            Log.i("打标签喽", "延迟结束，子弹该停停了！")
-            selectedEventIdsMap.value = mutableMapOf()
-            currentEvent = null
-        }
     }
 
     private fun updateEventName() {
@@ -188,6 +192,7 @@ class EventsViewModel(
     private fun stopCurrentEvent(type: EventType = EventType.MAIN) {
         viewModelScope.launch {
             if (currentEvent == null) {
+                Log.i("打标签喽", "停止事件记录，currentEvent 为 0，从数据库获取最新的事件。")
                 currentEvent = eventDao.getLastEvent()
             }
 
@@ -203,6 +208,7 @@ class EventsViewModel(
                 it.duration = Duration.between(it.startTime, it.endTime).minus(subEventsDuration)
 
                 viewModelScope.launch {
+                    Log.i("打标签喽", "viewModelScope 块，更新到数据库执行了！！！")
                     eventDao.updateEvent(it)
                 }
 
