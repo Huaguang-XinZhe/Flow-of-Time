@@ -132,11 +132,10 @@ fun EventItemRow(
         if (showTime) {
             DraggableText(
                 text = formatLocalDateTime(startTime),
-                modifier = Modifier.padding(end = 5.dp),
                 onDragDelta = { dragValue ->
                     startTime = startTime.plusMinutes(dragValue.toLong())
 
-                    if (duration != null) {
+                    if (duration != null && event.name != "起床") {
                         val delta = Duration.between(startTime, event.startTime)
                         Log.i("打标签喽", "delta = $delta")
                         duration = event.duration!! + delta
@@ -145,7 +144,8 @@ fun EventItemRow(
                 onDragStopped = {
                     val updatedEvent = event.copy(startTime = startTime, duration = duration)
                     viewModel.updateTimeToDB(updatedEvent)
-                }
+                },
+                modifier = Modifier.padding(end = 5.dp)
             )
         }
 
@@ -168,10 +168,8 @@ fun EventItemRow(
         if (showTime) {
             DraggableText(
                 text = endTimeText,
-                modifier = Modifier.padding(start = 5.dp),
                 onDragDelta = { dragValue ->
-                    // 还没有结束时间的时候禁止拖动
-                    if (endTime != null) {
+                    if (endTime != null && event.name != "起床") {
                         endTime = endTime!!.plusMinutes(dragValue.toLong())
                         val delta = Duration.between(endTime, event.endTime)
                         duration = event.duration!! - delta
@@ -180,7 +178,9 @@ fun EventItemRow(
                 onDragStopped = {
                     val updatedEvent = event.copy(endTime = endTime, duration = duration)
                     viewModel.updateTimeToDB(updatedEvent)
-                }
+                },
+                modifier = Modifier.padding(start = 5.dp),
+                enabled = endTime != null
             )
         }
 

@@ -30,7 +30,6 @@ fun getAdjustedEventDate(): LocalDate {
     } else LocalDate.now()
 }
 
-
 fun formatLocalDateTime(dateTime: LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return dateTime.format(formatter)

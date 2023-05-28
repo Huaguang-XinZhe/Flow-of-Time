@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.views
 
 import android.util.Log
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -158,7 +157,6 @@ fun EventInputField(viewModel: EventsViewModel) {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EventButtons(viewModel: EventsViewModel) {
     val mainEventButtonText by viewModel.mainEventButtonText.observeAsState()

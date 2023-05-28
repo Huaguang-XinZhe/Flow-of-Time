@@ -18,6 +18,7 @@ fun DraggableText(
     onDragDelta: (Float) -> Unit,
     onDragStopped: () -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val speedList = remember { mutableStateListOf<Float>() }
     val lastDragTime = remember { mutableStateOf<Long?>(null) }
@@ -27,6 +28,7 @@ fun DraggableText(
         text = text,
         modifier = modifier.draggable(
             orientation = Orientation.Horizontal,
+            enabled = enabled,
             state = rememberDraggableState { delta ->
                 calculateDragSpeed(delta, speedList, lastDragTime, lastDelta)
             },

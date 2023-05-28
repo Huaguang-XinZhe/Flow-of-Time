@@ -24,6 +24,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -72,10 +73,8 @@ class EventsViewModel(
             scrollIndex.value = savedScrollIndex
             eventCount = savedScrollIndex + 1
         }
-
-        if (mainEventButtonText.value == "结束") {
-            subButtonShow.value = true
-        }
+        // 目前主要是重置 remainingDuration
+        resetStateIfNewDay()
     }
 
     fun updateTimeToDB(event: Event) {
@@ -106,21 +105,14 @@ class EventsViewModel(
         when (mainEventButtonText.value) {
             "开始" -> {
                 startNewEvent()
-                mainEventButtonText.value = "结束"
-                subButtonShow.value = true
-                isImportExportEnabled.value = false
+                updateStateAndStorage("开始")
             }
             "结束" -> {
                 stopCurrentEvent()
-                mainEventButtonText.value = "开始"
-                subButtonShow.value = false
-                isImportExportEnabled.value = true
+                updateStateAndStorage("结束")
             }
         }
-        spHelper.saveButtonText(mainEventButtonText.value!!)
     }
-
-
 
     fun toggleSubEvent() {
         when (subEventButtonText.value) {
@@ -324,19 +316,38 @@ class EventsViewModel(
             val startTime = lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
 
             if (startTime != null) {
-                startEventWithStateUpdateAndStorage(startTime)
+                startNewEvent(startTime = startTime)
+                updateStateAndStorage("开始")
             }
         }
 
         Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
     }
 
-    private fun startEventWithStateUpdateAndStorage(startTime: LocalDateTime) {
-        startNewEvent(startTime = startTime)
-        mainEventButtonText.value = "结束"
-        subButtonShow.value = true
-        isImportExportEnabled.value = false
+    private fun updateStateAndStorage(buttonText: String) {
+        when (buttonText) {
+            "开始" -> {
+                mainEventButtonText.value = "结束"
+                subButtonShow.value = true
+                isImportExportEnabled.value = false
+            }
+            "结束" -> {
+                mainEventButtonText.value = "开始"
+                subButtonShow.value = false
+                isImportExportEnabled.value = true
+            }
+        }
         spHelper.saveButtonText(mainEventButtonText.value!!)
+    }
+
+    private fun resetStateIfNewDay() {
+       viewModelScope.launch {
+           val events = eventsWithSubEvents.first()
+           if (events.isEmpty()) {
+               Log.i("打标签喽", "remainingDuration 置空执行了。")
+               remainingDuration.value = null
+           }
+       }
     }
 
 
