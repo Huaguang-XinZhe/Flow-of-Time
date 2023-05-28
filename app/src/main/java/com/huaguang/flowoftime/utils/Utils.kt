@@ -11,6 +11,26 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+fun getEventDate(startTime: LocalDateTime): LocalDate {
+    return if (startTime.hour in 0..4) {
+        startTime.toLocalDate().minusDays(1)
+    } else {
+        startTime.toLocalDate()
+    }
+}
+
+fun getAdjustedEventDate(): LocalDate {
+    val now = LocalTime.now()
+    val midnight = LocalTime.MIDNIGHT
+    val fiveAM = LocalTime.of(5, 0)
+
+    return if (now.isAfter(midnight) && now.isBefore(fiveAM)) {
+        // 当前时间是在 0 点与凌晨 5 点之间
+        LocalDate.now().minusDays(1)
+    } else LocalDate.now()
+}
+
+
 fun formatLocalDateTime(dateTime: LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return dateTime.format(formatter)

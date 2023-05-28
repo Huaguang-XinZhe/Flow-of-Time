@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.views
 
 import android.util.Log
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,7 +37,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.huaguang.flowoftime.hourThreshold
+import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import kotlinx.coroutines.delay
@@ -157,6 +158,7 @@ fun EventInputField(viewModel: EventsViewModel) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun EventButtons(viewModel: EventsViewModel) {
     val mainEventButtonText by viewModel.mainEventButtonText.observeAsState()
@@ -164,11 +166,16 @@ fun EventButtons(viewModel: EventsViewModel) {
     val mainButtonShow by viewModel.mainButtonShow.observeAsState()
     val subButtonShow by viewModel.subButtonShow.observeAsState()
 
-    Row {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 5.dp)
+    ) {
         if (mainButtonShow == true) {
-            Button(onClick = { viewModel.toggleMainEvent() }) {
-                Text(text = mainEventButtonText ?: "开始")
-            }
+            LongPressButton(
+                onClick = { viewModel.toggleMainEvent() },
+                onLongClick = { viewModel.onMainButtonLongClick() },
+                text = mainEventButtonText ?: "开始"
+            )
         }
 
         if (subButtonShow == true) {
@@ -209,7 +216,7 @@ fun DurationSlider(viewModel: EventsViewModel) {
         )
 
         Text(
-            text = hourThreshold.minus(remainingDuration ?: hourThreshold)
+            text = FOCUS_EVENT_DURATION_THRESHOLD.minus(remainingDuration ?: FOCUS_EVENT_DURATION_THRESHOLD)
                 ?.let { formatDurationInText(it) } ?: "...",
             modifier = Modifier.padding(start = 8.dp, end = 8.dp)
         )

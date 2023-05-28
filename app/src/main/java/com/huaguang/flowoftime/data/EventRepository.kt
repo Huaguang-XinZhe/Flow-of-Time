@@ -4,17 +4,8 @@ import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.EventSerializer
 import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class EventRepository(val eventDao: EventDao) {
-
-    fun getEventDate(startTime: LocalDateTime): LocalDate {
-        return if (startTime.hour in 0..4) {
-            startTime.toLocalDate().minusDays(1)
-        } else {
-            startTime.toLocalDate()
-        }
-    }
 
     suspend fun calculateTotalDuration(): Duration {
         var totalDuration = Duration.ZERO

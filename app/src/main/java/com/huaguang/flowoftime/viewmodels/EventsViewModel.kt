@@ -5,17 +5,20 @@ import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.huaguang.flowoftime.ALARM_CANCELLATION_THRESHOLD
+import com.huaguang.flowoftime.ALARM_SETTING_THRESHOLD
+import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
-import com.huaguang.flowoftime.hourThreshold
-import com.huaguang.flowoftime.hourThreshold2
-import com.huaguang.flowoftime.minutesThreshold
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.copyToClipboard
+import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.getEventDate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +37,7 @@ class EventsViewModel(
 ) : AndroidViewModel(application) {
 
     private val eventDao = repository.eventDao
-    val eventsWithSubEvents = eventDao.getEventsWithSubEvents()
+    val eventsWithSubEvents = eventDao.getEventsWithSubEvents(getAdjustedEventDate())
     val isTracking = MutableLiveData(spHelper.getIsTracking())
     private var currentEvent: Event? = null
     val mainEventButtonText = MutableLiveData(spHelper.getButtonText())
@@ -50,13 +53,14 @@ class EventsViewModel(
     val isImportExportEnabled = MutableLiveData(true)
     private var updateJob: Job? = null
     val selectedEventIdsMap = MutableLiveData<MutableMap<Long, Boolean>>(mutableMapOf())
+
+
     private val isCurrentItemNotClicked: Boolean
         get() = currentEvent?.let { selectedEventIdsMap.value!![it.id] == null } ?: true
 
-
     val rate: StateFlow<Float?> get() = remainingDuration.map { remainingDuration ->
         remainingDuration?.let {
-            val remainingRate = it.toMillis().toFloat() / hourThreshold.toMillis()
+            val remainingRate = it.toMillis().toFloat() / FOCUS_EVENT_DURATION_THRESHOLD.toMillis()
             1 - remainingRate
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
@@ -67,6 +71,10 @@ class EventsViewModel(
         if (savedScrollIndex != -1) {
             scrollIndex.value = savedScrollIndex
             eventCount = savedScrollIndex + 1
+        }
+
+        if (mainEventButtonText.value == "结束") {
+            subButtonShow.value = true
         }
     }
 
@@ -111,6 +119,8 @@ class EventsViewModel(
         }
         spHelper.saveButtonText(mainEventButtonText.value!!)
     }
+
+
 
     fun toggleSubEvent() {
         when (subEventButtonText.value) {
@@ -201,12 +211,14 @@ class EventsViewModel(
         }
     }
 
-    private fun startNewEvent(type: EventType = EventType.MAIN) {
-        val startTime = LocalDateTime.now()
+    private fun startNewEvent(
+        type: EventType = EventType.MAIN,
+        startTime: LocalDateTime = LocalDateTime.now()
+    ) {
         val newEvent = Event(
             name = newEventName.value!!,
             startTime = startTime,
-            eventDate = repository.getEventDate(startTime)
+            eventDate = getEventDate(startTime)
         )
 
         viewModelScope.launch {
@@ -255,7 +267,8 @@ class EventsViewModel(
                     remainingDuration.value = remainingDuration.value?.minus(it.duration)
                     spHelper.saveRemainingDuration(remainingDuration.value!!)
 
-                    if (isAlarmSet.value == true && remainingDuration.value!! > minutesThreshold) {
+                    if (isAlarmSet.value == true &&
+                        remainingDuration.value!! > ALARM_CANCELLATION_THRESHOLD) {
                         alarmHelper.cancelAlarm()
                         isAlarmSet.value = false
                     }
@@ -273,7 +286,7 @@ class EventsViewModel(
         remainingDuration.value = if (remainingDuration.value == null) {
             // 数据库操作，查询并计算
             val totalDuration = repository.calculateTotalDuration()
-            hourThreshold.minus(totalDuration)
+            FOCUS_EVENT_DURATION_THRESHOLD.minus(totalDuration)
         } else remainingDuration.value
     }
 
@@ -281,7 +294,7 @@ class EventsViewModel(
         Log.i("打标签喽", "checkAndSetAlarm 执行！！！")
         if (!names.contains(name)) return
 
-        if (remainingDuration.value!! < hourThreshold2) {
+        if (remainingDuration.value!! < ALARM_SETTING_THRESHOLD) {
             // 一般事务一次性持续时间都不超过 5 小时
             alarmHelper.setAlarm(remainingDuration.value!!.toMillis())
             isAlarmSet.value = true
@@ -300,5 +313,31 @@ class EventsViewModel(
         map[eventId] = !(map[eventId] ?: false)
         selectedEventIdsMap.value = map
     }
+
+    fun onMainButtonLongClick() {
+        if (mainEventButtonText.value == "结束") return
+
+        Log.i("打标签喽", "长按执行了！")
+        // ButtonText 的值除了结束就是开始了，不可能为 null
+        viewModelScope.launch {
+            val lastEvent = eventDao.getLastEvent()
+            val startTime = lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
+
+            if (startTime != null) {
+                startEventWithStateUpdateAndStorage(startTime)
+            }
+        }
+
+        Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun startEventWithStateUpdateAndStorage(startTime: LocalDateTime) {
+        startNewEvent(startTime = startTime)
+        mainEventButtonText.value = "结束"
+        subButtonShow.value = true
+        isImportExportEnabled.value = false
+        spHelper.saveButtonText(mainEventButtonText.value!!)
+    }
+
 
 }
