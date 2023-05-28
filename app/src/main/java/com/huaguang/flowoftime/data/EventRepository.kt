@@ -7,9 +7,9 @@ import java.time.LocalDate
 
 class EventRepository(val eventDao: EventDao) {
 
-    suspend fun calculateTotalDuration(): Duration {
+    suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
         var totalDuration = Duration.ZERO
-        val events = eventDao.getFilteredEvents(names, LocalDate.now())
+        val events = eventDao.getFilteredEvents(names, eventDate)
 
         // 当 events 为空，里边的代码就不会执行
         for (event in events) {

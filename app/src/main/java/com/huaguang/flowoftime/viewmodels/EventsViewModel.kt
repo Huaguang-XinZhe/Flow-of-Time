@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class EventsViewModel(
@@ -42,7 +43,7 @@ class EventsViewModel(
     val isTracking = MutableLiveData(spHelper.getIsTracking())
     private var currentEvent: Event? = null
     val mainEventButtonText = MutableLiveData(spHelper.getButtonText())
-    val subEventButtonText = MutableLiveData("插入")
+    val subEventButtonText = MutableLiveData(spHelper.getSubButtonText())
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
     val newEventName = MutableLiveData("")
@@ -75,6 +76,13 @@ class EventsViewModel(
         }
         // 目前主要是重置 remainingDuration
         resetStateIfNewDay()
+
+        if (subEventButtonText.value == "插入结束") {
+            subButtonShow.value = true
+            mainButtonShow.value = false
+        } else if (mainEventButtonText.value == "结束") {
+            subButtonShow.value = true
+        }
     }
 
     fun updateTimeToDB(event: Event) {
@@ -128,6 +136,7 @@ class EventsViewModel(
             }
         }
 
+        spHelper.saveSubButtonText(subEventButtonText.value!!)
     }
 
     fun onConfirm() {
@@ -183,8 +192,6 @@ class EventsViewModel(
                 eventDao.getLastEvent()
             } else currentEvent
 
-            Log.i("打标签喽", "updateEventName 块内：currentEvent = $currentEvent")
-
             currentEvent!!.let {
                 it.name = newEventName.value!!
                 Log.i("打标签喽", "updateEventName 块内：newEventName.value = ${newEventName.value}")
@@ -234,11 +241,9 @@ class EventsViewModel(
     private fun stopCurrentEvent(type: EventType = EventType.MAIN) {
         viewModelScope.launch {
             if (currentEvent == null) {
-                Log.i("打标签喽", "停止事件记录，currentEvent 为 0，从数据库获取最新的事件。")
-                currentEvent = eventDao.getLastEvent()
+                Log.i("打标签喽", "停止事件记录，currentEvent 为 null，从数据库获取最新的事件。")
+                currentEvent = eventDao.getLastIncompleteEvent()
             }
-
-            Log.i("打标签喽", "currentEvent 获取后 = $currentEvent")
 
             currentEvent?.let {
                 // 如果是主事件，就计算从数据库中获取子事件列表，并计算其间隔总和
@@ -276,8 +281,11 @@ class EventsViewModel(
 
     private suspend fun setRemainingDuration() {
         remainingDuration.value = if (remainingDuration.value == null) {
+            Log.i("打标签喽", "setRemainingDuration 块内：currentEvent = $currentEvent")
             // 数据库操作，查询并计算
-            val totalDuration = repository.calculateTotalDuration()
+            val totalDuration = repository.calEventDateDuration(
+                currentEvent?.eventDate ?: LocalDate.now()
+            )
             FOCUS_EVENT_DURATION_THRESHOLD.minus(totalDuration)
         } else remainingDuration.value
     }

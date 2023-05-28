@@ -28,10 +28,17 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
             "AND duration IS NOT NULL")
-    suspend fun getFilteredEvents(names: List<String>, currentDate: LocalDate): List<Event>
+    suspend fun getFilteredEvents(
+        names: List<String>,
+        currentDate: LocalDate = LocalDate.now()
+    ): List<Event>
 
     @Query("SELECT * FROM events ORDER BY id DESC LIMIT 1")
     suspend fun getLastEvent(): Event
+
+    @Query("SELECT * FROM events WHERE endTime IS NULL ORDER BY id DESC LIMIT 1")
+    suspend fun getLastIncompleteEvent(): Event
+
 
     @Query("SELECT MAX(id) FROM events WHERE parentId IS NULL")
     suspend fun getLastMainEventId(): Long?

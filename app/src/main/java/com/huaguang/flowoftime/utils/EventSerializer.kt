@@ -73,11 +73,11 @@ object EventSerializer {
     private fun formatEvent(event: Event): String {
         return "${formatLocalDateTime(event.startTime)} " +
                 "${event.name} " +
-                "${formatLocalDateTime(event.endTime!!)} " +
-                formatDuration(event.duration!!)
+                "${event.endTime?.let { formatLocalDateTime(it) }} " +
+                event.duration?.let { formatDuration(it) }
     }
 
     private fun formatSubEvent(subEvent: Event): String {
-        return " ……${subEvent.name} ${formatDuration(subEvent.duration!!)}"
+        return " ……${subEvent.name} ${subEvent.duration?.let { formatDuration(it) }}"
     }
 }

@@ -20,8 +20,16 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         sharedPreferences.edit().putString("button_text", text).apply()
     }
 
-    fun getButtonText(): String {
-        return sharedPreferences.getString("button_text", "开始") ?: "开始"
+    fun getButtonText(): String? {
+        return sharedPreferences.getString("button_text", "开始")
+    }
+
+    fun getSubButtonText(): String? {
+        return sharedPreferences.getString("sub_button_text", "插入")
+    }
+
+    fun saveSubButtonText(text: String) {
+        sharedPreferences.edit().putString("sub_button_text", text).apply()
     }
 
     fun saveScrollIndex(index: Int) {
