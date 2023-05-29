@@ -34,6 +34,9 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
@@ -136,15 +139,30 @@ fun HeaderRow(viewModel: EventsViewModel) {
 fun EventInputField(viewModel: EventsViewModel) {
     val newEventName by viewModel.newEventName.observeAsState()
     val focusRequester = remember { FocusRequester() }
+    var textFieldState by remember {
+        mutableStateOf(TextFieldValue(text = newEventName ?: ""))
+    }
 
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         TextField(
-            value = newEventName ?: "",
-            onValueChange = { newValue -> viewModel.newEventName.value = newValue },
+            value = textFieldState,
+            onValueChange = {
+                textFieldState = it
+                viewModel.newEventName.value = it.text
+            },
             label = { Text("事件名称") },
-            modifier = Modifier.focusRequester(focusRequester)
+            modifier = Modifier.weight(1f)
+                .focusRequester(focusRequester)
+                .onFocusChanged {
+                    if (it.isFocused) {
+                        // 这将全选文本
+                        textFieldState = textFieldState.copy(
+                            selection = TextRange(0, textFieldState.text.length)
+                        )
+                    }
+                }
         )
 
         Button(onClick = { viewModel.onConfirm() }) {
@@ -156,6 +174,7 @@ fun EventInputField(viewModel: EventsViewModel) {
         focusRequester.requestFocus()
     }
 }
+
 
 @Composable
 fun EventButtons(viewModel: EventsViewModel) {

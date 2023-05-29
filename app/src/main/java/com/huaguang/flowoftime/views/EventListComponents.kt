@@ -7,12 +7,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,8 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventWithSubEvents
 import com.huaguang.flowoftime.names
@@ -107,6 +111,7 @@ fun EventItemRow(
     var startTime by remember { mutableStateOf(event.startTime) }
     var endTime by remember { mutableStateOf(event.endTime) }
     var duration by remember { mutableStateOf(event.duration) }
+    var isExpansion by remember { mutableStateOf(false) }
     val selectedEventIdsMap by viewModel.selectedEventIdsMap.observeAsState(mutableMapOf())
 
     val endTimeText = if (endTime != null) {
@@ -119,6 +124,12 @@ fun EventItemRow(
             formatDurationInText(duration!!)
         }
     } else "..."
+    val isEventNameLong = event.name.length > 10
+    val painter = if (!isExpansion) {
+        painterResource(id = R.drawable.expansion)
+    } else {
+        painterResource(id = R.drawable.contraction)
+    }
 
     LaunchedEffect(event.endTime, event.duration) {
         endTime = event.endTime
@@ -137,33 +148,51 @@ fun EventItemRow(
 
                     if (duration != null && event.name != "起床") {
                         val delta = Duration.between(startTime, event.startTime)
-                        Log.i("打标签喽", "delta = $delta")
                         duration = event.duration!! + delta
                     }
                 },
                 onDragStopped = {
                     val updatedEvent = event.copy(startTime = startTime, duration = duration)
-                    viewModel.updateTimeToDB(updatedEvent)
+                    val lastDelta = duration!! - event.duration
+                    Log.i("打标签喽", "startTime: lastDelta = $lastDelta")
+                    viewModel.updateTimeAndState(updatedEvent, lastDelta)
                 },
-                modifier = Modifier.padding(end = 5.dp)
+                modifier = Modifier.padding(end = 5.dp),
+                viewModel = viewModel
             )
         }
 
         Text(
             text = if (showTime) event.name else "……${event.name}",
             style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.clickable {
-                viewModel.onNameTextClicked(event)
-            }.let { modifier ->
-                if (selectedEventIdsMap[event.id] == true) {
-                    modifier
-                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp))
-                        .padding(3.dp)
-                } else modifier
-            }
+            maxLines = if (!isExpansion) 1 else 3,
+            overflow = if (!isExpansion) TextOverflow.Ellipsis else TextOverflow.Visible,
+            modifier = Modifier
+                .clickable {
+                    viewModel.onNameTextClicked(event)
+                }
+                .let { modifier ->
+                    if (selectedEventIdsMap[event.id] == true) {
+                        modifier
+                            .border(2.dp, Color.Green, RoundedCornerShape(8.dp))
+                            .padding(3.dp)
+                    } else modifier
+                }
+                .then(if (isEventNameLong) modifier.weight(1f) else modifier)
         )
+
+        if (isEventNameLong) {
+            Icon(
+                painter = painter,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(24.dp)
+                    .padding(start = 5.dp)
+                    .clickable {
+                        isExpansion = !isExpansion
+                    }
+            )
+        }
 
         if (showTime) {
             DraggableText(
@@ -177,10 +206,13 @@ fun EventItemRow(
                 },
                 onDragStopped = {
                     val updatedEvent = event.copy(endTime = endTime, duration = duration)
-                    viewModel.updateTimeToDB(updatedEvent)
+                    val lastDelta = duration!! - event.duration
+                    Log.i("打标签喽", "endTime: lastDelta = $lastDelta")
+                    viewModel.updateTimeAndState(updatedEvent, lastDelta)
                 },
                 modifier = Modifier.padding(start = 5.dp),
-                enabled = endTime != null
+                enabled = endTime != null,
+                viewModel = viewModel
             )
         }
 

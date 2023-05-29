@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.viewmodels
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -55,7 +56,7 @@ class EventsViewModel(
     val isImportExportEnabled = MutableLiveData(true)
     private var updateJob: Job? = null
     val selectedEventIdsMap = MutableLiveData<MutableMap<Long, Boolean>>(mutableMapOf())
-
+    val isStartOrEndTimeClicked = mutableStateOf(false)
 
     private val isCurrentItemNotClicked: Boolean
         get() = currentEvent?.let { selectedEventIdsMap.value!![it.id] == null } ?: true
@@ -85,13 +86,19 @@ class EventsViewModel(
         }
     }
 
-    fun updateTimeToDB(event: Event) {
-        Log.i("打标签喽", "拖拽后结束后更新数据到数据库。")
+    fun updateTimeAndState(updatedEvent: Event, lastDelta: Duration) {
         updateJob?.cancel()
         updateJob = viewModelScope.launch {
             delay(2000) // Wait for 2 seconds
-            eventDao.updateEvent(event)
+            eventDao.updateEvent(updatedEvent)
             Toast.makeText(getApplication(), "调整已更新到数据库", Toast.LENGTH_SHORT).show()
+
+            isStartOrEndTimeClicked.value = false // 取消滑块阴影，禁止点击
+
+            if (names.contains(updatedEvent.name)) {
+                remainingDuration.value = remainingDuration.value?.minus(lastDelta)
+                remainingDuration.value?.let { spHelper.saveRemainingDuration(it) }
+            }
         }
     }
 
@@ -303,6 +310,7 @@ class EventsViewModel(
 
     fun onNameTextClicked(event: Event) {
         isTracking.value = true
+        newEventName.value = event.name
         currentEvent = event
         // 点击的事项条目的状态会被设为 true
         toggleSelectedId(event.id)

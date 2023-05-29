@@ -12,3 +12,4 @@ val Pink40 = Color(0xFF7D5260)
 
 // 自定义颜色
 val DarkGray24 = Color(56, 57, 60)
+val DarkGreen39 = Color(45, 100, 53, 255)
