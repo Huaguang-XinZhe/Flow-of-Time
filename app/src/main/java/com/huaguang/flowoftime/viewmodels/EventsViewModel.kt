@@ -18,14 +18,15 @@ import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.copyToClipboard
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.getEventDate
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -40,7 +41,17 @@ class EventsViewModel(
 ) : AndroidViewModel(application) {
 
     private val eventDao = repository.eventDao
-    val eventsWithSubEvents = eventDao.getEventsWithSubEvents(getAdjustedEventDate())
+    val isOneDayButtonClicked = MutableStateFlow(spHelper.getIsOneDayButtonClicked())
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val eventsWithSubEvents = isOneDayButtonClicked.flatMapLatest { clicked ->
+        if (clicked) {
+            repository.getCustomTodayEvents()
+        } else {
+            repository.getRecentTwoDaysEvents()
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), listOf())
+
     val isTracking = MutableLiveData(spHelper.getIsTracking())
     private var currentEvent: Event? = null
     val mainEventButtonText = MutableLiveData(spHelper.getButtonText())
@@ -58,6 +69,7 @@ class EventsViewModel(
     val selectedEventIdsMap = MutableLiveData<MutableMap<Long, Boolean>>(mutableMapOf())
     val isStartOrEndTimeClicked = mutableStateOf(false)
 
+
     private val isCurrentItemNotClicked: Boolean
         get() = currentEvent?.let { selectedEventIdsMap.value!![it.id] == null } ?: true
 
@@ -69,6 +81,7 @@ class EventsViewModel(
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
+
         // 从SharedPreferences中恢复滚动索引
         val savedScrollIndex = spHelper.getScrollIndex()
         if (savedScrollIndex != -1) {
@@ -84,6 +97,11 @@ class EventsViewModel(
         } else if (mainEventButtonText.value == "结束") {
             subButtonShow.value = true
         }
+    }
+
+    fun toggleListDisplayState() {
+        isOneDayButtonClicked.value = !isOneDayButtonClicked.value //切换状态
+        spHelper.saveIsOneDayButtonClicked(isOneDayButtonClicked.value)
     }
 
     fun updateTimeAndState(updatedEvent: Event, lastDelta: Duration) {

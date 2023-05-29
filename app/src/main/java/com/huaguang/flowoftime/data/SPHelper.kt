@@ -5,6 +5,14 @@ import java.time.Duration
 
 class SPHelper(private val sharedPreferences: SharedPreferences) {
 
+    fun saveIsOneDayButtonClicked(value: Boolean) {
+        sharedPreferences.edit().putBoolean("IS_ONE_DAY_BUTTON_CLICKED", value).apply()
+    }
+
+    fun getIsOneDayButtonClicked(): Boolean {
+        return sharedPreferences.getBoolean("IS_ONE_DAY_BUTTON_CLICKED", false)
+    }
+
     fun getIsTracking(): Boolean {
         return sharedPreferences.getBoolean("isTracking", false)
     }

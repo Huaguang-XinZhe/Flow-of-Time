@@ -2,6 +2,8 @@ package com.huaguang.flowoftime.data
 
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.EventSerializer
+import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import kotlinx.coroutines.flow.Flow
 import java.time.Duration
 import java.time.LocalDate
 
@@ -17,6 +19,15 @@ class EventRepository(val eventDao: EventDao) {
         }
 
         return totalDuration
+    }
+
+    fun getRecentTwoDaysEvents(): Flow<List<EventWithSubEvents>> {
+        val customToday = getAdjustedEventDate()
+        return eventDao.getEventsWithSubEvents(customToday.minusDays(1), customToday)
+    }
+
+    fun getCustomTodayEvents(): Flow<List<EventWithSubEvents>> {
+        return eventDao.getEventsWithSubEvents(getAdjustedEventDate())
     }
 
     suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {

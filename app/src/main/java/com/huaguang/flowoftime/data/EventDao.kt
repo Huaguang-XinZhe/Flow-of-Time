@@ -48,6 +48,11 @@ interface EventDao {
     fun getEventsWithSubEvents(eventDate: LocalDate = LocalDate.now()): Flow<List<EventWithSubEvents>>
 
     @Transaction
+    @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate BETWEEN :startDate AND :endDate")
+    fun getEventsWithSubEvents(startDate: LocalDate, endDate: LocalDate): Flow<List<EventWithSubEvents>>
+
+
+    @Transaction
     @Query("SELECT * FROM events WHERE parentId IS NULL")
     suspend fun getEventsWithSubEventsImmediate(): List<EventWithSubEvents>
 

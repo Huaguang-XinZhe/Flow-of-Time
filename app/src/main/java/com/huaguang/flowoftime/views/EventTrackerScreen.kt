@@ -15,6 +15,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
@@ -101,6 +102,9 @@ fun HeaderRow(viewModel: EventsViewModel) {
     val isAlarmSet by viewModel.isAlarmSet.observeAsState()
     val isImportExportEnabled by viewModel.isImportExportEnabled.observeAsState()
     var showDialog by remember { mutableStateOf(false) }
+    val isOneDayButtonClicked by viewModel.isOneDayButtonClicked.collectAsState()
+
+    val toggleButtonText = if (isOneDayButtonClicked) "RecentTwoDays" else "OneDay"
 
     Row {
         if (isAlarmSet == true) {
@@ -124,6 +128,14 @@ fun HeaderRow(viewModel: EventsViewModel) {
         ) {
             Text("导出")
         }
+
+        OutlinedButton(
+            onClick = { viewModel.toggleListDisplayState() },
+            modifier = Modifier.padding(start = 5.dp)
+        ) {
+            Text(toggleButtonText)
+        }
+
     }
 
     if (showDialog) {
@@ -153,7 +165,8 @@ fun EventInputField(viewModel: EventsViewModel) {
                 viewModel.newEventName.value = it.text
             },
             label = { Text("事件名称") },
-            modifier = Modifier.weight(1f)
+            modifier = Modifier
+                .weight(1f)
                 .focusRequester(focusRequester)
                 .onFocusChanged {
                     if (it.isFocused) {
