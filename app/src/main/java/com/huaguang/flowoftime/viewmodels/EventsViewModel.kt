@@ -138,30 +138,40 @@ class EventsViewModel(
         when (mainEventButtonText.value) {
             "开始" -> {
                 startNewEvent()
-                toggleStartOrEndState("开始")
+                toggleMainButtonState("开始")
             }
             "结束" -> {
                 stopCurrentEvent()
-                toggleStartOrEndState("结束")
+                toggleMainButtonState("结束")
             }
         }
+    }
+
+    private fun toggleSubButtonState(buttonText: String) {
+        when (buttonText) {
+            "插入" -> {
+                subEventButtonText.value = "插入结束"
+                mainButtonShow.value = false
+            }
+            "插入结束" -> {
+                subEventButtonText.value = "插入"
+                mainButtonShow.value = true
+            }
+        }
+        spHelper.saveButtonText(subEventButtonText.value!!)
     }
 
     fun toggleSubEvent() {
         when (subEventButtonText.value) {
             "插入" -> {
                 startNewEvent(EventType.SUB)
-                subEventButtonText.value = "插入结束"
-                mainButtonShow.value = false
+                toggleSubButtonState("插入")
             }
             "插入结束" -> {
                 stopCurrentEvent(EventType.SUB)
-                subEventButtonText.value = "插入"
-                mainButtonShow.value = true
+                toggleSubButtonState("插入结束")
             }
         }
-
-        spHelper.saveSubButtonText(subEventButtonText.value!!)
     }
 
     fun onConfirm() {
@@ -296,8 +306,10 @@ class EventsViewModel(
                 }
             }
 
+            Log.i("打标签喽", "currentEvent = $currentEvent")
+
             currentEvent = if (type == EventType.SUB) {
-                eventDao.getEvent(currentEvent!!.parentId!!)
+                currentEvent!!.parentId?.let { eventDao.getEvent(it) }
             } else null
         }
 
@@ -350,14 +362,14 @@ class EventsViewModel(
 
             if (startTime != null) {
                 startNewEvent(startTime = startTime)
-                toggleStartOrEndState("开始")
+                toggleMainButtonState("开始")
             }
         }
 
         Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
     }
 
-    private fun toggleStartOrEndState(buttonText: String) {
+    private fun toggleMainButtonState(buttonText: String) {
         when (buttonText) {
             "开始" -> {
                 mainEventButtonText.value = "结束"
@@ -386,9 +398,17 @@ class EventsViewModel(
     fun undoTiming() {
         isTracking.value = false
         newEventName.value = ""
-        toggleStartOrEndState("结束") // 切换到开始状态
+        // 切换到开始状态
+        if (subEventButtonText.value == "插入结束") {
+            // 撤销的是子事件
+            toggleSubButtonState("插入结束")
+        } else {
+            // 撤销的是主事件
+            toggleMainButtonState("结束")
+        }
         viewModelScope.launch {
             currentEvent?.let { eventDao.deleteEvent(it.id) }
+            currentEvent = null // 方便快捷的方法，让停止事件之前总是从数据库获取当前未完成的事件，以避免 id 问题。
         }
     }
 

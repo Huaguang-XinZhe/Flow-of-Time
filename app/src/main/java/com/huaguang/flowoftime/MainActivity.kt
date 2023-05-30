@@ -14,7 +14,7 @@ import com.huaguang.flowoftime.views.EventTrackerScreen
 
 class MainActivity : ComponentActivity() {
 
-    lateinit var viewModel: EventsViewModel
+    private var viewModel: EventsViewModel? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,16 +31,18 @@ class MainActivity : ComponentActivity() {
             }
             viewModel = eVM
 
-            Log.i("打标签喽", "eventCount = ${viewModel.eventCount}")
+            Log.i("打标签喽", "eventCount = ${viewModel!!.eventCount}")
 
-            EventTrackerScreen(viewModel = viewModel)
+            EventTrackerScreen(viewModel = viewModel!!)
             
         }
     }
 
     override fun onStop() {
         super.onStop()
-        viewModel.spHelper.setIsTracking(viewModel.isTracking.value!!)
+        viewModel?.let {
+            it.spHelper.setIsTracking(it.isTracking.value!!)
+        }
     }
 
 }
