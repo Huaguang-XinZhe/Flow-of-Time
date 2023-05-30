@@ -138,11 +138,11 @@ class EventsViewModel(
         when (mainEventButtonText.value) {
             "开始" -> {
                 startNewEvent()
-                updateStateAndStorage("开始")
+                toggleStartOrEndState("开始")
             }
             "结束" -> {
                 stopCurrentEvent()
-                updateStateAndStorage("结束")
+                toggleStartOrEndState("结束")
             }
         }
     }
@@ -350,14 +350,14 @@ class EventsViewModel(
 
             if (startTime != null) {
                 startNewEvent(startTime = startTime)
-                updateStateAndStorage("开始")
+                toggleStartOrEndState("开始")
             }
         }
 
         Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
     }
 
-    private fun updateStateAndStorage(buttonText: String) {
+    private fun toggleStartOrEndState(buttonText: String) {
         when (buttonText) {
             "开始" -> {
                 mainEventButtonText.value = "结束"
@@ -381,6 +381,15 @@ class EventsViewModel(
                remainingDuration.value = null
            }
        }
+    }
+
+    fun undoTiming() {
+        isTracking.value = false
+        newEventName.value = ""
+        toggleStartOrEndState("结束") // 切换到开始状态
+        viewModelScope.launch {
+            currentEvent?.let { eventDao.deleteEvent(it.id) }
+        }
     }
 
 

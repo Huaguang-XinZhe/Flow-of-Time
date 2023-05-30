@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -15,6 +16,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -36,11 +38,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
+import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import kotlinx.coroutines.delay
@@ -155,31 +159,46 @@ fun EventInputField(viewModel: EventsViewModel) {
         mutableStateOf(TextFieldValue(text = newEventName ?: ""))
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        TextField(
-            value = textFieldState,
-            onValueChange = {
-                textFieldState = it
-                viewModel.newEventName.value = it.text
+    Column {
+        IconButton(
+            onClick = {
+                viewModel.undoTiming()
             },
-            label = { Text("事件名称") },
-            modifier = Modifier
-                .weight(1f)
-                .focusRequester(focusRequester)
-                .onFocusChanged {
-                    if (it.isFocused) {
-                        // 这将全选文本
-                        textFieldState = textFieldState.copy(
-                            selection = TextRange(0, textFieldState.text.length)
-                        )
-                    }
-                }
-        )
+            modifier = Modifier.size(36.dp)
+                .padding(start = 10.dp, bottom = 5.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.revocation),
+                contentDescription = null,
+            )
+        }
 
-        Button(onClick = { viewModel.onConfirm() }) {
-            Text("确认")
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextField(
+                value = textFieldState,
+                onValueChange = {
+                    textFieldState = it
+                    viewModel.newEventName.value = it.text
+                },
+                label = { Text("事件名称") },
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged {
+                        if (it.isFocused) {
+                            // 这将全选文本
+                            textFieldState = textFieldState.copy(
+                                selection = TextRange(0, textFieldState.text.length)
+                            )
+                        }
+                    }
+            )
+
+            Button(onClick = { viewModel.onConfirm() }) {
+                Text("确认")
+            }
         }
     }
 
