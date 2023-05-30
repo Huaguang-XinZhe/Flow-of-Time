@@ -1,6 +1,6 @@
 package com.huaguang.flowoftime.views
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -32,6 +32,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,10 +51,12 @@ import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventWithSubEvents
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.ui.theme.DarkGray24
+import com.huaguang.flowoftime.ui.theme.LightRed6
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import java.time.Duration
+import java.time.LocalDateTime
 
 @Composable
 fun EventList(
@@ -93,13 +97,33 @@ fun CustomSwipeToDismiss(
     isEventNameNotClicked: Boolean,
     dismissContent: @Composable (RowScope.() -> Unit)
 ) {
+    val context = LocalContext.current
     val dismissState = rememberDismissState()
+    val isItemClicked = remember { mutableStateOf(false) }
+
+    val direction = if (isEventNameNotClicked && isItemClicked.value) {
+        setOf(DismissDirection.StartToEnd)
+    } else setOf()
+    val borderModifier = if (isItemClicked.value) {
+        Modifier.border(2.dp, Color.Red, RoundedCornerShape(12.dp))
+    } else Modifier
+
     if (dismissState.isDismissed(DismissDirection.StartToEnd)) { dismissed() }
 
     SwipeToDismiss(
         state = dismissState,
-        modifier = Modifier.padding(8.dp),
-        directions = if (isEventNameNotClicked) setOf(DismissDirection.StartToEnd) else setOf(),
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable {
+                isItemClicked.value = !isItemClicked.value
+                if (isItemClicked.value) {
+                    Toast
+                        .makeText(context, "解除限制，可右滑删除", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
+            .then(borderModifier),
+        directions = direction,
         dismissThresholds = {
             FractionalThreshold(0.35f)
         },
@@ -107,7 +131,7 @@ fun CustomSwipeToDismiss(
             val isDefault = dismissState.targetValue == DismissValue.Default
             val color by animateColorAsState(
                 when (dismissState.targetValue) {
-                    DismissValue.Default -> Color.LightGray
+                    DismissValue.Default -> LightRed6
                     DismissValue.DismissedToEnd -> Color.Red
                     else -> Color.Green
                 }
@@ -182,34 +206,27 @@ fun EventItemRow(
     event: Event,
     showTime: Boolean,
     viewModel: EventsViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    var startTime by remember { mutableStateOf(event.startTime) }
-    var endTime by remember { mutableStateOf(event.endTime) }
-    var duration by remember { mutableStateOf(event.duration) }
-    var isExpansion by remember { mutableStateOf(false) }
-    val selectedEventIdsMap by viewModel.selectedEventIdsMap
+    val startTimeState = remember { mutableStateOf(event.startTime) }
+    val endTimeState = remember { mutableStateOf(event.endTime) }
+    val durationState = remember { mutableStateOf(event.duration) }
 
-    val endTimeText = if (endTime != null) {
-        if (endTime == startTime) "" else {
-            formatLocalDateTime(endTime!!)
+    val endTimeText = if (endTimeState.value != null) {
+        if (endTimeState.value == startTimeState.value) "" else {
+            formatLocalDateTime(endTimeState.value!!)
         }
     } else "..."
-    val durationText = if (duration != null) {
-        if (duration == Duration.ZERO) "" else {
-            formatDurationInText(duration!!)
+    val durationText = if (durationState.value != null) {
+        if (durationState.value == Duration.ZERO) "" else {
+            formatDurationInText(durationState.value!!)
         }
     } else "..."
-    val isEventNameExceedsLimit = event.name.length > 10
-    val painter = if (!isExpansion) {
-        painterResource(id = R.drawable.expansion)
-    } else {
-        painterResource(id = R.drawable.contraction)
-    }
+
 
     LaunchedEffect(event.endTime, event.duration) {
-        endTime = event.endTime
-        duration = event.duration
+        endTimeState.value = event.endTime
+        durationState.value = event.duration
     }
 
     Row(
@@ -217,78 +234,28 @@ fun EventItemRow(
         modifier = modifier
     ) {
         if (showTime) {
-            DraggableText(
-                text = formatLocalDateTime(startTime),
-                onDragDelta = { dragValue ->
-                    startTime = startTime.plusMinutes(dragValue.toLong())
-
-                    if (duration != null && event.name != "起床") {
-                        val delta = Duration.between(startTime, event.startTime)
-                        duration = event.duration!! + delta
-                    }
-                },
-                onDragStopped = {
-                    val updatedEvent = event.copy(startTime = startTime, duration = duration)
-                    val lastDelta = duration?.minus(event.duration)
-                    viewModel.updateTimeAndState(updatedEvent, lastDelta)
-                },
-                modifier = Modifier.padding(end = 5.dp),
-                viewModel = viewModel
+            EventStartTime(
+                event = event,
+                viewModel = viewModel,
+                startTimeState = startTimeState,
+                durationState = durationState
             )
         }
 
-        Text(
-            text = if (showTime) event.name else "……${event.name}",
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = if (!isExpansion) 1 else 3,
-            overflow = if (!isExpansion) TextOverflow.Ellipsis else TextOverflow.Visible,
-            modifier = Modifier
-                .clickable {
-                    viewModel.onNameTextClicked(event)
-                }
-                .let { modifier ->
-                    if (selectedEventIdsMap[event.id] == true) { // 为了与其他 item 区分开来，这里只能用 selectedEventIdsMap
-                        modifier
-                            .border(2.dp, Color.Green, RoundedCornerShape(8.dp))
-                            .padding(3.dp)
-                    } else modifier
-                }
-                .then(if (isEventNameExceedsLimit) modifier.weight(1f) else modifier)
+        EventName(
+            event = event,
+            viewModel = viewModel,
+            showTime = true,
+            modifier = if (event.name.length > 10) Modifier.weight(1f) else Modifier
         )
 
-        if (isEventNameExceedsLimit) {
-            Icon(
-                painter = painter,
-                contentDescription = null,
-                modifier = Modifier
-                    .size(24.dp)
-                    .padding(start = 5.dp)
-                    .clickable {
-                        isExpansion = !isExpansion
-                    }
-            )
-        }
-
         if (showTime) {
-            DraggableText(
-                text = endTimeText,
-                onDragDelta = { dragValue ->
-                    if (endTime != null && event.name != "起床") {
-                        endTime = endTime!!.plusMinutes(dragValue.toLong())
-                        val delta = Duration.between(endTime, event.endTime)
-                        duration = event.duration!! - delta
-                    }
-                },
-                onDragStopped = {
-                    val updatedEvent = event.copy(endTime = endTime, duration = duration)
-                    val lastDelta = duration!! - event.duration
-                    Log.i("打标签喽", "endTime: lastDelta = $lastDelta")
-                    viewModel.updateTimeAndState(updatedEvent, lastDelta)
-                },
-                modifier = Modifier.padding(start = 5.dp),
-                enabled = endTime != null,
+            EventEndTime(
+                event = event,
                 viewModel = viewModel,
-                isShadow = endTimeText != "" && endTimeText != "..."
+                endTimeState = endTimeState,
+                endTimeText = endTimeText,
+                durationState = durationState
             )
         }
 
@@ -301,6 +268,106 @@ fun EventItemRow(
 }
 
 @Composable
-fun EventTime() {
+fun EventName(
+    event: Event,
+    viewModel: EventsViewModel,
+    showTime: Boolean,
+    modifier: Modifier = Modifier
+) {
+    var isExpansion by remember { mutableStateOf(false) }
+    val selectedEventIdsMap by viewModel.selectedEventIdsMap
 
+    val painter = if (!isExpansion) {
+        painterResource(id = R.drawable.expansion)
+    } else {
+        painterResource(id = R.drawable.contraction)
+    }
+
+    Text(
+        text = if (showTime) event.name else "……${event.name}",
+        style = MaterialTheme.typography.titleMedium,
+        maxLines = if (!isExpansion) 1 else 3,
+        overflow = if (!isExpansion) TextOverflow.Ellipsis else TextOverflow.Visible,
+        modifier = Modifier
+            .clickable {
+                viewModel.onNameTextClicked(event)
+            }
+            .then(
+                if (selectedEventIdsMap[event.id] == true) { // 为了与其他 item 区分开来，这里只能用 selectedEventIdsMap
+                    Modifier
+                        .border(2.dp, Color.Green, RoundedCornerShape(8.dp))
+                        .padding(3.dp)
+                } else Modifier
+            )
+            .then(modifier)
+    )
+
+    if (event.name.length > 10) {
+        Icon(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .padding(start = 5.dp)
+                .clickable {
+                    isExpansion = !isExpansion
+                }
+        )
+    }
+}
+
+@Composable
+fun EventStartTime(
+    event: Event,
+    viewModel: EventsViewModel,
+    startTimeState: MutableState<LocalDateTime>,
+    durationState: MutableState<Duration?>
+) {
+    DraggableText(
+        modifier = Modifier.padding(end = 5.dp),
+        text = formatLocalDateTime(startTimeState.value),
+        viewModel = viewModel,
+        onDragDelta = { dragValue ->
+            startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
+
+            if (durationState.value != null && event.name != "起床") {
+                val delta = Duration.between(startTimeState.value, event.startTime)
+                durationState.value = event.duration!! + delta
+            }
+        }
+    ) {
+        val updatedEvent =
+            event.copy(startTime = startTimeState.value, duration = durationState.value)
+        val lastDelta = durationState.value?.minus(event.duration)
+        viewModel.updateTimeAndState(updatedEvent, lastDelta)
+    }
+}
+
+@Composable
+fun EventEndTime(
+    event: Event,
+    viewModel: EventsViewModel,
+    endTimeState: MutableState<LocalDateTime?>,
+    endTimeText: String,
+    durationState: MutableState<Duration?>
+) {
+    DraggableText(
+        modifier = Modifier.padding(start = 5.dp),
+        text = endTimeText,
+        enabled = endTimeState.value != null,
+        isShadow = endTimeText != "" && endTimeText != "...",
+        viewModel = viewModel,
+        onDragDelta = { dragValue ->
+            if (endTimeState.value != null && event.name != "起床") {
+                endTimeState.value = endTimeState.value!!.plusMinutes(dragValue.toLong())
+                val delta = Duration.between(endTimeState.value, event.endTime)
+                durationState.value = event.duration!! - delta
+            }
+        }
+    ) {
+        val updatedEvent =
+            event.copy(endTime = endTimeState.value, duration = durationState.value)
+        val lastDelta = durationState.value!! - event.duration
+        viewModel.updateTimeAndState(updatedEvent, lastDelta)
+    }
 }

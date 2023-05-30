@@ -21,13 +21,13 @@ import com.huaguang.flowoftime.viewmodels.EventsViewModel
 
 @Composable
 fun DraggableText(
-    text: String,
-    onDragDelta: (Float) -> Unit,
-    onDragStopped: () -> Unit,
     modifier: Modifier = Modifier,
+    text: String,
     enabled: Boolean = true,
+    isShadow: Boolean = true,
     viewModel: EventsViewModel,
-    isShadow: Boolean = true
+    onDragDelta: (Float) -> Unit,
+    onDragStopped: () -> Unit
 ) {
     val speedList = remember { mutableStateListOf<Float>() }
     val lastDragTime = remember { mutableStateOf<Long?>(null) }
