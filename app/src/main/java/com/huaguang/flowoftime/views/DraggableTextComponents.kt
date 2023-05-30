@@ -26,7 +26,8 @@ fun DraggableText(
     onDragStopped: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
-    viewModel: EventsViewModel
+    viewModel: EventsViewModel,
+    isShadow: Boolean = true
 ) {
     val speedList = remember { mutableStateListOf<Float>() }
     val lastDragTime = remember { mutableStateOf<Long?>(null) }
@@ -38,7 +39,7 @@ fun DraggableText(
             .clip(RoundedCornerShape(8.dp)) // 设置Box的边缘为圆角
             .clickable { isClicked.value = !isClicked.value } // 添加点击事件，点击后设置isClicked为true
             .then(
-                if (isClicked.value) { // 如果Text被点击，添加阴影并设置阴影的形状为圆角
+                if (isClicked.value && isShadow) { // 如果Text被点击，添加阴影
                     Modifier.shadow(1.dp)
                 } else Modifier
             )

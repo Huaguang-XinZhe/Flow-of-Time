@@ -39,7 +39,6 @@ import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import java.time.Duration
-import java.time.LocalDateTime
 
 @Composable
 fun EventList(
@@ -115,7 +114,7 @@ fun EventItemRow(
     val selectedEventIdsMap by viewModel.selectedEventIdsMap.observeAsState(mutableMapOf())
 
     val endTimeText = if (endTime != null) {
-        if (endTime == LocalDateTime.MIN) "" else {
+        if (endTime == startTime) "" else {
             formatLocalDateTime(endTime!!)
         }
     } else "..."
@@ -153,8 +152,7 @@ fun EventItemRow(
                 },
                 onDragStopped = {
                     val updatedEvent = event.copy(startTime = startTime, duration = duration)
-                    val lastDelta = duration!! - event.duration
-                    Log.i("打标签喽", "startTime: lastDelta = $lastDelta")
+                    val lastDelta = duration?.minus(event.duration)
                     viewModel.updateTimeAndState(updatedEvent, lastDelta)
                 },
                 modifier = Modifier.padding(end = 5.dp),
@@ -212,7 +210,8 @@ fun EventItemRow(
                 },
                 modifier = Modifier.padding(start = 5.dp),
                 enabled = endTime != null,
-                viewModel = viewModel
+                viewModel = viewModel,
+                isShadow = endTimeText != "" && endTimeText != "..."
             )
         }
 

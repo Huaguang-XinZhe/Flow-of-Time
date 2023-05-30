@@ -104,7 +104,7 @@ class EventsViewModel(
         spHelper.saveIsOneDayButtonClicked(isOneDayButtonClicked.value)
     }
 
-    fun updateTimeAndState(updatedEvent: Event, lastDelta: Duration) {
+    fun updateTimeAndState(updatedEvent: Event, lastDelta: Duration?) {
         updateJob?.cancel()
         updateJob = viewModelScope.launch {
             delay(2000) // Wait for 2 seconds
@@ -227,7 +227,7 @@ class EventsViewModel(
 
     private fun updateEventEndTimeAndDuration() {
         currentEvent?.let {
-            it.endTime = LocalDateTime.MIN
+            it.endTime = it.startTime
             it.duration = Duration.ZERO
             viewModelScope.launch {
                 eventDao.updateEvent(it)
@@ -284,8 +284,7 @@ class EventsViewModel(
                     eventDao.updateEvent(it)
                 }
 
-                // 只要包含，remainingDuration 就会得到设置，一定不为 null
-                if (names.contains(it.name)) {
+                if (remainingDuration.value != null && names.contains(it.name)) {
                     remainingDuration.value = remainingDuration.value?.minus(it.duration)
                     spHelper.saveRemainingDuration(remainingDuration.value!!)
 
