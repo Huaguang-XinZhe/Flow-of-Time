@@ -1,17 +1,30 @@
 package com.huaguang.flowoftime.views
 
 import android.util.Log
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.SwipeToDismiss
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.rememberDismissState
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -26,6 +39,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,11 +67,73 @@ fun EventList(
             modifier = Modifier.align(Alignment.BottomCenter),
             state = listState
         ) {
-            items(eventsWithSubEvents) { (event, subEvents) ->
-                EventItem(event, subEvents, viewModel)
+            items(
+                items = eventsWithSubEvents,
+                key = { eventWithSubEvents ->
+                    // Use the event's id as the key
+                    eventWithSubEvents.event.id
+                }
+            ) { (event, subEvents) ->
+                CustomSwipeToDismiss(
+                    dismissed = { viewModel.deleteItem(event, subEvents) }
+                ) {
+                    EventItem(event, subEvents, viewModel)
+                }
             }
         }
     }
+}
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun CustomSwipeToDismiss(
+    dismissed: () -> Unit,
+    dismissContent: @Composable (RowScope.() -> Unit)
+) {
+    Log.i("打标签喽", "CustomSwipeToDismiss 重组执行！！！")
+    val dismissState = rememberDismissState()
+    if (dismissState.isDismissed(DismissDirection.StartToEnd)) { dismissed() }
+
+    SwipeToDismiss(
+        state = dismissState,
+        modifier = Modifier.padding(8.dp),
+        directions = setOf(DismissDirection.StartToEnd),
+        dismissThresholds = {
+            FractionalThreshold(0.35f)
+        },
+        background = {
+            val isDefault = dismissState.targetValue == DismissValue.Default
+            val color by animateColorAsState(
+                when (dismissState.targetValue) {
+                    DismissValue.Default -> Color.LightGray
+                    DismissValue.DismissedToEnd -> Color.Red
+                    else -> Color.Green
+                }
+            )
+            val scale by animateFloatAsState(
+                // DismissValue.Default 是滑块达到阈值之前的状态
+                if (isDefault) 0.75f else 1f
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize() // 背景部分不撑到父容器那么大，就只会是刚刚好包含 Icon 的大小
+                    .clip(RoundedCornerShape(12.dp)) //必须放在这里，如果放在 SwipeToDismiss，会把 Card 的阴影给覆盖了。
+                    .background(color)
+                    .padding(start = 20.dp),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.scale(scale),
+                    tint = if (isDefault) Color.Black else Color.White
+                )
+            }
+        },
+        dismissContent = dismissContent
+    )
 }
 
 @Composable
@@ -79,7 +156,6 @@ fun EventItem(
 
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
-        modifier = Modifier.padding(4.dp),
         colors = cardColors
     ) {
         Column(

@@ -31,7 +31,7 @@ import com.huaguang.flowoftime.ui.theme.DarkGreen39
 
 @ExperimentalMaterialApi
 @Composable
-fun <T> CustomSwipeToDismiss(
+fun <T> CustomSwipeToDismiss2(
     list: List<T>,
     key: ((T) -> Any)? = null,
     dismissed: (T) -> Unit,

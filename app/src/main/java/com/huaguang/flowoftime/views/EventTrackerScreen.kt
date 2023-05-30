@@ -110,7 +110,9 @@ fun HeaderRow(viewModel: EventsViewModel) {
 
     val toggleButtonText = if (isOneDayButtonClicked) "RecentTwoDays" else "OneDay"
 
-    Row {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         if (isAlarmSet == true) {
             Icon(
                 imageVector = Icons.Default.AddCircle,

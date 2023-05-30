@@ -412,5 +412,14 @@ class EventsViewModel(
         }
     }
 
+    fun deleteItem(event: Event, subEvents: List<Event>) {
+        viewModelScope.launch {
+            eventDao.deleteEvent(event.id)
+            for (subEvent in subEvents) {
+                eventDao.deleteEvent(subEvent.id)
+            }
+        }
+    }
+
 
 }
