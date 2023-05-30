@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -60,6 +59,7 @@ fun EventList(
     viewModel: EventsViewModel,
     listState: LazyListState,
     eventsWithSubEvents: List<EventWithSubEvents>,
+    isEventNameNotClicked: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
@@ -75,7 +75,8 @@ fun EventList(
                 }
             ) { (event, subEvents) ->
                 CustomSwipeToDismiss(
-                    dismissed = { viewModel.deleteItem(event, subEvents) }
+                    dismissed = { viewModel.deleteItem(event, subEvents) },
+                    isEventNameNotClicked = isEventNameNotClicked
                 ) {
                     EventItem(event, subEvents, viewModel)
                 }
@@ -89,16 +90,16 @@ fun EventList(
 @Composable
 fun CustomSwipeToDismiss(
     dismissed: () -> Unit,
+    isEventNameNotClicked: Boolean,
     dismissContent: @Composable (RowScope.() -> Unit)
 ) {
-    Log.i("打标签喽", "CustomSwipeToDismiss 重组执行！！！")
     val dismissState = rememberDismissState()
     if (dismissState.isDismissed(DismissDirection.StartToEnd)) { dismissed() }
 
     SwipeToDismiss(
         state = dismissState,
         modifier = Modifier.padding(8.dp),
-        directions = setOf(DismissDirection.StartToEnd),
+        directions = if (isEventNameNotClicked) setOf(DismissDirection.StartToEnd) else setOf(),
         dismissThresholds = {
             FractionalThreshold(0.35f)
         },
@@ -187,7 +188,7 @@ fun EventItemRow(
     var endTime by remember { mutableStateOf(event.endTime) }
     var duration by remember { mutableStateOf(event.duration) }
     var isExpansion by remember { mutableStateOf(false) }
-    val selectedEventIdsMap by viewModel.selectedEventIdsMap.observeAsState(mutableMapOf())
+    val selectedEventIdsMap by viewModel.selectedEventIdsMap
 
     val endTimeText = if (endTime != null) {
         if (endTime == startTime) "" else {
@@ -199,7 +200,7 @@ fun EventItemRow(
             formatDurationInText(duration!!)
         }
     } else "..."
-    val isEventNameLong = event.name.length > 10
+    val isEventNameExceedsLimit = event.name.length > 10
     val painter = if (!isExpansion) {
         painterResource(id = R.drawable.expansion)
     } else {
@@ -246,16 +247,16 @@ fun EventItemRow(
                     viewModel.onNameTextClicked(event)
                 }
                 .let { modifier ->
-                    if (selectedEventIdsMap[event.id] == true) {
+                    if (selectedEventIdsMap[event.id] == true) { // 为了与其他 item 区分开来，这里只能用 selectedEventIdsMap
                         modifier
                             .border(2.dp, Color.Green, RoundedCornerShape(8.dp))
                             .padding(3.dp)
                     } else modifier
                 }
-                .then(if (isEventNameLong) modifier.weight(1f) else modifier)
+                .then(if (isEventNameExceedsLimit) modifier.weight(1f) else modifier)
         )
 
-        if (isEventNameLong) {
+        if (isEventNameExceedsLimit) {
             Icon(
                 painter = painter,
                 contentDescription = null,
@@ -297,4 +298,9 @@ fun EventItemRow(
             modifier = Modifier.padding(start = 8.dp)
         )
     }
+}
+
+@Composable
+fun EventTime() {
+
 }

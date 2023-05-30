@@ -24,6 +24,14 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         }
     }
 
+    fun getIsInputShow(): Boolean {
+        return sharedPreferences.getBoolean("is_input_show", false)
+    }
+
+    fun setIsInputShow(value: Boolean) {
+        sharedPreferences.edit().putBoolean("is_input_show", value).apply()
+    }
+
     fun saveButtonText(text: String) {
         sharedPreferences.edit().putString("button_text", text).apply()
     }

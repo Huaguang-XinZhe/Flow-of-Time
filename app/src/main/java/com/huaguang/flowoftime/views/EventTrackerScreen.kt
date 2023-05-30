@@ -52,9 +52,10 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun EventTrackerScreen(viewModel: EventsViewModel) {
-    val isTracking by viewModel.isTracking.observeAsState(false)
+    val isInputShow by viewModel.isInputShowState
     val listState = rememberLazyListState()
     val eventsWithSubEvents by viewModel.eventsWithSubEvents.collectAsState(emptyList())
+    val isEventNameNotClicked by viewModel.isEventNameNotClicked
 
     HandleScrollEffect(viewModel, listState)
 
@@ -67,10 +68,10 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
 
         DurationSlider(viewModel)
 
-        EventList(viewModel, listState, eventsWithSubEvents, Modifier.weight(1f))
+        EventList(viewModel, listState, eventsWithSubEvents, isEventNameNotClicked, Modifier.weight(1f))
 
-        if (isTracking) {
-            EventInputField(viewModel)
+        if (isInputShow) {
+            EventInputField(viewModel, isEventNameNotClicked)
         }
 
         EventButtons(viewModel)
@@ -154,7 +155,7 @@ fun HeaderRow(viewModel: EventsViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventInputField(viewModel: EventsViewModel) {
+fun EventInputField(viewModel: EventsViewModel, isEventNameNotClicked: Boolean) {
     val newEventName by viewModel.newEventName.observeAsState()
     val focusRequester = remember { FocusRequester() }
     var textFieldState by remember {
@@ -162,17 +163,19 @@ fun EventInputField(viewModel: EventsViewModel) {
     }
 
     Column {
-        IconButton(
-            onClick = {
-                viewModel.undoTiming()
-            },
-            modifier = Modifier.size(36.dp)
-                .padding(start = 10.dp, bottom = 5.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.revocation),
-                contentDescription = null,
-            )
+        if (isEventNameNotClicked) {
+            IconButton(
+                onClick = {
+                    viewModel.undoTiming()
+                },
+                modifier = Modifier.size(36.dp)
+                    .padding(start = 10.dp, bottom = 5.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.revocation),
+                    contentDescription = null,
+                )
+            }
         }
 
         Row(

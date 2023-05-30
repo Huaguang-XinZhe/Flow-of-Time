@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         viewModel?.let {
-            it.spHelper.setIsTracking(it.isTracking.value!!)
+            it.spHelper.setIsInputShow(it.isInputShowState.value)
         }
     }
 
