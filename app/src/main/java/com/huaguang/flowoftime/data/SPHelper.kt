@@ -1,9 +1,26 @@
 package com.huaguang.flowoftime.data
 
 import android.content.SharedPreferences
+import com.google.gson.Gson
 import java.time.Duration
 
 class SPHelper(private val sharedPreferences: SharedPreferences) {
+
+    private val gson = Gson()
+
+    fun saveCurrentEvent(event: Event) {
+        val eventJson = gson.toJson(event)
+        with(sharedPreferences.edit()) {
+            putString("currentEvent", eventJson)
+            apply()
+        }
+    }
+
+    fun getCurrentEvent(): Event? {
+        val eventJson = sharedPreferences.getString("currentEvent", null) ?: return null
+        return gson.fromJson(eventJson, Event::class.java)
+    }
+
 
     fun saveIsOneDayButtonClicked(value: Boolean) {
         sharedPreferences.edit().putBoolean("IS_ONE_DAY_BUTTON_CLICKED", value).apply()

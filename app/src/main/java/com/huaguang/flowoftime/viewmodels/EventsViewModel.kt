@@ -10,6 +10,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
 import com.huaguang.flowoftime.ALARM_CANCELLATION_THRESHOLD
 import com.huaguang.flowoftime.ALARM_SETTING_THRESHOLD
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
@@ -78,7 +80,9 @@ class EventsViewModel(
     val isEventNameNotClicked = derivedStateOf {
         currentEvent?.let { selectedEventIdsMap.value[it.id] == null } ?: true
     }
-
+    val pager = Pager(
+        PagingConfig(pageSize = 25)
+    ) { eventDao.getAllEvents() }.flow
 
     val rate: StateFlow<Float?> get() = remainingDuration.map { remainingDuration ->
         remainingDuration?.let {
