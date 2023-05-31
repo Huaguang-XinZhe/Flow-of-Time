@@ -3,10 +3,9 @@ package com.huaguang.flowoftime.viewmodels
 import android.annotation.SuppressLint
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
@@ -25,6 +24,7 @@ import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.copyToClipboard
 import com.huaguang.flowoftime.utils.getEventDate
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -47,8 +47,8 @@ class EventsViewModel(
 ) : AndroidViewModel(application) {
 
     private val eventDao = repository.eventDao
-    val isOneDayButtonClicked = MutableStateFlow(spHelper.getIsOneDayButtonClicked())
 
+    val isOneDayButtonClicked = MutableStateFlow(false)
     @OptIn(ExperimentalCoroutinesApi::class)
     val eventsWithSubEvents = isOneDayButtonClicked.flatMapLatest { clicked ->
         if (clicked) {
@@ -58,32 +58,36 @@ class EventsViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), listOf())
 
-    private val isTracking = mutableStateOf(false)
-    val isInputShowState = mutableStateOf(spHelper.getIsInputShow())
-    private var currentEvent: Event? by mutableStateOf(null)
-    val mainEventButtonText = MutableLiveData(spHelper.getButtonText())
-    val subEventButtonText = MutableLiveData(spHelper.getSubButtonText())
+    val isTracking = mutableStateOf(false)
+    var currentEventState: MutableState<Event?> =  mutableStateOf(null)
+
+    val isInputShowState = mutableStateOf(false)
+    val newEventName = MutableLiveData("")
+
+    // 底部按钮相关状态——————————————————————————————————👇
+    val mainEventButtonText = MutableLiveData("开始")
+    val subEventButtonText = MutableLiveData("插入")
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
-    val newEventName = MutableLiveData("")
+    // 底部按钮相关状态——————————————————————————————————👆
+
     val scrollIndex = MutableLiveData<Int>()
     var eventCount = 0
+
     private val alarmHelper = AlarmHelper(application)
     val isAlarmSet = MutableLiveData(false)
-    val remainingDuration = MutableStateFlow(spHelper.getRemainingDuration())
-    val isImportExportEnabled = MutableLiveData(true)
-    private var updateJob: Job? = null
-    val isStartOrEndTimeClicked = mutableStateOf(false)
-    private val eventTypeState = mutableStateOf(EventType.MAIN)
+
     @SuppressLint("MutableCollectionMutableState")
     val selectedEventIdsMap = mutableStateOf(mutableMapOf<Long, Boolean>())
     val isEventNameNotClicked = derivedStateOf {
-        currentEvent?.let { selectedEventIdsMap.value[it.id] == null } ?: true
+        currentEventState.value?.let { selectedEventIdsMap.value[it.id] == null } ?: true
     }
+
     val pager = Pager(
         PagingConfig(pageSize = 25)
     ) { eventDao.getAllEvents() }.flow
 
+    val remainingDuration = MutableStateFlow(Duration.ZERO)
     val rate: StateFlow<Float?> get() = remainingDuration.map { remainingDuration ->
         remainingDuration?.let {
             val remainingRate = it.toMillis().toFloat() / FOCUS_EVENT_DURATION_THRESHOLD.toMillis()
@@ -91,27 +95,44 @@ class EventsViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
+    val isImportExportEnabled = MutableLiveData(true)
+    private var updateJob: Job? = null
+    val isStartOrEndTimeClicked = mutableStateOf(false)
+    private val eventTypeState = mutableStateOf(EventType.MAIN)
+
     init {
-        // 从SharedPreferences中恢复滚动索引
-        val savedScrollIndex = spHelper.getScrollIndex()
-        if (savedScrollIndex != -1) {
-            scrollIndex.value = savedScrollIndex
-            eventCount = savedScrollIndex + 1
+        viewModelScope.launch(Dispatchers.IO) {
+            isOneDayButtonClicked.value = spHelper.getIsOneDayButtonClicked()
+            isInputShowState.value = spHelper.getIsInputShow()
+            mainEventButtonText.value = spHelper.getButtonText()
+            remainingDuration.value = spHelper.getRemainingDuration()
+
+            isTracking.value = spHelper.getIsTracking()
+            if (isTracking.value) {
+                currentEventState.value = spHelper.getCurrentEvent()
+            }
+
+            // 从SharedPreferences中恢复滚动索引
+            val savedScrollIndex = spHelper.getScrollIndex()
+            if (savedScrollIndex != -1) {
+                scrollIndex.value = savedScrollIndex // TODO: 这里似乎存在着优化空间 
+                eventCount = savedScrollIndex + 1
+            }
         }
+
         // 目前主要是重置 remainingDuration
         resetStateIfNewDay()
 
-        if (subEventButtonText.value == "插入结束") {
-            subButtonShow.value = true
-            mainButtonShow.value = false
-        } else if (mainEventButtonText.value == "结束") {
-            subButtonShow.value = true
-        }
+//        if (subEventButtonText.value == "插入结束") {
+//            subButtonShow.value = true
+//            mainButtonShow.value = false
+//        } else if (mainEventButtonText.value == "结束") {
+//            subButtonShow.value = true
+//        }
     }
 
     fun toggleListDisplayState() {
         isOneDayButtonClicked.value = !isOneDayButtonClicked.value //切换状态
-        spHelper.saveIsOneDayButtonClicked(isOneDayButtonClicked.value)
     }
 
     fun updateTimeAndState(updatedEvent: Event, lastDelta: Duration?) {
@@ -144,47 +165,7 @@ class EventsViewModel(
         Toast.makeText(getApplication(), "导入成功！", Toast.LENGTH_SHORT).show()
     }
 
-    fun toggleMainEvent() {
-        when (mainEventButtonText.value) {
-            "开始" -> {
-                toggleMainButtonState("开始")
-                startNewEvent()
-            }
-            "结束" -> {
-                toggleMainButtonState("结束")
-                stopCurrentEvent()
-            }
-        }
-    }
 
-    private fun toggleSubButtonState(buttonText: String) {
-        when (buttonText) {
-            "插入" -> {
-                eventTypeState.value = EventType.SUB
-                subEventButtonText.value = "插入结束"
-                mainButtonShow.value = false
-            }
-            "插入结束" -> {
-                eventTypeState.value = EventType.MAIN
-                subEventButtonText.value = "插入"
-                mainButtonShow.value = true
-            }
-        }
-        spHelper.saveButtonText(subEventButtonText.value!!)
-    }
-
-    fun toggleSubEvent() {
-        when (subEventButtonText.value) {
-            "插入" -> {
-                toggleSubButtonState("插入")
-                startNewEvent()
-            }
-            "插入结束" -> {
-                toggleSubButtonState("插入结束")
-                stopCurrentEvent()
-            }
-        }
-    }
 
     fun onConfirm() {
         if (newEventName.value == "") {
@@ -228,18 +209,18 @@ class EventsViewModel(
             delay(800)
             Log.i("打标签喽", "延迟结束，子弹该停停了！")
             selectedEventIdsMap.value = mutableMapOf()
-            currentEvent = null
+            currentEventState.value = null
         }
     }
 
 
     private fun updateEventName() {
         viewModelScope.launch {
-            currentEvent = if (currentEvent == null) {
+            currentEventState.value = if (currentEventState.value == null) {
                 eventDao.getLastEvent()
-            } else currentEvent
+            } else currentEventState.value
 
-            currentEvent!!.let {
+            currentEventState.value!!.let {
                 it.name = newEventName.value!!
                 Log.i("打标签喽", "updateEventName 块内：newEventName.value = ${newEventName.value}")
                 eventDao.updateEvent(it)
@@ -248,7 +229,7 @@ class EventsViewModel(
     }
 
     private fun updateEventEndTimeAndDuration() {
-        currentEvent?.let {
+        currentEventState.value?.let {
             it.endTime = it.startTime
             it.duration = Duration.ZERO
             viewModelScope.launch {
@@ -258,34 +239,29 @@ class EventsViewModel(
     }
 
     private fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now()) {
-        // 1. 创建新的事件对象（主、子），数据入库，得到 currentEvent+++++++++++++++++
-        val newEvent = Event(
-            name = newEventName.value!!,
-            startTime = startTime,
-            eventDate = getEventDate(startTime)
-        )
-
+        // 1. 获取 parentId，并创建新的事件对象（主、子），更新 currentEvent——————————————————————
         viewModelScope.launch {
-            Log.i("打标签喽", "startNewEvent：eventTypeState.value = ${eventTypeState.value}")
             val mainEventId = if (eventTypeState.value == EventType.SUB) {
                 eventDao.getLastMainEventId()
             } else null
-            // 必须放在后边，要不然获取 mainEventId 会出错
-            val eventId = eventDao.insertEvent(newEvent)
-            currentEvent = newEvent.copy(id = eventId, parentId = mainEventId)
+
+            currentEventState.value = Event(
+                name = newEventName.value!!,
+                startTime = startTime,
+                eventDate = getEventDate(startTime),
+                parentId = mainEventId
+            )
         }
 
-        // 2. 重要状态更新++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // 2. 重要状态更新—————————————————————————————————————————————————————
         isTracking.value = true
         isInputShowState.value = true
 
-        // 3. 索引相关+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+        // 3. 索引相关—————————————————————————————————————————————————————————
         // 更新事件数量
         eventCount++
         // 更新滚动索引
         scrollIndex.value = eventCount - 1
-        // 保存滚动索引到SharedPreferences
-        spHelper.saveScrollIndex(eventCount - 1)
 
     }
 
@@ -295,12 +271,12 @@ class EventsViewModel(
         }
 
         viewModelScope.launch {
-            if (currentEvent == null) {
+            if (currentEventState.value == null) {
                 Log.i("打标签喽", "停止事件记录，currentEvent 为 null，从数据库获取最新的事件。")
-                currentEvent = eventDao.getLastIncompleteEvent()
+                currentEventState.value = eventDao.getLastIncompleteEvent()
             }
 
-            currentEvent?.let {
+            currentEventState.value?.let {
                 // 如果是主事件，就计算从数据库中获取子事件列表，并计算其间隔总和
                 val subEventsDuration = if (it.parentId == null) {
                     repository.calculateSubEventsDuration(it.id)
@@ -316,7 +292,6 @@ class EventsViewModel(
 
                 if (remainingDuration.value != null && names.contains(it.name)) {
                     remainingDuration.value = remainingDuration.value?.minus(it.duration)
-                    spHelper.saveRemainingDuration(remainingDuration.value!!)
 
                     if (isAlarmSet.value == true &&
                         remainingDuration.value!! > ALARM_CANCELLATION_THRESHOLD) {
@@ -326,8 +301,8 @@ class EventsViewModel(
                 }
             }
 
-            currentEvent = if (eventTypeState.value == EventType.SUB) {
-                currentEvent!!.parentId?.let { eventDao.getEvent(it) }
+            currentEventState.value = if (eventTypeState.value == EventType.SUB) {
+                currentEventState.value!!.parentId?.let { eventDao.getEvent(it) }
             } else null
         }
 
@@ -335,10 +310,10 @@ class EventsViewModel(
 
     private suspend fun setRemainingDuration() {
         remainingDuration.value = if (remainingDuration.value == null) {
-            Log.i("打标签喽", "setRemainingDuration 块内：currentEvent = $currentEvent")
+            Log.i("打标签喽", "setRemainingDuration 块内：currentEvent = $currentEventState")
             // 数据库操作，查询并计算
             val totalDuration = repository.calEventDateDuration(
-                currentEvent?.eventDate ?: LocalDate.now()
+                currentEventState.value?.eventDate ?: LocalDate.now()
             )
             FOCUS_EVENT_DURATION_THRESHOLD.minus(totalDuration)
         } else remainingDuration.value
@@ -357,7 +332,7 @@ class EventsViewModel(
     fun onNameTextClicked(event: Event) {
         isInputShowState.value = true
         newEventName.value = event.name
-        currentEvent = event
+        currentEventState.value = event
         // 点击的事项条目的状态会被设为 true
         toggleSelectedId(event.id)
     }
@@ -368,38 +343,7 @@ class EventsViewModel(
         selectedEventIdsMap.value = map
     }
 
-    fun onMainButtonLongClick() {
-        if (mainEventButtonText.value == "结束") return
 
-        // ButtonText 的值除了结束就是开始了，不可能为 null
-        viewModelScope.launch {
-            val lastEvent = eventDao.getLastEvent()
-            val startTime = lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
-
-            if (startTime != null) {
-                startNewEvent(startTime = startTime)
-                toggleMainButtonState("开始")
-            }
-        }
-
-        Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
-    }
-
-    private fun toggleMainButtonState(buttonText: String) {
-        when (buttonText) {
-            "开始" -> {
-                mainEventButtonText.value = "结束"
-                subButtonShow.value = true
-                isImportExportEnabled.value = false
-            }
-            "结束" -> {
-                mainEventButtonText.value = "开始"
-                subButtonShow.value = false
-                isImportExportEnabled.value = true
-            }
-        }
-        spHelper.saveButtonText(mainEventButtonText.value!!)
-    }
 
     private fun resetStateIfNewDay() {
        viewModelScope.launch {
@@ -413,7 +357,7 @@ class EventsViewModel(
 
     fun undoTiming() {
         viewModelScope.launch {
-            currentEvent?.let { eventDao.deleteEvent(it.id) }
+            currentEventState.value?.let { eventDao.deleteEvent(it.id) }
             reset()
         }
     }
@@ -434,7 +378,7 @@ class EventsViewModel(
 
         // 事件跟踪+++++++++++++++++++++++++++++++++++++++++
         isTracking.value = false
-        currentEvent = null // 方便快捷的方法，让停止事件之前总是从数据库获取当前未完成的事件，以避免 id 问题。
+        currentEventState.value = null // 方便快捷的方法，让停止事件之前总是从数据库获取当前未完成的事件，以避免 id 问题。
 
     }
 
@@ -446,9 +390,88 @@ class EventsViewModel(
             }
         }
 
-        val isDeleteCurrentItem = currentEvent?.let { event.id == it.id } ?: false
+        val isDeleteCurrentItem = currentEventState.value?.let { event.id == it.id } ?: false
         if (isTracking.value && isDeleteCurrentItem) reset()
     }
 
+
+    // 底部按钮相关————————————————————————————————————————————————————————————👇
+
+    fun onMainButtonLongClick() {
+        if (mainEventButtonText.value == "结束") return
+
+        // ButtonText 的值除了结束就是开始了，不可能为 null
+        viewModelScope.launch {
+            val lastEvent = eventDao.getLastEvent() // 这个数据库操作是必需的
+            val startTime = lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
+
+            if (startTime != null) {
+                startNewEvent(startTime = startTime)
+                toggleMainButtonState("开始")
+            }
+        }
+
+        Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
+    }
+
+    fun toggleMainEvent() {
+        when (mainEventButtonText.value) {
+            "开始" -> {
+                toggleMainButtonState("开始")
+                startNewEvent()
+            }
+            "结束" -> {
+                toggleMainButtonState("结束")
+                stopCurrentEvent()
+            }
+        }
+    }
+
+    fun toggleSubEvent() {
+        when (subEventButtonText.value) {
+            "插入" -> {
+                toggleSubButtonState("插入")
+                startNewEvent()
+            }
+            "插入结束" -> {
+                toggleSubButtonState("插入结束")
+                stopCurrentEvent()
+            }
+        }
+    }
+
+    private fun toggleMainButtonState(buttonText: String) {
+        when (buttonText) {
+            "开始" -> {
+                mainEventButtonText.value = "结束"
+                subButtonShow.value = true
+//                subEventButtonText.value = "插入" // TODO: 不知道这个设置是不是多此一举
+                isImportExportEnabled.value = false
+            }
+            "结束" -> {
+                mainEventButtonText.value = "开始"
+                subButtonShow.value = false
+//                subEventButtonText.value = "插入结束" // TODO: 不知道这个设置是不是多此一举
+                isImportExportEnabled.value = true
+            }
+        }
+    }
+
+    private fun toggleSubButtonState(buttonText: String) {
+        when (buttonText) {
+            "插入" -> {
+                eventTypeState.value = EventType.SUB
+                subEventButtonText.value = "插入结束"
+                mainButtonShow.value = false
+            }
+            "插入结束" -> {
+                eventTypeState.value = EventType.MAIN
+                subEventButtonText.value = "插入"
+                mainButtonShow.value = true
+            }
+        }
+    }
+
+    // 底部按钮相关————————————————————————————————————————————————————————————👆
 
 }

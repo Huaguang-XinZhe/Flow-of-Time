@@ -56,6 +56,7 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
     val listState = rememberLazyListState()
     val eventsWithSubEvents by viewModel.eventsWithSubEvents.collectAsState(emptyList())
     val isEventNameNotClicked by viewModel.isEventNameNotClicked
+    val currentEvent by viewModel.currentEventState
 
     HandleScrollEffect(viewModel, listState)
 

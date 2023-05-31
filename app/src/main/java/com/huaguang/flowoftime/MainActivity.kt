@@ -6,11 +6,14 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import com.huaguang.flowoftime.viewmodels.EventsViewModelFactory
 import com.huaguang.flowoftime.views.EventTrackerScreen
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -40,8 +43,18 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        viewModel?.let {
-            it.spHelper.setIsInputShow(it.isInputShowState.value)
+        if (viewModel == null) return
+
+        viewModel!!.apply {
+            viewModelScope.launch(Dispatchers.IO) {
+                spHelper.setIsInputShow(isInputShowState.value)
+                spHelper.saveButtonText(mainEventButtonText.value!!)
+                spHelper.saveIsOneDayButtonClicked(isOneDayButtonClicked.value)
+                spHelper.saveScrollIndex(scrollIndex.value!!)
+                spHelper.saveRemainingDuration(remainingDuration.value!!)
+                spHelper.setIsTracking(isTracking.value)
+                currentEventState.value?.let { spHelper.saveCurrentEvent(it) }
+            }
         }
     }
 
