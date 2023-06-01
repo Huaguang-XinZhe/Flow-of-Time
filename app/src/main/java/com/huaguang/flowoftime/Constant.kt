@@ -26,3 +26,9 @@ enum class EventType {
     MAIN,
     SUB
 }
+
+enum class ProcessState {
+    INSERT,
+    END,
+    NONE
+}

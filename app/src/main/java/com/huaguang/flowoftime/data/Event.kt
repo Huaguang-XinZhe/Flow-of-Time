@@ -8,9 +8,9 @@ import java.time.LocalDateTime
 
 @Entity(tableName = "events")
 data class Event(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    @PrimaryKey(autoGenerate = true) var id: Long = 0L,
     var name: String,
-    var startTime: LocalDateTime,
+    var startTime: LocalDateTime?,
     var endTime: LocalDateTime? = null,
     var duration: Duration? = null,
     var eventDate: LocalDate? = null, // 用于存储事件发生的日期

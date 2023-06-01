@@ -4,7 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
-@Database(entities = [Event::class], version = 1)
+@Database(entities = [Event::class], version = 1, exportSchema = false)
 @TypeConverters(LocalDateTimeConverter::class, DurationConverter::class,
     DurationConverter.LocalDateConverter::class)
 abstract class EventDatabase : RoomDatabase() {

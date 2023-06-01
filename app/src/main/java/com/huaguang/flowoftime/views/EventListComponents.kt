@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.views
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -33,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,10 +48,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.paging.compose.collectAsLazyPagingItems
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.Event
-import com.huaguang.flowoftime.data.EventWithSubEvents
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.ui.theme.LightRed6
@@ -63,12 +63,11 @@ import java.time.LocalDateTime
 fun EventList(
     viewModel: EventsViewModel,
     listState: LazyListState,
-    eventsWithSubEvents: List<EventWithSubEvents>,
-    isEventNameNotClicked: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val lazyPagingItems = viewModel.pager.collectAsLazyPagingItems()
-
+//    val lazyPagingItems = viewModel.pager.collectAsLazyPagingItems()
+    val eventsWithSubEvents by viewModel.eventsWithSubEvents.collectAsState(emptyList())
+    
     Box(modifier = modifier) {
         LazyColumn(
             modifier = Modifier.align(Alignment.BottomCenter),
@@ -82,27 +81,48 @@ fun EventList(
                 }
             ) { (event, subEvents) ->
                 CustomSwipeToDismiss(
-                    dismissed = { viewModel.deleteItem(event, subEvents) },
-                    isEventNameNotClicked = isEventNameNotClicked
+                    viewModel = viewModel,
+                    dismissed = { viewModel.deleteItem(event, subEvents) }
                 ) {
-                    EventItem(event, subEvents, viewModel)
+                    EventItem(event = event, subEvents = subEvents, viewModel = viewModel)
                 }
+            }
+
+            item {
+                CurrentItem(viewModel = viewModel)
             }
         }
     }
 }
 
+@Composable
+fun CurrentItem(viewModel: EventsViewModel) {
+    Log.i("打标签喽", "CurrentItem 重组！")
+    val currentEvent by viewModel.currentEventState
+    
+    currentEvent?.let {
+        if (it.name != "&主事件结束，不重复显示&" && it.endTime != LocalDateTime.MIN) {
+            EventItem(
+                modifier = Modifier
+                    .padding(8.dp, 8.dp, 8.dp, 16.dp),
+                event = currentEvent!!,
+                viewModel = viewModel
+            )
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CustomSwipeToDismiss(
+    viewModel: EventsViewModel,
     dismissed: () -> Unit,
-    isEventNameNotClicked: Boolean,
     dismissContent: @Composable (RowScope.() -> Unit)
 ) {
     val context = LocalContext.current
     val dismissState = rememberDismissState()
     val isItemClicked = remember { mutableStateOf(false) }
+    val isEventNameNotClicked by viewModel.isEventNameNotClicked
 
     val direction = if (isEventNameNotClicked && isItemClicked.value) {
         setOf(DismissDirection.StartToEnd)
@@ -166,6 +186,7 @@ fun CustomSwipeToDismiss(
 
 @Composable
 fun EventItem(
+    modifier: Modifier = Modifier,
     event: Event,
     subEvents: List<Event> = listOf(),
     viewModel: EventsViewModel
@@ -184,7 +205,8 @@ fun EventItem(
 
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = cardColors
+        colors = cardColors,
+        modifier = modifier
     ) {
         Column(
             modifier = Modifier.padding(10.dp)
@@ -249,7 +271,7 @@ fun EventItemRow(
             event = event,
             viewModel = viewModel,
             showTime = showTime,
-            modifier = if (event.name.length > 10) Modifier.weight(1f) else Modifier
+            modifier = if (event.name.length >= 9) Modifier.weight(1f) else Modifier
         )
 
         if (showTime) {
@@ -305,7 +327,7 @@ fun EventName(
             .then(modifier)
     )
 
-    if (event.name.length > 10) {
+    if (event.name.length >= 9) {
         Icon(
             painter = painter,
             contentDescription = null,
@@ -323,15 +345,15 @@ fun EventName(
 fun EventStartTime(
     event: Event,
     viewModel: EventsViewModel,
-    startTimeState: MutableState<LocalDateTime>,
+    startTimeState: MutableState<LocalDateTime?>,
     durationState: MutableState<Duration?>
 ) {
     DraggableText(
         modifier = Modifier.padding(end = 5.dp),
-        text = formatLocalDateTime(startTimeState.value),
+        text = startTimeState.value?.let { formatLocalDateTime(it) } ?: "",
         viewModel = viewModel,
         onDragDelta = { dragValue ->
-            startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
+            startTimeState.value = startTimeState.value?.plusMinutes(dragValue.toLong())
 
             if (durationState.value != null && event.name != "起床") {
                 val delta = Duration.between(startTimeState.value, event.startTime)

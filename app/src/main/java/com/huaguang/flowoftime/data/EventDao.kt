@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.data
 
-import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -67,8 +66,8 @@ interface EventDao {
         insertAll(eventWithSubEvents.subEvents)
     }
 
-    @Transaction
-    @Query("SELECT * FROM events")
-    fun getAllEvents(): PagingSource<Int, Event>
+//    @Transaction
+//    @Query("SELECT * FROM events")
+//    fun getAllEvents(): PagingSource<Int, Event>
 
 }

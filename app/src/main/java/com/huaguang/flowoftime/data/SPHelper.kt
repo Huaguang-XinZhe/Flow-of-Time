@@ -2,28 +2,76 @@ package com.huaguang.flowoftime.data
 
 import android.content.SharedPreferences
 import com.google.gson.Gson
+import com.huaguang.flowoftime.EventType
 import java.time.Duration
 
 class SPHelper(private val sharedPreferences: SharedPreferences) {
 
     private val gson = Gson()
 
-    fun saveCurrentEvent(event: Event) {
-        val eventJson = gson.toJson(event)
-        with(sharedPreferences.edit()) {
-            putString("currentEvent", eventJson)
-            apply()
+    fun saveState(
+        isOneDayButtonClicked: Boolean,
+        isInputShow: Boolean,
+        buttonText: String,
+        scrollIndex: Int,
+        isTracking: Boolean,
+        remainingDuration: Duration?,
+        currentEvent: Event?,
+        incompleteMainEvent: Event?,
+        subButtonClickCount: Int,
+        eventType: EventType,
+        isLastStopFromSub: Boolean
+    ) {
+        val editor = sharedPreferences.edit()
+
+        editor.putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
+        editor.putBoolean("is_input_show", isInputShow)
+        editor.putString("button_text", buttonText)
+        editor.putInt("scroll_index", scrollIndex)
+        editor.putBoolean("isTracking", isTracking)
+        editor.putInt("subButtonClickCount", subButtonClickCount)
+        editor.putBoolean("isLastStopFromSub", isLastStopFromSub)
+
+        if (remainingDuration != null) {
+            val durationMillis = remainingDuration.toMillis()
+            editor.putLong("remaining_duration", durationMillis)
         }
+
+        if (currentEvent != null) {
+            val eventJson = gson.toJson(currentEvent)
+            editor.putString("currentEvent", eventJson)
+        }
+
+        if (incompleteMainEvent != null) {
+            val eventJson = gson.toJson(incompleteMainEvent)
+            editor.putString("incompleteMainEvent", eventJson)
+        }
+
+        val isSubEventType = eventType == EventType.SUB
+        editor.putBoolean("is_sub_event_type", isSubEventType)
+
+        editor.apply()
     }
 
-    fun getCurrentEvent(): Event? {
-        val eventJson = sharedPreferences.getString("currentEvent", null) ?: return null
+    // 其他的 get 方法...
+
+    fun getIsLastStopFromSub(): Boolean {
+        return sharedPreferences.getBoolean("isLastStopFromSub", false)
+    }
+    fun getIsSubEventType(): Boolean {
+        return sharedPreferences.getBoolean("is_sub_event_type", false)
+    }
+
+    fun getIncompleteMainEvent(): Event? {
+        val eventJson = sharedPreferences.getString("incompleteMainEvent", null)
+            ?: return null
         return gson.fromJson(eventJson, Event::class.java)
     }
 
-
-    fun saveIsOneDayButtonClicked(value: Boolean) {
-        sharedPreferences.edit().putBoolean("IS_ONE_DAY_BUTTON_CLICKED", value).apply()
+    fun getCurrentEvent(): Event? {
+        val eventJson = sharedPreferences.getString("currentEvent", null)
+            ?: return null
+        return gson.fromJson(eventJson, Event::class.java)
     }
 
     fun getIsOneDayButtonClicked(): Boolean {
@@ -34,48 +82,20 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         return sharedPreferences.getBoolean("isTracking", false)
     }
 
-    fun setIsTracking(isTracking: Boolean) {
-        with(sharedPreferences.edit()) {
-            putBoolean("isTracking", isTracking)
-            apply()
-        }
-    }
-
     fun getIsInputShow(): Boolean {
         return sharedPreferences.getBoolean("is_input_show", false)
     }
 
-    fun setIsInputShow(value: Boolean) {
-        sharedPreferences.edit().putBoolean("is_input_show", value).apply()
+    fun getButtonText(): String {
+        return sharedPreferences.getString("button_text", "开始") ?: "开始"
     }
 
-    fun saveButtonText(text: String) {
-        sharedPreferences.edit().putString("button_text", text).apply()
-    }
-
-    fun getButtonText(): String? {
-        return sharedPreferences.getString("button_text", "开始")
-    }
-
-    fun getSubButtonText(): String? {
-        return sharedPreferences.getString("sub_button_text", "插入")
-    }
-
-    fun saveSubButtonText(text: String) {
-        sharedPreferences.edit().putString("sub_button_text", text).apply()
-    }
-
-    fun saveScrollIndex(index: Int) {
-        sharedPreferences.edit().putInt("scroll_index", index).apply()
+    fun getSubButtonClickCount(): Int {
+        return sharedPreferences.getInt("subButtonClickCount", 0)
     }
 
     fun getScrollIndex(): Int {
         return sharedPreferences.getInt("scroll_index", -1)
-    }
-
-    fun saveRemainingDuration(duration: Duration) {
-        val durationMillis = duration.toMillis()
-        sharedPreferences.edit().putLong("remaining_duration", durationMillis).apply()
     }
 
     fun getRemainingDuration(): Duration? {
@@ -86,3 +106,4 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
     }
 
 }
+
