@@ -71,7 +71,7 @@ object EventSerializer {
     }
 
     private fun formatEvent(event: Event): String {
-        return "${event.startTime?.let { formatLocalDateTime(it) }} " +
+        return "${formatLocalDateTime(event.startTime)} " +
                 "${event.name} " +
                 "${event.endTime?.let { formatLocalDateTime(it) }} " +
                 event.duration?.let { formatDuration(it) }

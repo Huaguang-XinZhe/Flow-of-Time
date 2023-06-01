@@ -138,33 +138,34 @@ fun HeaderRow(viewModel: EventsViewModel) {
 }
 
 
-
-
 @Composable
 fun EventButtons(viewModel: EventsViewModel) {
     val mainEventButtonText by viewModel.mainEventButtonText
-    val subEventButtonText by viewModel.subEventButtonText.observeAsState()
+    val subEventButtonText by viewModel.subEventButtonText
     val mainButtonShow by viewModel.mainButtonShow.observeAsState()
     val subButtonShow by viewModel.subButtonShow.observeAsState()
+    val initialized by viewModel.initialized
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(vertical = 5.dp)
-    ) {
-        if (mainButtonShow == true) {
-            LongPressButton(
-                onClick = { viewModel.toggleMainEvent() },
-                onLongClick = { viewModel.onMainButtonLongClick() },
-                text = mainEventButtonText ?: "开始"
-            )
-        }
+    if (initialized) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(vertical = 10.dp)
+        ) {
+            if (mainButtonShow == true) {
+                LongPressButton(
+                    onClick = { viewModel.toggleMainEvent() },
+                    onLongClick = { viewModel.onMainButtonLongClick() },
+                    text = mainEventButtonText
+                )
+            }
 
-        if (subButtonShow == true) {
-            TextButton(
-                onClick = { viewModel.toggleSubEvent() },
-                modifier = Modifier.padding(start = 5.dp)
-            ) {
-                Text(text = subEventButtonText ?: "插入")
+            if (subButtonShow == true) {
+                TextButton(
+                    onClick = { viewModel.toggleSubEvent() },
+                    modifier = Modifier.padding(start = 5.dp)
+                ) {
+                    Text(text = subEventButtonText)
+                }
             }
         }
     }

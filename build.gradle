@@ -3,4 +3,6 @@ plugins {
     id 'com.android.application' version '8.0.1' apply false
     id 'com.android.library' version '8.0.1' apply false
     id 'org.jetbrains.kotlin.android' version '1.7.20' apply false
+    //序列化插件（感觉这个版本好像没有用，虽然会下载，但在 app 模块中，它用的版本还是和 kotlin.android 的版本。
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.30'
 }

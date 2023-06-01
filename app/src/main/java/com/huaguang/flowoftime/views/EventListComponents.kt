@@ -99,15 +99,18 @@ fun EventList(
 fun CurrentItem(viewModel: EventsViewModel) {
     Log.i("打标签喽", "CurrentItem 重组！")
     val currentEvent by viewModel.currentEventState
-    
-    currentEvent?.let {
-        if (it.name != "&主事件结束，不重复显示&" && it.endTime != LocalDateTime.MIN) {
-            EventItem(
-                modifier = Modifier
-                    .padding(8.dp, 8.dp, 8.dp, 16.dp),
-                event = currentEvent!!,
-                viewModel = viewModel
-            )
+    val initialized by viewModel.initialized
+
+    if (initialized) {
+        currentEvent?.let {
+            if (it.name != "&主事件结束，不重复显示&" && it.endTime != LocalDateTime.MIN) {
+                EventItem(
+                    modifier = Modifier
+                        .padding(8.dp, 8.dp, 8.dp, 16.dp),
+                    event = it,
+                    viewModel = viewModel
+                )
+            }
         }
     }
 }
@@ -345,15 +348,15 @@ fun EventName(
 fun EventStartTime(
     event: Event,
     viewModel: EventsViewModel,
-    startTimeState: MutableState<LocalDateTime?>,
+    startTimeState: MutableState<LocalDateTime>,
     durationState: MutableState<Duration?>
 ) {
     DraggableText(
         modifier = Modifier.padding(end = 5.dp),
-        text = startTimeState.value?.let { formatLocalDateTime(it) } ?: "",
+        text = formatLocalDateTime(startTimeState.value),
         viewModel = viewModel,
         onDragDelta = { dragValue ->
-            startTimeState.value = startTimeState.value?.plusMinutes(dragValue.toLong())
+            startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
 
             if (durationState.value != null && event.name != "起床") {
                 val delta = Duration.between(startTimeState.value, event.startTime)

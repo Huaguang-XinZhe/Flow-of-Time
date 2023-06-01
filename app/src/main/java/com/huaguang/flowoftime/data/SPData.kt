@@ -6,6 +6,7 @@ data class SPData(
     val isOneDayButtonClicked: Boolean,
     val isInputShow: Boolean,
     val buttonText: String,
+    val subButtonText: String,
     val remainingDuration: Duration?,
     val isTracking: Boolean,
     val currentEvent: Event?,

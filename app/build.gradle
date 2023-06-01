@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
+    id 'kotlinx-serialization'
 }
 
 android {
@@ -91,8 +92,8 @@ dependencies {
     implementation "androidx.paging:paging-runtime:3.1.1"
     implementation 'androidx.paging:paging-runtime-ktx:3.1.1'
     implementation 'androidx.paging:paging-compose:1.0.0-alpha20'
-    // json 对象序列化库
-    implementation 'com.google.code.gson:gson:2.9.0'
+    // json 对象序列化库（用 Gson 不如用 Serialization）
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

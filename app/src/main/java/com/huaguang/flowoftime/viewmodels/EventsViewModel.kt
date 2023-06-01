@@ -19,7 +19,6 @@ import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventRepository
-import com.huaguang.flowoftime.data.SPData
 import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.utils.AlarmHelper
@@ -69,7 +68,7 @@ class EventsViewModel(
 
     // 底部按钮相关——————————————————————————————————👇
     val mainEventButtonText = mutableStateOf("开始")
-    val subEventButtonText = MutableLiveData("插入")
+    val subEventButtonText = mutableStateOf("插入")
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
     private var subButtonClickCount = 0
@@ -104,21 +103,19 @@ class EventsViewModel(
     private var updateJob: Job? = null
     val isStartOrEndTimeClicked = mutableStateOf(false)
     private val eventTypeState = mutableStateOf(EventType.MAIN)
+    val initialized = mutableStateOf(false)
 
     init {
+        viewModelScope.launch {
+            retrieveStateFromSP() // 恢复相关状态
 
-        // 恢复相关状态
-        retrieveStateFromSP()
+            restoreButtonShow()
+
+            initialized.value = true
+        }
 
         // 目前主要是重置 remainingDuration
         resetStateIfNewDay()
-
-//        if (subEventButtonText.value == "插入结束") {
-//            subButtonShow.value = true
-//            mainButtonShow.value = false
-//        } else if (mainEventButtonText.value == "结束") {
-//            subButtonShow.value = true
-//        }
     }
 
 
@@ -212,56 +209,28 @@ class EventsViewModel(
 
     // 恢复和存储 UI 状态————————————————————————————————————————————————————————————————————————————👇
 
-    private fun retrieveStateFromSP() {
-        viewModelScope.launch {
-            val data = withContext(Dispatchers.IO) {
-                val isOneDayButtonClicked = spHelper.getIsOneDayButtonClicked()
-                val isInputShow = spHelper.getIsInputShow()
-                val buttonText = spHelper.getButtonText()
-                val remainingDuration = spHelper.getRemainingDuration()
-                val isTracking = spHelper.getIsTracking()
-                val currentEvent = if (isTracking) spHelper.getCurrentEvent() else null
-                val incompleteMainEvent = if (isTracking) spHelper.getIncompleteMainEvent() else null
-                val scrollIndex = spHelper.getScrollIndex()
-                val subButtonClickCount = spHelper.getSubButtonClickCount()
-                val isSubEventType = spHelper.getIsSubEventType()
-                val isLastStopFromSub = spHelper.getIsLastStopFromSub()
-
-                // 将获取的所有数据封装在 SharedPreferencesData 类的实例中
-                SPData(
-                    isOneDayButtonClicked,
-                    isInputShow,
-                    buttonText,
-                    remainingDuration,
-                    isTracking,
-                    currentEvent,
-                    incompleteMainEvent,
-                    scrollIndex,
-                    subButtonClickCount,
-                    isSubEventType,
-                    isLastStopFromSub
-                )
-            }
-
-            // 在主线程中使用取出的数据更新状态
-            isOneDayButtonClicked.value = data.isOneDayButtonClicked
-            isInputShowState.value = data.isInputShow
-            mainEventButtonText.value = data.buttonText
-            remainingDuration.value = data.remainingDuration
-            isTracking.value = data.isTracking
-            currentEventState.value = data.currentEvent
-            incompleteMainEvent = data.incompleteMainEvent
-            subButtonClickCount = data.subButtonClickCount
-            eventTypeState.value = if (data.isSubEventType) EventType.SUB else EventType.MAIN
-            isLastStopFromSub = data.isLastStopFromSub
-
-            if (data.scrollIndex != -1) {
-                scrollIndex.value = data.scrollIndex
-                eventCount = data.scrollIndex + 1
-            }
+    private suspend fun retrieveStateFromSP() {
+        val data = withContext(Dispatchers.IO) {
+            spHelper.getAllData()
         }
 
-        Log.i("打标签喽", "从 sp 获取：${currentEventState.value}")
+        // 在主线程中使用取出的数据更新状态
+        isOneDayButtonClicked.value = data.isOneDayButtonClicked
+        isInputShowState.value = data.isInputShow
+        mainEventButtonText.value = data.buttonText
+        subEventButtonText.value = data.subButtonText
+        remainingDuration.value = data.remainingDuration
+        isTracking.value = data.isTracking
+        currentEventState.value = data.currentEvent
+        incompleteMainEvent = data.incompleteMainEvent
+        subButtonClickCount = data.subButtonClickCount
+        eventTypeState.value = if (data.isSubEventType) EventType.SUB else EventType.MAIN
+        isLastStopFromSub = data.isLastStopFromSub
+
+        if (data.scrollIndex != -1) {
+            scrollIndex.value = data.scrollIndex
+            eventCount = data.scrollIndex + 1
+        }
     }
 
     fun saveState() {
@@ -270,6 +239,7 @@ class EventsViewModel(
                 isOneDayButtonClicked.value,
                 isInputShowState.value,
                 mainEventButtonText.value,
+                subEventButtonText.value,
                 scrollIndex.value,
                 isTracking.value,
                 remainingDuration.value,
@@ -422,6 +392,7 @@ class EventsViewModel(
                     isLastStopFromSub = true
                     eventTypeState.value = EventType.MAIN // 必须放在 stop 逻辑中
                 } else {
+                    Log.i("打标签喽", "结束主事件，改变名称！不显示！")
                     // 结束后的特殊设置，为减少重组和优化显示
                     it.name = "&主事件结束，不重复显示&"
 
@@ -505,6 +476,19 @@ class EventsViewModel(
         }
 
         Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun restoreButtonShow() {
+        if (mainEventButtonText.value == "结束") {
+            if (subEventButtonText.value == "插入结束") {
+                Log.i("打标签喽", "插入结束部分恢复！")
+                subButtonShow.value = true
+                mainButtonShow.value = false
+            } else {
+                subButtonShow.value = true
+            }
+        }
+
     }
 
     fun toggleMainEvent() {

@@ -26,7 +26,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.ui.theme.DarkGreen39
+import kotlinx.serialization.json.Json
+import java.time.LocalDateTime
 
 
 @ExperimentalMaterialApi
@@ -110,7 +113,19 @@ fun <T> CustomSwipeToDismiss2(
 //                    }
 
 
+fun main() {
+    val event = Event(
+        id = 2,
+        startTime = LocalDateTime.of(2023, 3, 12, 11, 5),
+        name = "这是我自己造的一个 event",
+        endTime = LocalDateTime.now(),
+        parentId = 5
+    )
 
-
+    val eventJson = Json.encodeToString(Event.serializer(), event)
+    val decodeEvent = Json.decodeFromString<Event>(eventJson)
+    println(eventJson)
+    println(decodeEvent)
+}
 
 

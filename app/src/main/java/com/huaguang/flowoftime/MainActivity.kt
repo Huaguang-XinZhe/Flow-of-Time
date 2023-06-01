@@ -41,7 +41,6 @@ class MainActivity : ComponentActivity() {
     override fun onStop() {
         super.onStop()
         viewModel?.saveState()
-        Log.i("打标签喽", "onStop：${viewModel?.currentEventState?.value}")
     }
 
 }
