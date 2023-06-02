@@ -37,13 +37,12 @@ import androidx.compose.ui.window.DialogProperties
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun EventTrackerScreen(viewModel: EventsViewModel) {
-    Log.i("打标签喽", "页面重组")
     val listState = rememberLazyListState()
+    val isInputShow by viewModel.isInputShowState
 
     HandleScrollEffect(viewModel, listState)
 
@@ -58,9 +57,13 @@ fun EventTrackerScreen(viewModel: EventsViewModel) {
 
         EventList(viewModel, listState, Modifier.weight(1f))
 
-        EventInputField(viewModel)
+        if (isInputShow) {
+            EventInputField(viewModel)
+        }
 
-        EventButtons(viewModel)
+        if (!isInputShow) {
+            EventButtons(viewModel)
+        }
     }
 }
 
@@ -76,8 +79,7 @@ fun HandleScrollEffect(
     LaunchedEffect(scrollIndex) {
         scope.launch {
             if (firstLaunch.value) {
-                Log.i("打标签喽", "定位延迟！！！")
-                delay(200)
+                Log.i("打标签喽", "不延迟！！！")
                 firstLaunch.value = false
             }
             listState.animateScrollToItem(scrollIndex)

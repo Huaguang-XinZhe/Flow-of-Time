@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -70,8 +71,10 @@ fun EventList(
     
     Box(modifier = modifier) {
         LazyColumn(
-            modifier = Modifier.align(Alignment.BottomCenter),
-            state = listState
+            modifier = Modifier.fillMaxWidth()
+                .align(Alignment.BottomCenter),
+            state = listState,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(
                 items = eventsWithSubEvents,
@@ -103,7 +106,7 @@ fun CurrentItem(viewModel: EventsViewModel) {
 
     if (initialized) {
         currentEvent?.let {
-            if (it.name != "&主事件结束，不重复显示&" && it.endTime != LocalDateTime.MIN) {
+            if (it.name != "&currentEvent不显示&" && it.endTime != LocalDateTime.MIN) {
                 EventItem(
                     modifier = Modifier
                         .padding(8.dp, 8.dp, 8.dp, 16.dp),
@@ -214,14 +217,14 @@ fun EventItem(
         Column(
             modifier = Modifier.padding(10.dp)
         ) {
-            EventItemRow(event = event, showTime = true, viewModel)
+            EventItemRow(viewModel, event = event, showTime = true)
 
             // 插入的临时事件的 UI
             for (subEvent in subEvents) {
                 EventItemRow(
+                    viewModel = viewModel,
                     event = subEvent,
-                    showTime = false,
-                    viewModel = viewModel,  // 添加了一些左侧的 padding 以便缩进
+                    showTime = false,  // 添加了一些左侧的 padding 以便缩进
                     modifier = Modifier.padding(start = 30.dp)
                 )
             }
@@ -231,30 +234,22 @@ fun EventItem(
 
 @Composable
 fun EventItemRow(
+    viewModel: EventsViewModel,
     event: Event,
     showTime: Boolean,
-    viewModel: EventsViewModel,
     modifier: Modifier = Modifier,
 ) {
     val startTimeState = remember { mutableStateOf(event.startTime) }
     val endTimeState = remember { mutableStateOf(event.endTime) }
     val durationState = remember { mutableStateOf(event.duration) }
+    val isShowTail = remember { mutableStateOf(true) }
 
-    val endTimeText = if (endTimeState.value != null) {
-        if (endTimeState.value == startTimeState.value) "" else {
-            formatLocalDateTime(endTimeState.value!!)
-        }
-    } else "..."
-    val durationText = if (durationState.value != null) {
-        if (durationState.value == Duration.ZERO) "" else {
-            formatDurationInText(durationState.value!!)
-        }
-    } else "..."
-
-
-    LaunchedEffect(event.endTime, event.duration) {
+    // 这么写的目的就是为了让当前 event（Item）的变化能够通知到上面的状态，而没有变化的其他 event（Item）就维持 remember 里面的状态值。
+    // 这就对当前 Item 和其他 Item 做出了区分，同时还能做到在 Composable 外边改变它的状态值。
+    LaunchedEffect(event.endTime, event.duration, event.name) {
         endTimeState.value = event.endTime
         durationState.value = event.duration
+        isShowTail.value = event.name != "起床"
     }
 
     Row(
@@ -277,21 +272,23 @@ fun EventItemRow(
             modifier = if (event.name.length >= 9) Modifier.weight(1f) else Modifier
         )
 
-        if (showTime) {
-            EventEndTime(
-                event = event,
-                viewModel = viewModel,
-                endTimeState = endTimeState,
-                endTimeText = endTimeText,
-                durationState = durationState
+        if (isShowTail.value) {
+            if (showTime) {
+                EventEndTime(
+                    event = event,
+                    viewModel = viewModel,
+                    endTimeState = endTimeState,
+                    endTimeText = endTimeState.value?.let { formatLocalDateTime(it) } ?: "...",
+                    durationState = durationState
+                )
+            }
+
+            Text(
+                text = durationState.value?.let { formatDurationInText(it) } ?: "...",
+                style = MaterialTheme.typography.titleSmall,
+                modifier = Modifier.padding(start = 8.dp)
             )
         }
-
-        Text(
-            text = durationText,
-            style = MaterialTheme.typography.titleSmall,
-            modifier = Modifier.padding(start = 8.dp)
-        )
     }
 }
 
@@ -317,6 +314,7 @@ fun EventName(
         maxLines = if (!isExpansion) 1 else 3,
         overflow = if (!isExpansion) TextOverflow.Ellipsis else TextOverflow.Visible,
         modifier = Modifier
+            .padding(end = 5.dp)
             .clickable {
                 viewModel.onNameTextClicked(event)
             }
@@ -336,7 +334,7 @@ fun EventName(
             contentDescription = null,
             modifier = Modifier
                 .size(24.dp)
-                .padding(start = 5.dp)
+                .padding(end = 5.dp)
                 .clickable {
                     isExpansion = !isExpansion
                 }
@@ -380,7 +378,6 @@ fun EventEndTime(
     durationState: MutableState<Duration?>
 ) {
     DraggableText(
-        modifier = Modifier.padding(start = 5.dp),
         text = endTimeText,
         enabled = endTimeState.value != null,
         isShadow = endTimeText != "" && endTimeText != "...",

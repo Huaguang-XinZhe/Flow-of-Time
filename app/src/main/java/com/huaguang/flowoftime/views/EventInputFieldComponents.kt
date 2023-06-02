@@ -2,6 +2,9 @@ package com.huaguang.flowoftime.views
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -31,19 +34,19 @@ import com.huaguang.flowoftime.viewmodels.EventsViewModel
 @Composable
 fun EventInputField(viewModel: EventsViewModel) {
     val focusRequester = remember { FocusRequester() }
-    val isInputShow by viewModel.isInputShowState
 
-    if (isInputShow) {
-        Column {
-            UndoIconButton(viewModel = viewModel)
+    Column {
+        UndoIconButton(viewModel = viewModel)
 
-            InputRow(viewModel = viewModel, focusRequester = focusRequester)
-        }
-
-        LaunchedEffect(Unit) {
-            focusRequester.requestFocus()
-        }
+        InputRow(viewModel = viewModel, focusRequester = focusRequester)
+        
+        Spacer(modifier = Modifier.fillMaxWidth().height(280.dp))
     }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

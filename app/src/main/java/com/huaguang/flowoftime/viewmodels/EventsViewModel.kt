@@ -62,6 +62,7 @@ class EventsViewModel(
     private val isTracking = mutableStateOf(false)
     val currentEventState: MutableState<Event?> =  mutableStateOf(null)
     private var incompleteMainEvent: Event? by mutableStateOf(null)
+    private var beModifiedEvent: Event? by mutableStateOf(null)
 
     val isInputShowState = mutableStateOf(false)
     val newEventName = mutableStateOf("")
@@ -157,12 +158,18 @@ class EventsViewModel(
     }
 
 
+
     fun onNameTextClicked(event: Event) {
+        if (event.name == "起床") { // 起床项的名称禁止更改
+            Toast.makeText(getApplication(), "起床项名称禁止修改！", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         isInputShowState.value = true
         newEventName.value = event.name
-        currentEventState.value = event
         // 点击的事项条目的状态会被设为 true
         toggleSelectedId(event.id)
+        beModifiedEvent = event
     }
 
     private fun toggleSelectedId(eventId: Long) {
@@ -173,6 +180,65 @@ class EventsViewModel(
 
     fun undoTiming() {
         resetState()
+    }
+
+    private fun getUpHandle() {
+        viewModelScope.launch {
+            if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null
+                Log.i("打标签喽", "起床处理，item 点击！！！")
+                beModifiedEvent!!.name = "起床"
+
+                withContext(Dispatchers.IO) {
+                    eventDao.updateEvent(beModifiedEvent!!)
+                }
+
+                delayReset()
+            } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
+                Log.i("打标签喽", "起床处理，一般流程")
+                currentEventState.value?.let { it.name = "起床" }
+
+                withContext(Dispatchers.IO) {
+                    currentEventState.value?.let { eventDao.insertEvent(it) }
+                }
+
+                // TODO: 这里似乎不需要 isEventNameClicked，是否可以优化呢？
+                // 按钮文本直接还原为开始，不需要结束
+                mainEventButtonText.value = "开始"
+                // 比较特殊，插入按钮不需要显示
+                subButtonShow.value = false
+                currentEventState.value = null
+            }
+
+        }
+    }
+
+    private fun generalHandle() {
+        if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null（事件可能在进行中）
+            viewModelScope.launch {
+                beModifiedEvent!!.name = newEventName.value
+
+                withContext(Dispatchers.IO) {
+                    eventDao.updateEvent(beModifiedEvent!!)
+                }
+
+                // 延迟一下，让边框再飞一会儿
+                delayReset()
+            }
+
+        } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
+            Log.i("打标签喽", "事件输入部分，点击确定，一般流程分支。")
+            currentEventState.value?.let {
+                currentEventState.value = it.copy(name = newEventName.value)
+            }
+//                checkAndSetAlarm(newEventName.value)
+        }
+    }
+
+    private suspend fun delayReset() {
+        Log.i("打标签喽", "延迟结束，子弹该停停了！")
+        delay(500)
+        beModifiedEvent = null
+        selectedEventIdsMap.value = mutableMapOf()
     }
 
     private fun resetState() {
@@ -301,54 +367,26 @@ class EventsViewModel(
     }
 
     fun onConfirm() {
-        if (newEventName.value == "") {
-            Toast.makeText(getApplication(), "你还没有输入呢？", Toast.LENGTH_SHORT).show()
-            return
-        }
 
-        // 名称更新————————————————————————————————————————————————————————————————————————————
-        currentEventState.value?.let {
-            currentEventState.value = if (newEventName.value == "起床") {
-                // 不需要显示结束时间和间隔
-                it.copy(name = newEventName.value, endTime = it.startTime, duration = Duration.ZERO)
-            } else {
-                it.copy(name = newEventName.value)
+        when (newEventName.value) {
+            "" -> {
+                Toast.makeText(getApplication(), "你还没有输入呢？", Toast.LENGTH_SHORT).show()
+                return
+            }
+            "起床" -> {
+                // 起床事件的特殊应对
+                getUpHandle()
+            }
+            else -> {
+                Log.i("打标签喽", "一般情况执行！！！")
+                // 一般情况
+                generalHandle()
             }
         }
 
-        // 当前事项条目的名称部分没被点击，没有对应的状态（为 null），反之，点过了的话，对应的状态就为 true
-        if (isEventNameNotClicked.value) {
-            Log.i("打标签喽", "事件输入部分，点击确定，一般流程分支。")
-            checkAndSetAlarm(newEventName.value)
-        } else {
-            // 点击修改事项名称进行的分支
-            viewModelScope.launch {
-                // 延迟一下，让边框再飞一会儿
-                delay(800)
-                Log.i("打标签喽", "延迟结束，子弹该停停了！")
-                selectedEventIdsMap.value = mutableMapOf()
-                currentEventState.value = null
-            }
-        }
-
-        viewModelScope.launch {
-            // 起床事件的特殊应对——————————————————————————————————————————————————————
-            if (newEventName.value == "起床" && isEventNameNotClicked.value) {
-                withContext(Dispatchers.IO) {
-                    eventDao.insertEvent(currentEventState.value!!)
-                }
-                // 按钮文本直接还原为开始，不需要结束
-                mainEventButtonText.value = "开始"
-                // 比较特殊，插入按钮不需要显示
-                subButtonShow.value = false
-                // 不需要显示结束时间和间隔
-                currentEventState.value = null
-            }
-
-            // 通用状态重置——————————————————————
-            newEventName.value = ""
-            isInputShowState.value = false
-        }
+        // 通用状态重置——————————————————————
+        newEventName.value = ""
+        isInputShowState.value = false
 
     }
 
@@ -394,7 +432,7 @@ class EventsViewModel(
                 } else {
                     Log.i("打标签喽", "结束主事件，改变名称！不显示！")
                     // 结束后的特殊设置，为减少重组和优化显示
-                    it.name = "&主事件结束，不重复显示&"
+                    it.name = "&currentEvent不显示&"
 
                     isLastStopFromSub = false
                 }
@@ -522,13 +560,11 @@ class EventsViewModel(
             "开始" -> {
                 mainEventButtonText.value = "结束"
                 subButtonShow.value = true
-//                subEventButtonText.value = "插入" // TODO: 不知道这个设置是不是多此一举
                 isImportExportEnabled.value = false
             }
             "结束" -> {
                 mainEventButtonText.value = "开始"
                 subButtonShow.value = false
-//                subEventButtonText.value = "插入结束" // TODO: 不知道这个设置是不是多此一举
                 isImportExportEnabled.value = true
             }
         }
