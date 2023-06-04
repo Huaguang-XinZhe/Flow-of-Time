@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 @Entity(tableName = "events")
 data class Event(
     @PrimaryKey(autoGenerate = true) var id: Long = 0L,
-    var name: String,
+    var name: String = "",
 
     @Serializable(with = LocalDateTimeSerializer::class)
     var startTime: LocalDateTime,
@@ -28,6 +28,8 @@ data class Event(
     @Serializable(with = LocalDateSerializer::class)
     var eventDate: LocalDate? = null, // 用于存储事件发生的日期
 
-    var parentId: Long? = null  // 用于存储该事件关联的主事件的ID，如果该事件是主事件，则此字段为null
+    var parentId: Long? = null,   // 用于存储该事件关联的主事件的ID，如果该事件是主事件，则此字段为null
+
+    var isCurrent: Boolean = false
 )
 

@@ -22,7 +22,8 @@ class MainActivity : ComponentActivity() {
             val myApplication = application as TimeStreamApplication
             val database = myApplication.database
             val eventDao = database.eventDao()
-            val repository = EventRepository(eventDao)
+            val dateDurationDao = database.dateDurationDao()
+            val repository = EventRepository(eventDao, dateDurationDao)
             val sharedPreferences = getSharedPreferences("my_preferences", Context.MODE_PRIVATE)
             val spHelper = SPHelper(sharedPreferences)
 
@@ -36,6 +37,12 @@ class MainActivity : ComponentActivity() {
             EventTrackerScreen(viewModel = viewModel!!)
             
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        viewModel?.updateCoreDuration()
     }
 
     override fun onStop() {

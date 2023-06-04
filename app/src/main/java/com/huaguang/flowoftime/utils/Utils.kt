@@ -30,6 +30,26 @@ fun getAdjustedEventDate(): LocalDate {
     } else LocalDate.now()
 }
 
+/**
+ * 我自定义的起床时段，这个有待根据个人记录进行定制。todo
+ */
+fun isWakeUpPeriod(): Boolean {
+    val now = LocalTime.now()
+    val sevenAM = LocalTime.of(7, 0)
+    val elevenAM = LocalTime.of(11, 0)
+
+    return now.isAfter(sevenAM) && now.isBefore(elevenAM)
+}
+
+
+fun isSleepingTime(time: LocalTime): Boolean {
+    val sleepStartTime = LocalTime.of(22, 30)
+    val sleepEndTime = LocalTime.of(4, 30)
+    // 如果时间在 22:30 之后，或者在 4:30 之前，那么这个时间在你的睡眠时间内
+    return time.isAfter(sleepStartTime) || time.isBefore(sleepEndTime)
+}
+
+
 fun formatLocalDateTime(dateTime: LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return dateTime.format(formatter)

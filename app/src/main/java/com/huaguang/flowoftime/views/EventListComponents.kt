@@ -50,8 +50,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.coreEventNames
 import com.huaguang.flowoftime.data.Event
-import com.huaguang.flowoftime.names
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.ui.theme.LightRed6
 import com.huaguang.flowoftime.utils.formatDurationInText
@@ -66,12 +66,14 @@ fun EventList(
     listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
+    Log.i("打标签喽", "EventList 重组！！！")
 //    val lazyPagingItems = viewModel.pager.collectAsLazyPagingItems()
     val eventsWithSubEvents by viewModel.eventsWithSubEvents.collectAsState(emptyList())
     
     Box(modifier = modifier) {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
                 .align(Alignment.BottomCenter),
             state = listState,
             horizontalAlignment = Alignment.CenterHorizontally
@@ -101,20 +103,16 @@ fun EventList(
 @Composable
 fun CurrentItem(viewModel: EventsViewModel) {
     Log.i("打标签喽", "CurrentItem 重组！")
-    val currentEvent by viewModel.currentEventState
+    val currentEvent by viewModel.currentEvent
     val initialized by viewModel.initialized
 
-    if (initialized) {
-        currentEvent?.let {
-            if (it.name != "&currentEvent不显示&" && it.endTime != LocalDateTime.MIN) {
-                EventItem(
-                    modifier = Modifier
-                        .padding(8.dp, 8.dp, 8.dp, 16.dp),
-                    event = it,
-                    viewModel = viewModel
-                )
-            }
-        }
+    if (initialized && currentEvent != null) {
+        EventItem(
+            modifier = Modifier
+                .padding(8.dp, 8.dp, 8.dp, 16.dp),
+            event = currentEvent!!,
+            viewModel = viewModel
+        )
     }
 }
 
@@ -125,6 +123,8 @@ fun CustomSwipeToDismiss(
     dismissed: () -> Unit,
     dismissContent: @Composable (RowScope.() -> Unit)
 ) {
+    Log.i("打标签喽", "CustomSwipeToDismiss 重组了！！！")
+
     val context = LocalContext.current
     val dismissState = rememberDismissState()
     val isItemClicked = remember { mutableStateOf(false) }
@@ -197,7 +197,7 @@ fun EventItem(
     subEvents: List<Event> = listOf(),
     viewModel: EventsViewModel
 ) {
-    val cardColors = if (names.contains(event.name)) {
+    val cardColors = if (coreEventNames.contains(event.name)) {
         CardDefaults.cardColors(
             containerColor = DarkGray24,
             contentColor = Color.White
@@ -261,6 +261,7 @@ fun EventItemRow(
                 event = event,
                 viewModel = viewModel,
                 startTimeState = startTimeState,
+                endTimeState = endTimeState,
                 durationState = durationState
             )
         }
@@ -277,6 +278,7 @@ fun EventItemRow(
                 EventEndTime(
                     event = event,
                     viewModel = viewModel,
+                    startTimeState = startTimeState,
                     endTimeState = endTimeState,
                     endTimeText = endTimeState.value?.let { formatLocalDateTime(it) } ?: "...",
                     durationState = durationState
@@ -347,6 +349,7 @@ fun EventStartTime(
     event: Event,
     viewModel: EventsViewModel,
     startTimeState: MutableState<LocalDateTime>,
+    endTimeState: MutableState<LocalDateTime?>,
     durationState: MutableState<Duration?>
 ) {
     DraggableText(
@@ -354,18 +357,18 @@ fun EventStartTime(
         text = formatLocalDateTime(startTimeState.value),
         viewModel = viewModel,
         onDragDelta = { dragValue ->
+            // 下面两个状态的调整必须放在这里，逐步进行
             startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
-
-            if (durationState.value != null && event.name != "起床") {
-                val delta = Duration.between(startTimeState.value, event.startTime)
-                durationState.value = event.duration!! + delta
-            }
+            durationState.value = durationState.value?.minusMinutes(dragValue.toLong())
         }
     ) {
-        val updatedEvent =
-            event.copy(startTime = startTimeState.value, duration = durationState.value)
-        val lastDelta = durationState.value?.minus(event.duration)
-        viewModel.updateTimeAndState(updatedEvent, lastDelta)
+        val updatedEvent = event.copy(
+            startTime = startTimeState.value,
+            endTime = endTimeState.value,
+            duration = durationState.value
+        )
+
+        viewModel.updateTimeAndState(updatedEvent, event.duration)
     }
 }
 
@@ -373,6 +376,7 @@ fun EventStartTime(
 fun EventEndTime(
     event: Event,
     viewModel: EventsViewModel,
+    startTimeState: MutableState<LocalDateTime>,
     endTimeState: MutableState<LocalDateTime?>,
     endTimeText: String,
     durationState: MutableState<Duration?>
@@ -383,16 +387,16 @@ fun EventEndTime(
         isShadow = endTimeText != "" && endTimeText != "...",
         viewModel = viewModel,
         onDragDelta = { dragValue ->
-            if (endTimeState.value != null && event.name != "起床") {
-                endTimeState.value = endTimeState.value!!.plusMinutes(dragValue.toLong())
-                val delta = Duration.between(endTimeState.value, event.endTime)
-                durationState.value = event.duration!! - delta
-            }
+            endTimeState.value = endTimeState.value?.plusMinutes(dragValue.toLong())
+            durationState.value = durationState.value?.plusMinutes(dragValue.toLong())
         }
     ) {
-        val updatedEvent =
-            event.copy(endTime = endTimeState.value, duration = durationState.value)
-        val lastDelta = durationState.value!! - event.duration
-        viewModel.updateTimeAndState(updatedEvent, lastDelta)
+        val updatedEvent = event.copy(
+            startTime = startTimeState.value,
+            endTime = endTimeState.value,
+            duration = durationState.value
+        )
+
+        viewModel.updateTimeAndState(updatedEvent, event.duration)
     }
 }

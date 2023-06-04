@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import com.huaguang.flowoftime.EventType
 import kotlinx.serialization.json.Json
 import java.time.Duration
+import java.time.LocalDateTime
 
 class SPHelper(private val sharedPreferences: SharedPreferences) {
 
@@ -14,43 +15,48 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         subButtonText: String,
         scrollIndex: Int,
         isTracking: Boolean,
-        remainingDuration: Duration?,
+        isCoreEventTracking: Boolean,
+        coreDuration: Duration,
+        startTimeTracking: LocalDateTime?,
         currentEvent: Event?,
         incompleteMainEvent: Event?,
         subButtonClickCount: Int,
         eventType: EventType,
-        isLastStopFromSub: Boolean
+        isLastStopFromSub: Boolean,
+        isCoreDurationReset: Boolean
     ) {
-        val editor = sharedPreferences.edit()
+        sharedPreferences.edit().apply {
+            putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
+            putBoolean("is_input_show", isInputShow)
+            putString("button_text", buttonText)
+            putString("sub_button_text", subButtonText)
+            putInt("scroll_index", scrollIndex)
+            putBoolean("isTracking", isTracking)
+            putBoolean("isCoreEventTracking", isCoreEventTracking)
+            putInt("subButtonClickCount", subButtonClickCount)
+            putBoolean("isLastStopFromSub", isLastStopFromSub)
+            putLong("core_duration", coreDuration.toMillis())
+            putBoolean("isCoreDurationReset", isCoreDurationReset)
 
-        editor.putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
-        editor.putBoolean("is_input_show", isInputShow)
-        editor.putString("button_text", buttonText)
-        editor.putString("sub_button_text", subButtonText)
-        editor.putInt("scroll_index", scrollIndex)
-        editor.putBoolean("isTracking", isTracking)
-        editor.putInt("subButtonClickCount", subButtonClickCount)
-        editor.putBoolean("isLastStopFromSub", isLastStopFromSub)
+            if (startTimeTracking != null) {
+                putString("startTimeTracking", startTimeTracking.toString())
+            }
 
-        if (remainingDuration != null) {
-            val durationMillis = remainingDuration.toMillis()
-            editor.putLong("remaining_duration", durationMillis)
+            if (currentEvent != null) {
+                val eventJson = Json.encodeToString(Event.serializer(), currentEvent)
+                putString("currentEvent", eventJson)
+            }
+
+            if (incompleteMainEvent != null) {
+                val eventJson = Json.encodeToString(Event.serializer(), incompleteMainEvent)
+                putString("incompleteMainEvent", eventJson)
+            }
+
+            val isSubEventType = eventType == EventType.SUB
+            putBoolean("is_sub_event_type", isSubEventType)
+
+            apply()
         }
-
-        if (currentEvent != null) {
-            val eventJson = Json.encodeToString(Event.serializer(), currentEvent)
-            editor.putString("currentEvent", eventJson)
-        }
-
-        if (incompleteMainEvent != null) {
-            val eventJson = Json.encodeToString(Event.serializer(), incompleteMainEvent)
-            editor.putString("incompleteMainEvent", eventJson)
-        }
-
-        val isSubEventType = eventType == EventType.SUB
-        editor.putBoolean("is_sub_event_type", isSubEventType)
-
-        editor.apply()
     }
 
     fun getAllData(): SPData {
@@ -58,14 +64,17 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         val isInputShow = getIsInputShow()
         val buttonText = getButtonText()
         val subButtonText = getSubButtonText()
-        val remainingDuration = getRemainingDuration()
-        val isTracking = getIsTracking()
+        val isTracking = getIsTracking() // 内部使用
+        val isCoreEventTracking = getIsCoreEventTracking() // 内部使用
+        val coreDuration = getCoreDuration()
+        val startTimeTracking = if (isCoreEventTracking) getStartTimeTracking() else null
         val currentEvent = if (isTracking) getCurrentEvent() else null
         val incompleteMainEvent =  if (isTracking) getIncompleteMainEvent() else null
         val scrollIndex = getScrollIndex()
         val subButtonClickCount = getSubButtonClickCount()
         val isSubEventType = getIsSubEventType()
         val isLastStopFromSub = getIsLastStopFromSub()
+        val isCoreDurationReset = getIsCoreDurationReset()
 
         // 将获取的所有数据封装在 SharedPreferencesData 类的实例中
         return SPData(
@@ -73,19 +82,22 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
             isInputShow,
             buttonText,
             subButtonText,
-            remainingDuration,
             isTracking,
+            isCoreEventTracking,
+            coreDuration,
+            startTimeTracking,
             currentEvent,
             incompleteMainEvent,
             scrollIndex,
             subButtonClickCount,
             isSubEventType,
-            isLastStopFromSub
+            isLastStopFromSub,
+            isCoreDurationReset
         )
     }
 
 
-    fun getIsLastStopFromSub(): Boolean {
+    private fun getIsLastStopFromSub(): Boolean {
         return sharedPreferences.getBoolean("isLastStopFromSub", false)
     }
     private fun getIsSubEventType(): Boolean {
@@ -132,11 +144,24 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         return sharedPreferences.getInt("scroll_index", -1)
     }
 
-    private fun getRemainingDuration(): Duration? {
-        val durationMillis = sharedPreferences.getLong("remaining_duration", -1L)
+    private fun getCoreDuration(): Duration {
+        val durationMillis = sharedPreferences.getLong("core_duration", -1L)
         return if (durationMillis != -1L) {
             Duration.ofMillis(durationMillis)
-        } else null
+        } else Duration.ZERO
+    }
+
+    private fun getStartTimeTracking(): LocalDateTime? {
+        val startTimeStr = sharedPreferences.getString("startTimeTracking", null)
+        return startTimeStr?.let { LocalDateTime.parse(it) }
+    }
+
+    private fun getIsCoreEventTracking(): Boolean {
+        return sharedPreferences.getBoolean("isCoreEventTracking", false)
+    }
+
+    private fun getIsCoreDurationReset(): Boolean {
+        return sharedPreferences.getBoolean("isCoreDurationReset", false)
     }
 
 }

@@ -34,7 +34,6 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
-import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import kotlinx.coroutines.launch
@@ -176,8 +175,8 @@ fun EventButtons(viewModel: EventsViewModel) {
 
 @Composable
 fun DurationSlider(viewModel: EventsViewModel) {
-    val rate by viewModel.rate.collectAsState()
-    val remainingDuration by viewModel.remainingDuration.collectAsState()
+    val rate by viewModel.rate
+    val coreDuration by viewModel.coreDuration
     
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -188,20 +187,19 @@ fun DurationSlider(viewModel: EventsViewModel) {
         )
 
         Slider(
-            value = rate ?: 0f,
+            value = rate,
             enabled = false,
             onValueChange = {  },
             modifier = Modifier.weight(1f)
         )
 
         Text(
-            text = rate?.let { "%.1f".format(it.times(100)) + "%" } ?: "0%",
+            text = rate.let { "%.1f".format(it.times(100)) + "%" },
             modifier = Modifier.padding(start = 8.dp)
         )
 
         Text(
-            text = FOCUS_EVENT_DURATION_THRESHOLD.minus(remainingDuration ?: FOCUS_EVENT_DURATION_THRESHOLD)
-                ?.let { formatDurationInText(it) } ?: "...",
+            text = formatDurationInText(coreDuration),
             modifier = Modifier.padding(start = 8.dp, end = 8.dp)
         )
     }
