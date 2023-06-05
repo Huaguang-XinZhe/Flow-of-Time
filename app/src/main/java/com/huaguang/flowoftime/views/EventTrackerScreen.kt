@@ -40,7 +40,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun EventTrackerScreen(viewModel: EventsViewModel) {
     val listState = rememberLazyListState()
-    val isInputShow by viewModel.isInputShowState
+    val isInputShow by viewModel.isInputShow
 
     HandleScrollEffect(viewModel, listState)
 

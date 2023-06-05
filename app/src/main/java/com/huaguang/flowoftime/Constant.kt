@@ -8,7 +8,8 @@ val coreEventNames = listOf(
     "compose学习",
     "compose 学习",
     "Compose 学习",
-    "时光流：修复 bug"
+    "时光流：修复 bug",
+    "扔物线学Android"
 )
 
 val sleepNames = listOf("睡", "睡觉", "晚睡")

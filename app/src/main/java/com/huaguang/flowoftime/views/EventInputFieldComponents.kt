@@ -93,7 +93,7 @@ fun UndoIconButton(viewModel: EventsViewModel) {
     if (isEventNameNotClicked) {
         IconButton(
             onClick = {
-                viewModel.undoTiming()
+                viewModel.resetState()
             },
             modifier = Modifier
                 .size(36.dp)

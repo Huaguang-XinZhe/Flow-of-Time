@@ -16,6 +16,7 @@ import com.huaguang.flowoftime.ALARM_SETTING_THRESHOLD
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
+import com.huaguang.flowoftime.ItemSelectionTracker
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.coreEventNames
 import com.huaguang.flowoftime.data.Event
@@ -65,7 +66,7 @@ class EventsViewModel(
     private var incompleteMainEvent: Event? by mutableStateOf(null)
     private var beModifiedEvent: Event? by mutableStateOf(null)
 
-    val isInputShowState = mutableStateOf(false)
+    val isInputShow = mutableStateOf(false)
     val newEventName = mutableStateOf("")
 
     // 底部按钮相关——————————————————————————————————👇
@@ -86,7 +87,7 @@ class EventsViewModel(
     @SuppressLint("MutableCollectionMutableState")
     val selectedEventIdsMap = mutableStateOf(mutableMapOf<Long, Boolean>())
     val isEventNameNotClicked = derivedStateOf {
-        currentEvent.value?.let { selectedEventIdsMap.value[it.id] == null } ?: true
+        beModifiedEvent?.let { selectedEventIdsMap.value[it.id] == null } ?: true
     }
 
 //    val pager = Pager(
@@ -101,13 +102,13 @@ class EventsViewModel(
 
     val isImportExportEnabled = MutableLiveData(true)
     private var updateJob: Job? = null
-    val isStartOrEndTimeClicked = mutableStateOf(false)
-    private val eventTypeState = mutableStateOf(EventType.MAIN)
+    private val eventType = mutableStateOf(EventType.MAIN)
     val initialized = mutableStateOf(false)
     private var isCoreEventTracking = false
     private var isCoreDurationReset = false
     private var coreNameClickedFlag = false
     private val dismissedItems = mutableSetOf<Long>() // 为了防止删除逻辑多次执行
+    val selectionTracker = ItemSelectionTracker()
 
     init {
         viewModelScope.launch {
@@ -153,7 +154,7 @@ class EventsViewModel(
 
             Toast.makeText(getApplication(), "调整已更新！", Toast.LENGTH_SHORT).show()
 
-            isStartOrEndTimeClicked.value = false // 取消滑块阴影，禁止点击
+            selectionTracker.cancelSelection(updatedEvent.id) // 取消滑块阴影，禁止点击
 
             if (coreEventNames.contains(updatedEvent.name)) { // 更新当下核心事务的持续时间
                 if (updatedEvent.duration != null) {
@@ -195,7 +196,7 @@ class EventsViewModel(
             return
         }
 
-        isInputShowState.value = true
+        isInputShow.value = true
         newEventName.value = event.name
         // 点击的事项条目的状态会被设为 true
         toggleSelectedId(event.id)
@@ -212,10 +213,6 @@ class EventsViewModel(
         selectedEventIdsMap.value = map
     }
 
-    fun undoTiming() {
-        resetState()
-    }
-
     private fun isSleepEvent(startTime: LocalDateTime): Boolean {
         return sleepNames.contains(newEventName.value) && isSleepingTime(startTime.toLocalTime())
     }
@@ -227,49 +224,54 @@ class EventsViewModel(
         selectedEventIdsMap.value = mutableMapOf()
     }
 
-    private fun resetState(isCoreEvent: Boolean = false) {
-        // 按钮状态++++++++++++++++++++++++++++++++++++++++
-        if (eventTypeState.value == EventType.SUB) {
+    fun resetState(isCoreEvent: Boolean = false, fromDelete: Boolean = false) {
+        // 按钮和currentEvent状态++++++++++++++++++++++++++++++++++++++++
+        if (eventType.value == EventType.SUB) {
             toggleSubButtonState("插入结束")
+            restoreOnMainEvent(fromDelete)
         } else {
+            if (isCoreEvent) {
+                val duration = Duration.between(currentEvent.value!!.startTime, LocalDateTime.now())
+                coreDuration.value -= duration
+            }
+
             toggleMainButtonState("结束")
+
+            resetCurrentOnMainBranch(fromDelete)
         }
 
         // 输入状态+++++++++++++++++++++++++++++++++++++++++
-        if (isInputShowState.value) {
-            isInputShowState.value = false
+        if (isInputShow.value) {
+            isInputShow.value = false
             newEventName.value = ""
         }
-
-        // 持续时间更新————————————————————————————————————————————————————————————————
-        if (isCoreEvent) {
-            val duration = Duration.between(currentEvent.value!!.startTime, LocalDateTime.now())
-            coreDuration.value -= duration
-        }
-
-        // 事件跟踪+++++++++++++++++++++++++++++++++++++++++
-        isTracking.value = false
-        currentEvent.value = null // 方便快捷的方法，让停止事件之前总是从数据库获取当前未完成的事件，以避免 id 问题。
-
     }
 
-    fun deleteItem(event: Event, subEvents: List<Event>) {
+    fun deleteItem(event: Event, subEvents: List<Event> = listOf()) {
         if (dismissedItems.contains(event.id)) return
 
-        Log.i("打标签喽", "删除执行了！！！")
-        viewModelScope.launch(Dispatchers.IO) {
-            eventDao.deleteEvent(event.id)
-            for (subEvent in subEvents) {
-                eventDao.deleteEvent(subEvent.id)
-            }
-        }
+        val isCoreEvent = coreEventNames.contains(event.name)
 
-        if (coreEventNames.contains(event.name)) { // 删除的是当下核心事务
-            coreDuration.value -= event.duration
+        if (event.id != 0L) { // 删除项已经存入数据库中了，排除已经插入了子事件的主事件（有点复杂，不处理这样的场景）
+            Log.i("打标签喽", "删除已经入库的条目")
+            viewModelScope.launch(Dispatchers.IO) {
+                eventDao.deleteEvent(event.id)
+                for (subEvent in subEvents) {
+                    eventDao.deleteEvent(subEvent.id)
+                }
+            }
+
+            if (isCoreEvent) { // 删除的是当下核心事务
+                coreDuration.value -= event.duration
+            }
+        } else { // 删除的是当前项（正在计时）
+            resetState(isCoreEvent, true)
         }
 
         // 在删除完成后，将该 id 添加到已删除项目的记录器中
-        dismissedItems.add(event.id)
+        if (event.id != 0L) { // 当前项的 id 始终是 0，就不要加进来限制执行次数了。
+            dismissedItems.add(event.id)
+        }
     }
 
     // 恢复和存储 UI 状态————————————————————————————————————————————————————————————————————————————👇
@@ -281,7 +283,7 @@ class EventsViewModel(
 
         // 在主线程中使用取出的数据更新状态
         isOneDayButtonClicked.value = data.isOneDayButtonClicked
-        isInputShowState.value = data.isInputShow
+        isInputShow.value = data.isInputShow
         mainEventButtonText.value = data.buttonText
         subEventButtonText.value = data.subButtonText
         coreDuration.value = data.coreDuration
@@ -289,7 +291,7 @@ class EventsViewModel(
         currentEvent.value = data.currentEvent
         incompleteMainEvent = data.incompleteMainEvent
         subButtonClickCount = data.subButtonClickCount
-        eventTypeState.value = if (data.isSubEventType) EventType.SUB else EventType.MAIN
+        eventType.value = if (data.isSubEventType) EventType.SUB else EventType.MAIN
         isLastStopFromSub = data.isLastStopFromSub
         isCoreDurationReset = data.isCoreDurationReset
 
@@ -303,7 +305,7 @@ class EventsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             spHelper.saveState(
                 isOneDayButtonClicked.value,
-                isInputShowState.value,
+                isInputShow.value,
                 mainEventButtonText.value,
                 subEventButtonText.value,
                 scrollIndex.value,
@@ -314,7 +316,7 @@ class EventsViewModel(
                 currentEvent.value,
                 incompleteMainEvent,
                 subButtonClickCount,
-                eventTypeState.value,
+                eventType.value,
                 isLastStopFromSub,
                 isCoreDurationReset
             )
@@ -328,20 +330,20 @@ class EventsViewModel(
     private fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now()) {
         // 重要状态更新—————————————————————————————————————————————————————
         isTracking.value = true
-        isInputShowState.value = true
+        isInputShow.value = true
         newEventName.value = ""
 
         viewModelScope.launch {
-            if (eventTypeState.value == EventType.SUB) {
+            if (eventType.value == EventType.SUB) {
                 subButtonClickCount++
 
                 if (subButtonClickCount == 1) { // 首次点击插入按钮
-                    // 存储每个未完成的主事件，以备后边插入的子事件结束后获取
-                    incompleteMainEvent = currentEvent.value
-
-                    withContext(Dispatchers.IO) {
+                    val id = withContext(Dispatchers.IO) {
                         currentEvent.value?.let { eventDao.insertEvent(it) }
                     }
+
+                    // 存储每个未完成的主事件，以备后边插入的子事件结束后获取
+                    incompleteMainEvent = currentEvent.value?.copy(id = id!!)
                 }
             } else {
                 subButtonClickCount = 0 // 一遇到主事件就清空
@@ -349,7 +351,7 @@ class EventsViewModel(
 
             // 获取 parentId，并创建新的事件对象（主、子），更新 currentEvent——————————————————————
             val mainEventId = withContext(Dispatchers.IO) {
-                if (eventTypeState.value == EventType.SUB) {
+                if (eventType.value == EventType.SUB) {
                     eventDao.getLastMainEventId()// 在插入子事件之前一定存在主事件，不会有问题
                 } else null
             }
@@ -387,7 +389,7 @@ class EventsViewModel(
             }
         }
 
-        isInputShowState.value = false
+        isInputShow.value = false
     }
 
     private fun stopCurrentEvent() {
@@ -480,6 +482,12 @@ class EventsViewModel(
     }
 
     private fun generalHandle() { // 确认时文本不为空也不是 ”起床“
+        if (eventType.value == EventType.SUB && coreEventNames.contains(newEventName.value)) {
+            Toast.makeText(getApplication(), "不可在子事务中进行核心事务！", Toast.LENGTH_SHORT).show()
+            resetState()
+            return
+        }
+
         if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null（事件可能在进行中）
             generalHandleFromNameClicked()
         } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
@@ -502,7 +510,7 @@ class EventsViewModel(
             it.isCurrent = false
 
             withContext(Dispatchers.IO) {
-                if (isLastStopFromSub && eventTypeState.value == EventType.MAIN) {
+                if (isLastStopFromSub && eventType.value == EventType.MAIN) {
                     Log.i("打标签喽", "结束：更新主事件到数据库！")
                     eventDao.updateEvent(it)
                 } else {
@@ -526,32 +534,47 @@ class EventsViewModel(
 
     private fun resetCurrentEventAndState() {
         // 子事件结束后恢复到主事件（数据库插入会重组一次，因此这里无需赋值重组）
-        if (eventTypeState.value == EventType.SUB) {
+        if (eventType.value == EventType.SUB) {
             restoreOnMainEvent()
         } else {
-            Log.i("打标签喽", "结束的是主事件")
-            currentEvent.value?.name = "￥为减少重组，优化频闪，不显示的特别设定￥" // 本来应该为 null，这里是为了优化显示
-
-            isLastStopFromSub = false
-            isTracking.value = false
+            resetCurrentOnMainBranch()
         }
 
         Log.i("打标签喽", "currentEvent.value = ${currentEvent.value}")
     }
 
-    private fun restoreOnMainEvent() {
-        currentEvent.value?.let {
-            Log.i("打标签喽", "结束的是子事件")
-            it.id = it.parentId!!
-            it.startTime = incompleteMainEvent!!.startTime
-            it.name = incompleteMainEvent!!.name
-            it.endTime = LocalDateTime.MIN // 为优化显示，实际业务不需要
-            it.parentId = null
-            it.isCurrent = true
-
-            isLastStopFromSub = true
-            eventTypeState.value = EventType.MAIN // 必须放在 stop 逻辑中
+    private fun restoreOnMainEvent(fromDelete: Boolean = false) {
+        Log.i("打标签喽", "结束的是子事件")
+        if (!fromDelete) {
+            currentEvent.value?.let {
+                it.id = it.parentId!!
+                it.startTime = incompleteMainEvent!!.startTime
+                it.name = incompleteMainEvent!!.name
+                it.endTime = LocalDateTime.MIN // 为优化显示，实际业务不需要
+                it.parentId = null
+                it.isCurrent = true
+            }
+        } else {
+            currentEvent.value = incompleteMainEvent!!.copy(
+                endTime = LocalDateTime.MIN,
+                isCurrent = true
+            )
         }
+
+        isLastStopFromSub = true
+        eventType.value = EventType.MAIN // 必须放在 stop 逻辑中
+    }
+
+    private fun resetCurrentOnMainBranch(fromDelete: Boolean = false) {
+        Log.i("打标签喽", "结束的是主事件")
+        if (fromDelete) {
+            currentEvent.value = null
+        } else { // 本来应该为 null，这里是为了优化显示
+            currentEvent.value?.name = "￥为减少重组，优化频闪，不显示的特别设定￥"
+        }
+
+        isLastStopFromSub = false
+        isTracking.value = false
     }
 
     // 关键 UI 逻辑——————————————————————————————————————————————————————————————————————————————————👆
@@ -702,7 +725,7 @@ class EventsViewModel(
     private fun toggleSubButtonState(buttonText: String) {
         when (buttonText) {
             "插入" -> {
-                eventTypeState.value = EventType.SUB
+                eventType.value = EventType.SUB
                 subEventButtonText.value = "插入结束"
                 mainButtonShow.value = false
             }

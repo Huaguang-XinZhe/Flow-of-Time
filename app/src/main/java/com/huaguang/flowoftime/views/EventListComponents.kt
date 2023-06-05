@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DismissDirection
+import androidx.compose.material.DismissState
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
@@ -86,6 +87,7 @@ fun EventList(
                 }
             ) { (event, subEvents) ->
                 CustomSwipeToDismiss(
+                    event = event,
                     viewModel = viewModel,
                     dismissed = { viewModel.deleteItem(event, subEvents) }
                 ) {
@@ -109,12 +111,16 @@ fun CurrentItem(viewModel: EventsViewModel) {
     if (initialized && currentEvent != null) {
         currentEvent!!.let {
             if (it.name != "￥为减少重组，优化频闪，不显示的特别设定￥" && it.endTime != LocalDateTime.MIN) {
-                EventItem(
-                    modifier = Modifier
-                        .padding(8.dp, 8.dp, 8.dp, 16.dp),
-                    event = it,
-                    viewModel = viewModel
-                )
+                CustomSwipeToDismiss(
+                    viewModel = viewModel,
+                    dismissed = { viewModel.deleteItem(it) }
+                ) {
+                    EventItem(
+                        event = it,
+                        viewModel = viewModel
+                    )
+                }
+
             }
         }
     }
@@ -123,6 +129,7 @@ fun CurrentItem(viewModel: EventsViewModel) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun CustomSwipeToDismiss(
+    event: Event? = null,
     viewModel: EventsViewModel,
     dismissed: () -> Unit,
     dismissContent: @Composable (RowScope.() -> Unit)
@@ -132,11 +139,12 @@ fun CustomSwipeToDismiss(
     val context = LocalContext.current
     val dismissState = rememberDismissState()
     val isItemClicked = remember { mutableStateOf(false) }
-    val isEventNameNotClicked by viewModel.isEventNameNotClicked
+    val isInputShow by viewModel.isInputShow
 
-    val direction = if (isEventNameNotClicked && isItemClicked.value) {
+    val direction = if (isItemClicked.value) {
         setOf(DismissDirection.StartToEnd)
     } else setOf()
+
     val borderModifier = if (isItemClicked.value) {
         Modifier.border(2.dp, Color.Red, RoundedCornerShape(12.dp))
     } else Modifier
@@ -147,12 +155,13 @@ fun CustomSwipeToDismiss(
         state = dismissState,
         modifier = Modifier
             .padding(8.dp)
-            .clickable {
+            .clickable( // 弹出输入框时禁止点击解除限制，滑动删除
+                // 已经插入数据库，且子事项正在计时的主事项禁止点击
+                enabled = !isInputShow && event?.let { it.endTime != null } ?: true
+            ) {
                 isItemClicked.value = !isItemClicked.value
                 if (isItemClicked.value) {
-                    Toast
-                        .makeText(context, "解除限制，可右滑删除", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(context, "解除限制，可右滑删除", Toast.LENGTH_SHORT).show()
                 }
             }
             .then(borderModifier),
@@ -161,42 +170,47 @@ fun CustomSwipeToDismiss(
             FractionalThreshold(0.35f)
         },
         background = {
-            val isDefault = dismissState.targetValue == DismissValue.Default
-            val color by animateColorAsState(
-                when (dismissState.targetValue) {
-                    DismissValue.Default -> LightRed6
-                    DismissValue.DismissedToEnd -> Color.Red
-                    else -> Color.Green
-                }
-            )
-            val scale by animateFloatAsState(
-                // DismissValue.Default 是滑块达到阈值之前的状态
-                if (isDefault) 0.75f else 1f
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize() // 背景部分不撑到父容器那么大，就只会是刚刚好包含 Icon 的大小
-                    .clip(RoundedCornerShape(12.dp)) //必须放在这里，如果放在 SwipeToDismiss，会把 Card 的阴影给覆盖了。
-                    .background(color)
-                    .padding(start = 20.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = null,
-                    modifier = Modifier.scale(scale),
-                    tint = if (isDefault) Color.Black else Color.White
-                )
-            }
+            SwipeBackground(dismissState = dismissState)
         },
         dismissContent = dismissContent
     )
 }
 
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SwipeBackground(dismissState: DismissState) {
+    val isDefault = dismissState.targetValue == DismissValue.Default
+    val color by animateColorAsState(
+        when (dismissState.targetValue) {
+            DismissValue.Default -> LightRed6
+            DismissValue.DismissedToEnd -> Color.Red
+            else -> Color.Green
+        }
+    )
+    val scale by animateFloatAsState(
+        // DismissValue.Default 是滑块达到阈值之前的状态
+        if (isDefault) 0.75f else 1f
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize() // 背景部分不撑到父容器那么大，就只会是刚刚好包含 Icon 的大小
+            .clip(RoundedCornerShape(12.dp)) //必须放在这里，如果放在 SwipeToDismiss，会把 Card 的阴影给覆盖了。
+            .background(color)
+            .padding(start = 20.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Delete,
+            contentDescription = null,
+            modifier = Modifier.scale(scale),
+            tint = if (isDefault) Color.Black else Color.White
+        )
+    }
+}
+
 @Composable
 fun EventItem(
-    modifier: Modifier = Modifier,
     event: Event,
     subEvents: List<Event> = listOf(),
     viewModel: EventsViewModel
@@ -215,8 +229,7 @@ fun EventItem(
 
     Card(
         elevation = CardDefaults.cardElevation(4.dp),
-        colors = cardColors,
-        modifier = modifier
+        colors = cardColors
     ) {
         Column(
             modifier = Modifier.padding(10.dp)
@@ -261,7 +274,7 @@ fun EventItemRow(
         modifier = modifier
     ) {
         if (showTime) {
-            EventStartTime(
+            EventTime(
                 event = event,
                 viewModel = viewModel,
                 startTimeState = startTimeState,
@@ -279,12 +292,12 @@ fun EventItemRow(
 
         if (isShowTail.value) {
             if (showTime) {
-                EventEndTime(
+                EventTime(
+                    isEndTime = true,
                     event = event,
                     viewModel = viewModel,
                     startTimeState = startTimeState,
                     endTimeState = endTimeState,
-                    endTimeText = endTimeState.value?.let { formatLocalDateTime(it) } ?: "...",
                     durationState = durationState
                 )
             }
@@ -349,50 +362,34 @@ fun EventName(
 }
 
 @Composable
-fun EventStartTime(
+fun EventTime(
+    isEndTime: Boolean = false,
     event: Event,
     viewModel: EventsViewModel,
     startTimeState: MutableState<LocalDateTime>,
     endTimeState: MutableState<LocalDateTime?>,
     durationState: MutableState<Duration?>
 ) {
-    DraggableText(
-        modifier = Modifier.padding(end = 5.dp),
-        text = formatLocalDateTime(startTimeState.value),
-        viewModel = viewModel,
-        onDragDelta = { dragValue ->
-            // 下面两个状态的调整必须放在这里，逐步进行
-            startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
-            durationState.value = durationState.value?.minusMinutes(dragValue.toLong())
-        }
-    ) {
-        val updatedEvent = event.copy(
-            startTime = startTimeState.value,
-            endTime = endTimeState.value,
-            duration = durationState.value
-        )
-
-        viewModel.updateTimeAndState(updatedEvent, event.duration)
+    val text = if (isEndTime) {
+        endTimeState.value?.let { formatLocalDateTime(it) } ?: "..."
+    } else {
+        formatLocalDateTime(startTimeState.value)
     }
-}
 
-@Composable
-fun EventEndTime(
-    event: Event,
-    viewModel: EventsViewModel,
-    startTimeState: MutableState<LocalDateTime>,
-    endTimeState: MutableState<LocalDateTime?>,
-    endTimeText: String,
-    durationState: MutableState<Duration?>
-) {
     DraggableText(
-        text = endTimeText,
-        enabled = endTimeState.value != null,
-        isShadow = endTimeText != "" && endTimeText != "...",
+        modifier = Modifier.padding(end = if (isEndTime) 0.dp else 5.dp),
+        text = text,
+        isEndTime = isEndTime,
         viewModel = viewModel,
+        event = event,
         onDragDelta = { dragValue ->
-            endTimeState.value = endTimeState.value?.plusMinutes(dragValue.toLong())
-            durationState.value = durationState.value?.plusMinutes(dragValue.toLong())
+            if (isEndTime) {
+                endTimeState.value = endTimeState.value?.plusMinutes(dragValue.toLong())
+                durationState.value = durationState.value?.plusMinutes(dragValue.toLong())
+            } else {
+                startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
+                durationState.value = durationState.value?.minusMinutes(dragValue.toLong())
+            }
         }
     ) {
         val updatedEvent = event.copy(

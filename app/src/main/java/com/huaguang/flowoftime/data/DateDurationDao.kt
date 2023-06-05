@@ -11,7 +11,7 @@ import java.time.LocalDate
 interface DateDurationDao {
 
     @Query("SELECT * FROM date_durations WHERE date = :date")
-    suspend fun getDateDuration(date: LocalDate): DateDuration
+    suspend fun getDateDuration(date: LocalDate): DateDuration?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDateDuration(dateDuration: DateDuration)
