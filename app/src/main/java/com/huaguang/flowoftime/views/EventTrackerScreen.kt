@@ -19,7 +19,6 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -161,12 +160,12 @@ fun EventButtons(viewModel: EventsViewModel) {
             }
 
             if (subButtonShow == true) {
-                TextButton(
+                LongPressTextButton(
                     onClick = { viewModel.toggleSubEvent() },
+                    onLongClick = { viewModel.onSubButtonLongClick() },
+                    text = subEventButtonText,
                     modifier = Modifier.padding(start = 5.dp)
-                ) {
-                    Text(text = subEventButtonText)
-                }
+                )
             }
         }
     }

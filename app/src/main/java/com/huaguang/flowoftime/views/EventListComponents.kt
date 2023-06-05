@@ -107,12 +107,16 @@ fun CurrentItem(viewModel: EventsViewModel) {
     val initialized by viewModel.initialized
 
     if (initialized && currentEvent != null) {
-        EventItem(
-            modifier = Modifier
-                .padding(8.dp, 8.dp, 8.dp, 16.dp),
-            event = currentEvent!!,
-            viewModel = viewModel
-        )
+        currentEvent!!.let {
+            if (it.name != "￥为减少重组，优化频闪，不显示的特别设定￥" && it.endTime != LocalDateTime.MIN) {
+                EventItem(
+                    modifier = Modifier
+                        .padding(8.dp, 8.dp, 8.dp, 16.dp),
+                    event = it,
+                    viewModel = viewModel
+                )
+            }
+        }
     }
 }
 

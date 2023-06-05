@@ -54,9 +54,45 @@ fun LongPressButton(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun LongPressTextButton(
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    text: String,
+    modifier: Modifier = Modifier
+) {
+    // 创建一个自定义的 InteractionSource
+    val interactionSource = remember { MutableInteractionSource() }
+    // 创建一个波纹效果的 Indication
+    val rippleIndication = rememberRipple(bounded = false, radius = 80.dp)
+
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(80.dp)) // 必须先调用，要不然会被背景覆盖
+            .padding(vertical = 10.dp, horizontal = 20.dp)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick,
+                // 使用自定义的 InteractionSource 和 Indication
+                interactionSource = interactionSource,
+                indication = rippleIndication
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+
+
 
 @Preview(showBackground = true)
 @Composable
 fun LongPressButtonPreview() {
-    LongPressButton(onClick = { /*TODO*/ }, onLongClick = { /*TODO*/ }, text = "开始")
+    LongPressTextButton(onClick = { /*TODO*/ }, onLongClick = { /*TODO*/ }, text = "开始")
 }
