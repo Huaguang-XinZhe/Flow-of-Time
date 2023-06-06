@@ -51,12 +51,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.coreEventNames
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.ui.theme.LightRed6
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.formatLocalDateTime
+import com.huaguang.flowoftime.utils.isCoreEvent
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 import java.time.Duration
 import java.time.LocalDateTime
@@ -161,7 +161,9 @@ fun CustomSwipeToDismiss(
             ) {
                 isItemClicked.value = !isItemClicked.value
                 if (isItemClicked.value) {
-                    Toast.makeText(context, "解除限制，可右滑删除", Toast.LENGTH_SHORT).show()
+                    Toast
+                        .makeText(context, "解除限制，可右滑删除", Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
             .then(borderModifier),
@@ -215,7 +217,7 @@ fun EventItem(
     subEvents: List<Event> = listOf(),
     viewModel: EventsViewModel
 ) {
-    val cardColors = if (coreEventNames.contains(event.name)) {
+    val cardColors = if (isCoreEvent(event.name)) {
         CardDefaults.cardColors(
             containerColor = DarkGray24,
             contentColor = Color.White
@@ -287,7 +289,7 @@ fun EventItemRow(
             event = event,
             viewModel = viewModel,
             showTime = showTime,
-            modifier = if (event.name.length >= 9) Modifier.weight(1f) else Modifier
+            modifier = Modifier.weight(1f)
         )
 
         if (isShowTail.value) {
@@ -319,6 +321,7 @@ fun EventName(
     modifier: Modifier = Modifier
 ) {
     var isExpansion by remember { mutableStateOf(false) }
+    var isShowIcon by remember { mutableStateOf(false) }
     val selectedEventIdsMap by viewModel.selectedEventIdsMap
 
     val painter = if (!isExpansion) {
@@ -332,7 +335,12 @@ fun EventName(
         style = MaterialTheme.typography.titleMedium,
         maxLines = if (!isExpansion) 1 else 3,
         overflow = if (!isExpansion) TextOverflow.Ellipsis else TextOverflow.Visible,
-        modifier = Modifier
+        onTextLayout = { textLayoutResult ->  // 文本布局完成时的回调函数
+            if (textLayoutResult.hasVisualOverflow) {  // 如果文本溢出
+                isShowIcon = true
+            }
+        },
+        modifier = if (event.name.length > 10 && event.parentId == null) modifier else Modifier
             .padding(end = 5.dp)
             .clickable {
                 viewModel.onNameTextClicked(event)
@@ -344,10 +352,9 @@ fun EventName(
                         .padding(3.dp)
                 } else Modifier
             )
-            .then(modifier)
     )
 
-    if (event.name.length >= 9) {
+    if (isShowIcon) {
         Icon(
             painter = painter,
             contentDescription = null,

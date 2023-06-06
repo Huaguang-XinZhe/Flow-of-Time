@@ -21,8 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.coreEventNames
 import com.huaguang.flowoftime.data.Event
+import com.huaguang.flowoftime.utils.isCoreEvent
 import com.huaguang.flowoftime.viewmodels.EventsViewModel
 
 @Composable
@@ -54,7 +54,7 @@ fun DraggableText(
             }
             .then(
                 if (isSelected && allow) { // 如果Text被点击，添加阴影
-                    if (coreEventNames.contains(event.name)) {
+                    if (isCoreEvent(event.name)) {
                         Modifier.border(1.dp, Color.White)
                     } else Modifier.shadow(1.dp)
                 } else Modifier

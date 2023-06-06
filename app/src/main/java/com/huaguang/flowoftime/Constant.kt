@@ -2,14 +2,18 @@ package com.huaguang.flowoftime
 
 import java.time.Duration
 
-val coreEventNames = listOf(
-    "时光流程序开发",
-    "吃什么程序开发",
-    "compose学习",
-    "compose 学习",
-    "Compose 学习",
-    "时光流：修复 bug",
-    "扔物线学Android"
+// TODO: 关键词应该允许自由编辑配置
+val coreEventKeyWords = listOf(
+    "开发",
+    "程序开发",
+    "compose",
+    "学习",
+    "修复",
+    "bug",
+    "Android",
+    "扔物线",
+    "时光流",
+    "吃什么",
 )
 
 val sleepNames = listOf("睡", "睡觉", "晚睡")
@@ -30,8 +34,4 @@ enum class EventType {
     SUB
 }
 
-enum class ProcessState {
-    INSERT,
-    END,
-    NONE
-}
+

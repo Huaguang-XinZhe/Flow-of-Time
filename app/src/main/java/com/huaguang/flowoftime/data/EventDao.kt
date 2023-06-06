@@ -1,11 +1,14 @@
 package com.huaguang.flowoftime.data
 
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Update
+import androidx.sqlite.db.SimpleSQLiteQuery
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -26,12 +29,28 @@ interface EventDao {
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEvent(eventId: Long)
 
-    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
-            "AND duration IS NOT NULL")
+//    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
+//            "AND duration IS NOT NULL")
+//    suspend fun getFilteredEvents(
+//        names: List<String>,
+//        currentDate: LocalDate = LocalDate.now()
+//    ): List<Event>
+
+    @RawQuery
+    suspend fun getEventsWithCustomQuery(query: SimpleSQLiteQuery): List<Event>
+
+    // TODO: 没有处理 SQL 注入风险 
     suspend fun getFilteredEvents(
         names: List<String>,
         currentDate: LocalDate = LocalDate.now()
-    ): List<Event>
+    ): List<Event> {
+        val condition = names.joinToString(" OR ") { "name LIKE '%$it%'" }
+        val queryString = "SELECT * FROM events WHERE eventDate = '$currentDate' " +
+                "AND duration IS NOT NULL AND ($condition)"
+        Log.i("打标签喽", "queryString = $queryString")
+        return getEventsWithCustomQuery(SimpleSQLiteQuery(queryString))
+    }
+
 
     @Query("SELECT * FROM events WHERE parentId IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun getLastMainEvent(): Event

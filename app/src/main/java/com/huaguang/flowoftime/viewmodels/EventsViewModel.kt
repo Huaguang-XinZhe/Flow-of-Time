@@ -18,7 +18,6 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.ItemSelectionTracker
 import com.huaguang.flowoftime.TimeStreamApplication
-import com.huaguang.flowoftime.coreEventNames
 import com.huaguang.flowoftime.data.Event
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
@@ -27,6 +26,7 @@ import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.copyToClipboard
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.getEventDate
+import com.huaguang.flowoftime.utils.isCoreEvent
 import com.huaguang.flowoftime.utils.isSleepingTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -156,7 +156,7 @@ class EventsViewModel(
 
             selectionTracker.cancelSelection(updatedEvent.id) // 取消滑块阴影，禁止点击
 
-            if (coreEventNames.contains(updatedEvent.name)) { // 更新当下核心事务的持续时间
+            if (isCoreEvent(updatedEvent.name)) { // 更新当下核心事务的持续时间
                 if (updatedEvent.duration != null) {
                     coreDuration.value += updatedEvent.duration!! - originalDuration!!
                 } else {
@@ -202,7 +202,7 @@ class EventsViewModel(
         toggleSelectedId(event.id)
         beModifiedEvent = event
 
-        if (coreEventNames.contains(event.name)) {
+        if (isCoreEvent(event.name)) {
             coreNameClickedFlag = true
         }
     }
@@ -250,7 +250,7 @@ class EventsViewModel(
     fun deleteItem(event: Event, subEvents: List<Event> = listOf()) {
         if (dismissedItems.contains(event.id)) return
 
-        val isCoreEvent = coreEventNames.contains(event.name)
+        val isCoreEvent = isCoreEvent(event.name)
 
         if (event.id != 0L) { // 删除项已经存入数据库中了，排除已经插入了子事件的主事件（有点复杂，不处理这样的场景）
             Log.i("打标签喽", "删除已经入库的条目")
@@ -445,7 +445,7 @@ class EventsViewModel(
                     eventDao.updateEvent(it)
                 }
 
-                if (coreEventNames.contains(newEventName.value)) { // 文本是当下核心事务
+                if (isCoreEvent(newEventName.value)) { // 文本是当下核心事务
                     coreDuration.value += it.duration!!
                 } else { // 已修改，不是当下核心事务
                     if (coreNameClickedFlag) { // 点击修改之前是当下核心事务
@@ -463,7 +463,7 @@ class EventsViewModel(
     private fun generalHandleFromNotClicked() {
         Log.i("打标签喽", "事件输入部分，点击确定，一般流程分支。")
         currentEvent.value?.let {
-            if (coreEventNames.contains(newEventName.value)) { // 文本是当下核心事务
+            if (isCoreEvent(newEventName.value)) { // 文本是当下核心事务
                 isCoreEventTracking = true
                 startTimeTracking = it.startTime
             }
@@ -482,7 +482,7 @@ class EventsViewModel(
     }
 
     private fun generalHandle() { // 确认时文本不为空也不是 ”起床“
-        if (eventType.value == EventType.SUB && coreEventNames.contains(newEventName.value)) {
+        if (eventType.value == EventType.SUB && isCoreEvent(newEventName.value)) {
             Toast.makeText(getApplication(), "不可在子事务中进行核心事务！", Toast.LENGTH_SHORT).show()
             resetState()
             return
@@ -524,7 +524,7 @@ class EventsViewModel(
 
     private fun updateCoreDurationOnStop() {
         currentEvent.value?.let {
-            if (coreEventNames.contains(it.name)) { // 结束的是当下核心事务
+            if (isCoreEvent(it.name)) { // 结束的是当下核心事务
                 coreDuration.value += Duration.between(startTimeTracking!!, it.endTime)
                 startTimeTracking = null
                 isCoreEventTracking = false
@@ -603,7 +603,7 @@ class EventsViewModel(
     }
 
     private fun checkAndSetAlarm(name: String) {
-        if (!coreEventNames.contains(name)) return
+        if (!isCoreEvent(name)) return
 
         if (coreDuration.value < ALARM_SETTING_THRESHOLD) {
             // 一般事务一次性持续时间都不超过 5 小时
@@ -614,7 +614,7 @@ class EventsViewModel(
 
     private fun cancelAlarm() {
         currentEvent.value?.let {
-            if (coreDuration.value != null && coreEventNames.contains(it.name)) {
+            if (coreDuration.value != null && isCoreEvent(it.name)) {
                 coreDuration.value = coreDuration.value?.minus(it.duration)
 
                 if (isAlarmSet.value == true &&

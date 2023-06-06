@@ -1,6 +1,6 @@
 package com.huaguang.flowoftime.data
 
-import com.huaguang.flowoftime.coreEventNames
+import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.utils.EventSerializer
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +14,7 @@ class EventRepository(
 
     suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
         var totalDuration = Duration.ZERO
-        val events = eventDao.getFilteredEvents(coreEventNames, eventDate)
+        val events = eventDao.getFilteredEvents(coreEventKeyWords, eventDate)
 
         // 当 events 为空，里边的代码就不会执行
         for (event in events) {

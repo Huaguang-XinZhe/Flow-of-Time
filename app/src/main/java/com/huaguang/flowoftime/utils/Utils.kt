@@ -5,11 +5,22 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.os.VibrationEffect
 import android.os.Vibrator
+import com.huaguang.flowoftime.coreEventKeyWords
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+
+fun isCoreEvent(name: String): Boolean {
+    for (keyWord in coreEventKeyWords) {
+        val contains = name.contains(keyWord, true)
+
+        if (contains) return true
+    }
+
+    return false
+}
 
 fun getEventDate(startTime: LocalDateTime): LocalDate {
     return if (startTime.hour in 0..4) {
