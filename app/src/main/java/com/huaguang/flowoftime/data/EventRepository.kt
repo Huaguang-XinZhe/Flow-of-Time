@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class EventRepository(
-    val eventDao: EventDao,
+    private val eventDao: EventDao,
     private val dateDurationDao: DateDurationDao
 ) {
 
@@ -102,6 +102,18 @@ class EventRepository(
         }
         return lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
             ?: lastEvent.startTime.plus(DEFAULT_EVENT_INTERVAL)
+    }
+
+    suspend fun deleteEventWithSubEvents(
+        event: Event,
+        subEvents: List<Event> = listOf()
+    ) {
+        withContext(Dispatchers.IO) {
+            eventDao.deleteEvent(event.id)
+            for (subEvent in subEvents) {
+                eventDao.deleteEvent(subEvent.id)
+            }
+        }
     }
 
 }

@@ -25,6 +25,14 @@ class EventButtonsViewModel @Inject constructor(
     val subButtonShow = MutableLiveData(false)
 
 
+    fun toggleButtonStateStopped() {
+        if (eventType == EventType.SUB) {
+            toggleSubButtonState("插入结束")
+        } else {
+            toggleMainButtonState("结束")
+        }
+    }
+
     fun toggleMainButtonState(buttonText: String) {
         when (buttonText) {
             "开始" -> {
@@ -64,6 +72,13 @@ class EventButtonsViewModel @Inject constructor(
 
         subButtonShow.value = true
 
+    }
+
+    fun updateStateOnGetUpConfirmed() {
+        // 按钮文本直接还原为开始，不需要结束
+        mainEventButtonText.value = "开始"
+        // 比较特殊，插入按钮不需要显示
+        subButtonShow.value = false
     }
 
 

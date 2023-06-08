@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
@@ -15,6 +16,7 @@ import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.isCoreEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -66,6 +68,19 @@ class EventNameViewModel @Inject constructor(
         delay(500)
         beModifiedEvent = null
         clickedTracker.clearSelection()
+    }
+
+    fun onGetUpTextClickThenConfirmed() {
+        if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null
+            Log.i("打标签喽", "起床处理，item 点击！！！")
+            viewModelScope.launch {
+                beModifiedEvent!!.name = "起床"
+
+                repository.updateEvent(beModifiedEvent!!)
+
+                delayReset()
+            }
+        }
     }
 
 }

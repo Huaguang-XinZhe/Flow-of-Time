@@ -5,13 +5,19 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.utils.AlarmHelper
+import com.huaguang.flowoftime.sleepNames
+import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.isCoreEvent
+import com.huaguang.flowoftime.utils.isSleepingTime
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -19,9 +25,11 @@ import javax.inject.Inject
 @HiltViewModel
 class DurationSliderViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val alarmHelper: AlarmHelper,
+    sharedState: SharedState,
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
+
+    private val newEventName = sharedState.newEventName.value
 
     // 专有
     val coreDuration = mutableStateOf(Duration.ZERO)
@@ -32,6 +40,7 @@ class DurationSliderViewModel @Inject constructor(
     var startTimeTracking: LocalDateTime? = null // 记录正在进行的核心事务的开始时间
     var isCoreDurationReset = false
     var isCoreEventTracking = false
+
 
     fun updateCoreDuration() {
         if (startTimeTracking != null) { // 当下核心事务的计时正在进行
@@ -56,11 +65,11 @@ class DurationSliderViewModel @Inject constructor(
         }
     }
 
-    fun updateCDonStoredItem(updatedDuration: Duration, originalDuration: Duration) {
+    private fun updateCDonStoredItem(updatedDuration: Duration, originalDuration: Duration) {
         coreDuration.value += updatedDuration - originalDuration
     }
 
-    fun updateCDonCurrentItem(currentBeforeST: LocalDateTime, updatedST: LocalDateTime) {
+    private fun updateCDonCurrentItem(currentBeforeST: LocalDateTime, updatedST: LocalDateTime) {
         coreDuration.value -= Duration.between(currentBeforeST, updatedST)
     }
 
@@ -70,28 +79,58 @@ class DurationSliderViewModel @Inject constructor(
         clickFlag: MutableState<Boolean>
     ) {
         if (isCoreEvent(name)) { // 文本是当下核心事务（之前不是）
-            plusStoredDuration(event.duration!!)
+            increaseStoredDuration(event.duration!!)
         } else { // 已修改，不是当下核心事务
             if (clickFlag.value) { // 点击修改之前是当下核心事务
-                minusStoredDuration(event.duration!!)
+                reduceStoredDuration(event.duration!!)
                 clickFlag.value = false
             }
         }
     }
 
-    fun plusStoredDuration(duration: Duration) {
+    private fun increaseStoredDuration(duration: Duration) {
         coreDuration.value += duration
     }
 
-    fun minusStoredDuration(duration: Duration) {
+    fun reduceStoredDuration(duration: Duration) {
         coreDuration.value -= duration
     }
 
-    fun updateCDonCurrentStop(currentEvent: Event) {
+    fun increaseCDonCurrentStop(currentEvent: Event) {
         if (isCoreEvent(currentEvent.name)) { // 结束的是当下核心事务
             coreDuration.value += Duration.between(startTimeTracking!!, currentEvent.endTime)
             startTimeTracking = null
             isCoreEventTracking = false
+        }
+    }
+
+    fun reduceCDonCurrentCancel(currentST: LocalDateTime, isCoreEvent: Boolean = false) {
+        if (isCoreEvent) {
+            val duration = Duration.between(currentST, LocalDateTime.now())
+            coreDuration.value -= duration
+        }
+    }
+
+
+    fun generalHandleFromNotClicked(currentEvent: Event) {
+        fun isSleepEvent(startTime: LocalDateTime): Boolean {
+            return sleepNames.contains(newEventName) && isSleepingTime(startTime.toLocalTime())
+        }
+
+        currentEvent.let {
+            if (isCoreEvent(newEventName)) { // 当下核心事务
+                isCoreEventTracking = true
+                startTimeTracking = currentEvent.startTime
+            }
+
+            if (isSleepEvent(currentEvent.startTime)) { // 晚睡
+                isCoreDurationReset = false
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    // 更新或存储当下核心事务的总值
+                    repository.updateCoreDurationForDate(getAdjustedEventDate(), coreDuration.value)
+                }
+            }
         }
     }
 

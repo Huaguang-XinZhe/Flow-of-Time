@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.ui.screens.event_tracker.EventTrackerScreenViewModel
+import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.utils.isCoreEvent
 import java.time.Duration
@@ -33,7 +33,7 @@ import java.time.LocalDateTime
 fun DraggableEventTime(
     isEndTime: Boolean = false,
     event: Event,
-    viewModel: EventTrackerScreenViewModel,
+    mediator: EventTrackerMediator,
     startTimeState: MutableState<LocalDateTime>,
     endTimeState: MutableState<LocalDateTime?>,
     durationState: MutableState<Duration?>
@@ -48,7 +48,7 @@ fun DraggableEventTime(
         modifier = Modifier.padding(end = if (isEndTime) 0.dp else 5.dp),
         text = text,
         isEndTime = isEndTime,
-        viewModel = viewModel,
+        viewModel = mediator.eventTimeViewModel,
         event = event,
         onDragDelta = { dragValue ->
             if (isEndTime) {
@@ -66,7 +66,7 @@ fun DraggableEventTime(
             duration = durationState.value
         )
 
-        viewModel.updateOnDragStopped(updatedEvent, event.duration)
+        mediator.updateOnDragStopped(updatedEvent, event.duration)
     }
 }
 
@@ -75,7 +75,7 @@ fun DraggableText(
     modifier: Modifier = Modifier,
     text: String,
     isEndTime: Boolean = false,
-    viewModel: EventTrackerScreenViewModel,
+    viewModel: EventTimeViewModel,
     event: Event,
     onDragDelta: (Float) -> Unit,
     onDragStopped: () -> Unit
@@ -83,7 +83,7 @@ fun DraggableText(
     val speedList = remember { mutableStateListOf<Float>() }
     val lastDragTime = remember { mutableStateOf<Long?>(null) }
     val lastDelta = remember { mutableStateOf(0f) }
-    val selectionTracker = viewModel.eventTimeViewModel.selectionTracker
+    val selectionTracker = viewModel.selectionTracker
     val isSelected by remember {
         derivedStateOf { selectionTracker.isSelected(event.id) }
     }

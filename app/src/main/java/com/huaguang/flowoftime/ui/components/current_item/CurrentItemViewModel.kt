@@ -22,12 +22,13 @@ import javax.inject.Inject
 @HiltViewModel
 class CurrentItemViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val sharedState: SharedState,
+    sharedState: SharedState,
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
-    var eventType = sharedState.eventType.value
-    var isTracking = sharedState.isTracking.value
+    // 共享依赖
+    private var eventType = sharedState.eventType.value
+    private var isTracking = sharedState.isTracking.value
 
     val currentEvent: MutableState<Event?> =  mutableStateOf(null)
     var incompleteMainEvent: Event? by mutableStateOf(null)
@@ -36,13 +37,12 @@ class CurrentItemViewModel @Inject constructor(
     var subButtonClickCount = 0
     var isLastStopFromSub = false
 
-
-    fun resetCurrentEventAndState() {
+    fun resetCurrentEvent(fromDelete: Boolean = false) {
         // 子事件结束后恢复到主事件（数据库插入会重组一次，因此这里无需赋值重组）
         if (eventType == EventType.SUB) {
-            restoreOnMainEvent()
+            restoreOnMainEvent(fromDelete)
         } else {
-            resetCurrentOnMainBranch()
+            resetCurrentItem(fromDelete)
         }
 
         Log.i("打标签喽", "currentEvent.value = ${currentEvent.value}")
@@ -70,7 +70,7 @@ class CurrentItemViewModel @Inject constructor(
         eventType = EventType.MAIN // 必须放在 stop 逻辑中
     }
 
-    private fun resetCurrentOnMainBranch(fromDelete: Boolean = false) {
+    fun resetCurrentItem(fromDelete: Boolean = false) {
         Log.i("打标签喽", "结束的是主事件")
         if (fromDelete) {
             currentEvent.value = null

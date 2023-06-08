@@ -32,7 +32,8 @@ fun DurationSlider(viewModel: DurationSliderViewModel) {
         }
 
         Text(
-            text = "当下核心事务："
+            text = "当下核心事务：",
+            modifier = if (!isAlarmSet) Modifier.padding(start = 8.dp, end = 5.dp) else Modifier
         )
 
         Slider(

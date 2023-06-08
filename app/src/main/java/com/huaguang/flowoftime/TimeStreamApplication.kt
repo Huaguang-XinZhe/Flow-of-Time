@@ -6,9 +6,10 @@ import android.app.NotificationManager
 import androidx.room.Room
 import com.huaguang.flowoftime.data.EventDatabase
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 @HiltAndroidApp
-class TimeStreamApplication : Application() {
+class TimeStreamApplication @Inject constructor() : Application() {
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "my_service_channel"
     }

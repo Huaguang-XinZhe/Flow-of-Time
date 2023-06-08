@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components.event_list
+package com.huaguang.flowoftime.ui.components
 
 import android.util.Log
 import androidx.compose.foundation.layout.Box
@@ -11,18 +11,18 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.huaguang.flowoftime.EventsViewModel
+import com.huaguang.flowoftime.ui.components.current_item.CurrentItem
 import com.huaguang.flowoftime.widget.CustomSwipeToDismiss
 
 @Composable
 fun EventList(
-    viewModel: EventsViewModel,
+    mediator: EventTrackerMediator,
     listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
     Log.i("打标签喽", "EventList 重组！！！")
 //    val lazyPagingItems = viewModel.pager.collectAsLazyPagingItems()
-    val eventsWithSubEvents by viewModel.eventsWithSubEvents.collectAsState(emptyList())
+    val eventsWithSubEvents by mediator.eventsWithSubEvents.collectAsState(emptyList())
 
     Box(modifier = modifier) {
         LazyColumn(
@@ -41,15 +41,15 @@ fun EventList(
             ) { (event, subEvents) ->
                 CustomSwipeToDismiss(
                     event = event,
-                    viewModel = viewModel,
-                    dismissed = { viewModel.deleteItem(event, subEvents) }
+                    sharedState = mediator.sharedState,
+                    dismissed = { mediator.deleteItem(event, subEvents) }
                 ) {
-                    EventItem(event = event, subEvents = subEvents, viewModel = viewModel)
+                    EventItem(event = event, subEvents = subEvents, mediator = mediator)
                 }
             }
 
             item {
-                CurrentItem(viewModel = viewModel)
+                CurrentItem(mediator = mediator)
             }
         }
     }

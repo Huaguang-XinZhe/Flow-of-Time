@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components.event_input
+package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,17 +28,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.EventsViewModel
 import com.huaguang.flowoftime.R
 
 @Composable
-fun EventInputField(viewModel: EventsViewModel) {
+fun EventInputField(mediator: EventTrackerMediator) {
     val focusRequester = remember { FocusRequester() }
 
     Column {
-        UndoIconButton(viewModel = viewModel)
+        UndoIconButton(mediator = mediator)
 
-        InputRow(viewModel = viewModel, focusRequester = focusRequester)
+        InputRow(mediator = mediator, focusRequester = focusRequester)
 
         Spacer(modifier = Modifier.fillMaxWidth().height(280.dp))
     }
@@ -51,8 +50,8 @@ fun EventInputField(viewModel: EventsViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputRow(viewModel: EventsViewModel, focusRequester: FocusRequester) {
-    val newEventName by viewModel.newEventName
+fun InputRow(mediator: EventTrackerMediator, focusRequester: FocusRequester) {
+    val newEventName by mediator.sharedState.newEventName
     var textFieldState by remember {
         mutableStateOf(TextFieldValue(text = newEventName))
     }
@@ -64,7 +63,7 @@ fun InputRow(viewModel: EventsViewModel, focusRequester: FocusRequester) {
             value = textFieldState,
             onValueChange = {
                 textFieldState = it
-                viewModel.newEventName.value = it.text
+                mediator.sharedState.newEventName.value = it.text
             },
             label = { Text("事件名称") },
             modifier = Modifier
@@ -80,20 +79,20 @@ fun InputRow(viewModel: EventsViewModel, focusRequester: FocusRequester) {
                 }
         )
 
-        Button(onClick = { viewModel.onConfirm() }) {
+        Button(onClick = { mediator.onConfirmed() }) {
             Text("确认")
         }
     }
 }
 
 @Composable
-fun UndoIconButton(viewModel: EventsViewModel) {
-    val isNameClicked by viewModel.isNameClicked
+fun UndoIconButton(mediator: EventTrackerMediator) {
+    val isNameClicked by mediator.eventNameViewModel.isNameClicked
 
     if (!isNameClicked) {
         IconButton(
             onClick = {
-                viewModel.resetState()
+                mediator.resetState()
             },
             modifier = Modifier
                 .size(36.dp)

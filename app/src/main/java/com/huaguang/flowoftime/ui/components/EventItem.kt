@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components.event_list
+package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,11 +15,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.EventsViewModel
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.event_name.EventName
 import com.huaguang.flowoftime.ui.components.event_time.DraggableEventTime
-import com.huaguang.flowoftime.ui.screens.event_tracker.EventTrackerScreenViewModel
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.isCoreEvent
@@ -28,7 +26,7 @@ import com.huaguang.flowoftime.utils.isCoreEvent
 fun EventItem(
     event: Event,
     subEvents: List<Event> = listOf(),
-    viewModel: EventTrackerScreenViewModel
+    mediator: EventTrackerMediator
 ) {
     val cardColors = if (isCoreEvent(event.name)) {
         CardDefaults.cardColors(
@@ -49,12 +47,12 @@ fun EventItem(
         Column(
             modifier = Modifier.padding(10.dp)
         ) {
-            EventItemRow(viewModel, event = event, showTime = true)
+            EventItemRow(mediator, event = event, showTime = true)
 
             // 插入的临时事件的 UI
             for (subEvent in subEvents) {
                 EventItemRow(
-                    viewModel = viewModel,
+                    mediator = mediator,
                     event = subEvent,
                     showTime = false,  // 添加了一些左侧的 padding 以便缩进
                     modifier = Modifier.padding(start = 30.dp)
@@ -66,7 +64,7 @@ fun EventItem(
 
 @Composable
 fun EventItemRow(
-    viewModel: EventsViewModel,
+    mediator: EventTrackerMediator,
     event: Event,
     showTime: Boolean,
     modifier: Modifier = Modifier,
@@ -89,7 +87,7 @@ fun EventItemRow(
         if (showTime) {
             DraggableEventTime(
                 event = event,
-                viewModel = viewModel,
+                mediator = mediator,
                 startTimeState = startTimeState,
                 endTimeState = endTimeState,
                 durationState = durationState
@@ -98,7 +96,7 @@ fun EventItemRow(
 
         EventName(
             event = event,
-            viewModel = viewModel,
+            viewModel = mediator.eventNameViewModel,
             showTime = showTime,
             modifier = Modifier.weight(1f)
         )
@@ -108,7 +106,7 @@ fun EventItemRow(
                 DraggableEventTime(
                     isEndTime = true,
                     event = event,
-                    viewModel = viewModel,
+                    mediator = mediator,
                     startTimeState = startTimeState,
                     endTimeState = endTimeState,
                     durationState = durationState

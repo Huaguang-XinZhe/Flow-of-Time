@@ -14,48 +14,49 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.huaguang.flowoftime.EventsViewModel
+import com.huaguang.flowoftime.ui.components.EventInputField
+import com.huaguang.flowoftime.ui.components.EventList
+import com.huaguang.flowoftime.ui.components.EventTrackerMediator
+import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSlider
 import com.huaguang.flowoftime.ui.components.event_buttons.EventButtons
-import com.huaguang.flowoftime.ui.components.event_input.EventInputField
-import com.huaguang.flowoftime.ui.components.event_list.EventList
 import com.huaguang.flowoftime.ui.components.header.HeaderRow
 import kotlinx.coroutines.launch
 
 @Composable
-fun EventTrackerScreen(viewModel: EventTrackerScreenViewModel) {
+fun EventTrackerScreen(mediator: EventTrackerMediator) {
     val listState = rememberLazyListState()
-    val isInputShow by viewModel.isInputShow
+    val isInputShow by mediator.sharedState.isInputShow
 
-    HandleScrollEffect(viewModel, listState)
+    HandleScrollEffect(mediator.sharedState, listState)
 
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        HeaderRow(viewModel)
+        HeaderRow(mediator.headerViewModel)
 
-        DurationSlider(viewModel)
+        DurationSlider(mediator.durationSliderViewModel)
 
-        EventList(viewModel, listState, Modifier.weight(1f))
+        EventList(mediator, listState, Modifier.weight(1f))
 
         if (isInputShow) {
-            EventInputField(viewModel)
+            EventInputField(mediator)
         }
 
         if (!isInputShow) {
-            EventButtons(viewModel)
+            EventButtons(mediator)
         }
     }
 }
 
 @Composable
 fun HandleScrollEffect(
-    viewModel: EventsViewModel,
+    sharedState: SharedState,
     listState: LazyListState
 ) {
-    val scrollIndex by viewModel.scrollIndex
+    val scrollIndex by sharedState.scrollIndex
     val scope = rememberCoroutineScope()
     val firstLaunch = remember { mutableStateOf(true) }
 
