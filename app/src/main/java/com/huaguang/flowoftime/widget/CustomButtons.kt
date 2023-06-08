@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.views
+package com.huaguang.flowoftime.widget
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background

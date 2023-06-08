@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.views
+package com.huaguang.flowoftime.ui.components.event_input
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,8 +28,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import com.huaguang.flowoftime.EventsViewModel
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.viewmodels.EventsViewModel
 
 @Composable
 fun EventInputField(viewModel: EventsViewModel) {
@@ -39,7 +39,7 @@ fun EventInputField(viewModel: EventsViewModel) {
         UndoIconButton(viewModel = viewModel)
 
         InputRow(viewModel = viewModel, focusRequester = focusRequester)
-        
+
         Spacer(modifier = Modifier.fillMaxWidth().height(280.dp))
     }
 
@@ -88,9 +88,9 @@ fun InputRow(viewModel: EventsViewModel, focusRequester: FocusRequester) {
 
 @Composable
 fun UndoIconButton(viewModel: EventsViewModel) {
-    val isEventNameNotClicked by viewModel.isEventNameNotClicked
+    val isNameClicked by viewModel.isNameClicked
 
-    if (isEventNameNotClicked) {
+    if (!isNameClicked) {
         IconButton(
             onClick = {
                 viewModel.resetState()
@@ -100,7 +100,7 @@ fun UndoIconButton(viewModel: EventsViewModel) {
                 .padding(start = 10.dp, bottom = 5.dp)
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.revocation),
+                painter = painterResource(id = R.drawable.undo),
                 contentDescription = null
             )
         }

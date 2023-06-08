@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime
+package com.huaguang.flowoftime.other
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.data.Event
+import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.theme.DarkGreen39
 import kotlinx.serialization.json.Json
 import java.time.LocalDateTime

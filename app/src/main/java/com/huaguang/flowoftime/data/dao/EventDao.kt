@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data
+package com.huaguang.flowoftime.data.dao
 
 import android.util.Log
 import androidx.room.Dao
@@ -9,6 +9,8 @@ import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -60,7 +62,7 @@ interface EventDao {
 
 
     @Query("SELECT MAX(id) FROM events WHERE parentId IS NULL")
-    suspend fun getLastMainEventId(): Long?
+    suspend fun getLastMainEventId(): Long
 
     @Transaction
     @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate = :eventDate")

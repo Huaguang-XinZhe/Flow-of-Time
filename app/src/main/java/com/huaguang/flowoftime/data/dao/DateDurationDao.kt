@@ -1,10 +1,11 @@
-package com.huaguang.flowoftime.data
+package com.huaguang.flowoftime.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.huaguang.flowoftime.data.models.DateDuration
 import java.time.LocalDate
 
 @Dao

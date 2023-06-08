@@ -1,11 +1,21 @@
 package com.huaguang.flowoftime.data
 
+import android.util.Log
+import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
 import com.huaguang.flowoftime.coreEventKeyWords
+import com.huaguang.flowoftime.data.dao.DateDurationDao
+import com.huaguang.flowoftime.data.dao.EventDao
+import com.huaguang.flowoftime.data.models.DateDuration
+import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.utils.EventSerializer
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 class EventRepository(
     val eventDao: EventDao,
@@ -34,7 +44,9 @@ class EventRepository(
     }
 
     suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {
-        val subEvents = eventDao.getSubEventsForMainEvent(mainEventId)
+        val subEvents = withContext(Dispatchers.IO) {
+            eventDao.getSubEventsForMainEvent(mainEventId)
+        }
         return subEvents.fold(Duration.ZERO) { total, event -> total.plus(event.duration) }
     }
 
@@ -56,6 +68,40 @@ class EventRepository(
         } else {
             dateDurationDao.insertDateDuration(DateDuration(date, duration))
         }
+    }
+
+    suspend fun updateEvent(event: Event) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateEvent(event)
+        }
+    }
+
+    suspend fun fetchMainEventId() = withContext(Dispatchers.IO) {
+        eventDao.getLastMainEventId() // 在插入子事件之前一定存在主事件，不会有问题
+    }
+
+    suspend fun insertEvent(event: Event) = withContext(Dispatchers.IO) {
+        eventDao.insertEvent(event)
+    }
+
+    suspend fun saveCurrentEvent(updateCondition: Boolean, currentEvent: Event) {
+        withContext(Dispatchers.IO) {
+            if (updateCondition) {
+                Log.i("打标签喽", "结束：更新主事件到数据库！")
+                eventDao.updateEvent(currentEvent)
+            } else {
+                Log.i("打标签喽", "结束：插入到数据库执行！")
+                eventDao.insertEvent(currentEvent)
+            }
+        }
+    }
+
+    suspend fun getOffsetStartTime(): LocalDateTime {
+        val lastEvent = withContext(Dispatchers.IO) {
+            eventDao.getLastMainEvent()
+        }
+        return lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
+            ?: lastEvent.startTime.plus(DEFAULT_EVENT_INTERVAL)
     }
 
 }

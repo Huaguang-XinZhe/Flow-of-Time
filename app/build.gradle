@@ -1,8 +1,11 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+
+    // 新增插件
     id 'kotlin-kapt'
     id 'kotlinx-serialization'
+    id 'com.google.dagger.hilt.android'
 }
 
 android {
@@ -63,37 +66,14 @@ android {
 
 dependencies {
 
-    implementation 'androidx.core:core-ktx:1.10.0'
+    implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
-    implementation 'androidx.activity:activity-compose:1.7.1'
+    implementation 'androidx.activity:activity-compose:1.7.2'
     implementation platform('androidx.compose:compose-bom:2022.10.00')
     implementation 'androidx.compose.ui:ui'
     implementation 'androidx.compose.ui:ui-graphics'
     implementation 'androidx.compose.ui:ui-tooling-preview'
     implementation 'androidx.compose.material3:material3'
-
-    // 外部依赖
-    // 原来的 material 库
-    implementation 'androidx.compose.material:material'
-    // Room components
-    def room_version = "2.5.0"
-    implementation "androidx.room:room-runtime:$room_version"
-    kapt "androidx.room:room-compiler:$room_version"
-    implementation "androidx.room:room-ktx:$room_version"
-    // LiveData 相关库
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation "androidx.compose.runtime:runtime-livedata:1.4.3"
-    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
-    // 解决重复的 kotlin 标准库问题
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10"
-    // For Kotlin + Coroutines（WorkManager）
-    implementation "androidx.work:work-runtime-ktx:2.7.1"
-    // 分页加载依赖
-    implementation "androidx.paging:paging-runtime:3.1.1"
-    implementation 'androidx.paging:paging-runtime-ktx:3.1.1'
-    implementation 'androidx.paging:paging-compose:1.0.0-alpha20'
-    // json 对象序列化库（用 Gson 不如用 Serialization）
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
@@ -103,8 +83,40 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
     debugImplementation 'androidx.compose.ui:ui-test-manifest'
 
+    // 解决重复的 kotlin 标准库问题
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.10"
+
+    // 原来的 material 库
+    implementation 'androidx.compose.material:material'
+
+    // Room components
+    def room_version = "2.5.1"
+    implementation "androidx.room:room-runtime:$room_version"
+    kapt "androidx.room:room-compiler:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
+
+    // LiveData 相关库
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+    implementation "androidx.compose.runtime:runtime-livedata:1.4.3"
+    implementation 'androidx.lifecycle:lifecycle-livedata-ktx:2.6.1'
+
+    // For Kotlin + Coroutines（WorkManager）
+    implementation "androidx.work:work-runtime-ktx:2.8.1"
+    androidTestImplementation "androidx.work:work-testing:2.8.1"
+
+    // 分页加载依赖
+    implementation "androidx.paging:paging-runtime:3.1.1"
+    implementation 'androidx.paging:paging-runtime-ktx:3.1.1'
+    implementation 'androidx.paging:paging-compose:1.0.0-alpha20'
+
+    // json 对象序列化库（用 Gson 不如用 Serialization）
+    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
+
+    // Hilt 依赖注入框架（模块部分）
+    implementation 'com.google.dagger:hilt-android:2.46.1'
+    kapt 'com.google.dagger:hilt-compiler:2.46.1'
+
     //郭神的数据库可视化库——Glance
     debugImplementation 'com.guolindev.glance:glance:1.1.0'
-    // For Testing（WorkManager）
-    androidTestImplementation "androidx.work:work-testing:2.7.1"
+
 }

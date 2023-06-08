@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.views
+package com.huaguang.flowoftime.ui.components.event_time
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,16 +21,61 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.data.Event
+import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.ui.screens.event_tracker.EventTrackerScreenViewModel
+import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.utils.isCoreEvent
-import com.huaguang.flowoftime.viewmodels.EventsViewModel
+import java.time.Duration
+import java.time.LocalDateTime
+
+
+@Composable
+fun DraggableEventTime(
+    isEndTime: Boolean = false,
+    event: Event,
+    viewModel: EventTrackerScreenViewModel,
+    startTimeState: MutableState<LocalDateTime>,
+    endTimeState: MutableState<LocalDateTime?>,
+    durationState: MutableState<Duration?>
+) {
+    val text = if (isEndTime) {
+        endTimeState.value?.let { formatLocalDateTime(it) } ?: "..."
+    } else {
+        formatLocalDateTime(startTimeState.value)
+    }
+
+    DraggableText(
+        modifier = Modifier.padding(end = if (isEndTime) 0.dp else 5.dp),
+        text = text,
+        isEndTime = isEndTime,
+        viewModel = viewModel,
+        event = event,
+        onDragDelta = { dragValue ->
+            if (isEndTime) {
+                endTimeState.value = endTimeState.value?.plusMinutes(dragValue.toLong())
+                durationState.value = durationState.value?.plusMinutes(dragValue.toLong())
+            } else {
+                startTimeState.value = startTimeState.value.plusMinutes(dragValue.toLong())
+                durationState.value = durationState.value?.minusMinutes(dragValue.toLong())
+            }
+        }
+    ) {
+        val updatedEvent = event.copy(
+            startTime = startTimeState.value,
+            endTime = endTimeState.value,
+            duration = durationState.value
+        )
+
+        viewModel.updateOnDragStopped(updatedEvent, event.duration)
+    }
+}
 
 @Composable
 fun DraggableText(
     modifier: Modifier = Modifier,
     text: String,
     isEndTime: Boolean = false,
-    viewModel: EventsViewModel,
+    viewModel: EventTrackerScreenViewModel,
     event: Event,
     onDragDelta: (Float) -> Unit,
     onDragStopped: () -> Unit
@@ -38,8 +83,9 @@ fun DraggableText(
     val speedList = remember { mutableStateListOf<Float>() }
     val lastDragTime = remember { mutableStateOf<Long?>(null) }
     val lastDelta = remember { mutableStateOf(0f) }
+    val selectionTracker = viewModel.eventTimeViewModel.selectionTracker
     val isSelected by remember {
-        derivedStateOf { viewModel.selectionTracker.isSelected(event.id) }
+        derivedStateOf { selectionTracker.isSelected(event.id) }
     }
 
     val allow = isEndTime && event.endTime != null || !isEndTime
@@ -50,7 +96,7 @@ fun DraggableText(
             .clickable(
                 enabled = allow
             ) {  // 添加点击事件，点击后设置isClicked为true
-                viewModel.selectionTracker.toggleSelection(event.id)
+                selectionTracker.toggleSelection(event.id)
             }
             .then(
                 if (isSelected && allow) { // 如果Text被点击，添加阴影
@@ -76,8 +122,6 @@ fun DraggableText(
         )
     }
 }
-
-
 
 private fun calculateDragSpeed(
     delta: Float,

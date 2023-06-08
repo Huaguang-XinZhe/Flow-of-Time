@@ -1,9 +1,10 @@
-package com.huaguang.flowoftime
+package com.huaguang.flowoftime.other
 
 import android.content.Context
 import android.widget.Toast
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.huaguang.flowoftime.TimeStreamApplication
 
 class MyAlarmWorker(appContext: Context, workerParams: WorkerParameters):
     CoroutineWorker(appContext, workerParams) {

@@ -7,6 +7,7 @@ import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.huaguang.flowoftime.other.MyAlarmWorker
 import com.huaguang.flowoftime.utils.vibrate
 
 class MyAlarmReceiver : BroadcastReceiver() {
