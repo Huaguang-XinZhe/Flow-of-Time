@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.components.current_item
 
-import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.huaguang.flowoftime.ui.components.EventItem
@@ -10,7 +9,7 @@ import java.time.LocalDateTime
 
 @Composable
 fun CurrentItem(mediator: EventTrackerMediator) {
-    Log.i("打标签喽", "CurrentItem 重组！")
+
     val currentEvent by mediator.currentItemViewModel.currentEvent
     val initialized by mediator.initialized
 

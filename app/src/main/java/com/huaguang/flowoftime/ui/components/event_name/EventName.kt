@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.components.event_name
 
-import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
@@ -98,7 +97,6 @@ fun Modifier.getModifier(
     viewModel: EventNameViewModel,
     isNameClicked: Boolean = false
 ): Modifier {
-    Log.i("打标签喽", "getModifier 中：isNameClicked = $isNameClicked")
 
     return if (event.name.length > 10 && event.parentId == null) this else Modifier
         .padding(end = 5.dp)

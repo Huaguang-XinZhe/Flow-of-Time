@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.widget
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -45,7 +44,6 @@ fun CustomSwipeToDismiss(
     dismissed: () -> Unit,
     dismissContent: @Composable (RowScope.() -> Unit)
 ) {
-    Log.i("打标签喽", "CustomSwipeToDismiss 重组了！！！")
 
     val context = LocalContext.current
     val dismissState = rememberDismissState()

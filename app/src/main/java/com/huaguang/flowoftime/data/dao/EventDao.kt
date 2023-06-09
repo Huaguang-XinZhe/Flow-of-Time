@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.data.dao
 
-import android.util.Log
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -49,7 +48,7 @@ interface EventDao {
         val condition = names.joinToString(" OR ") { "name LIKE '%$it%'" }
         val queryString = "SELECT * FROM events WHERE eventDate = '$currentDate' " +
                 "AND duration IS NOT NULL AND ($condition)"
-        Log.i("打标签喽", "queryString = $queryString")
+
         return getEventsWithCustomQuery(SimpleSQLiteQuery(queryString))
     }
 

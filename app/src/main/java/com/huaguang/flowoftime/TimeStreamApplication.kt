@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.room.Room
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.EventDatabase
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -24,7 +25,11 @@ class TimeStreamApplication @Inject constructor() : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
         createNotificationChannel()
+
+        RDALogger.start("打标签喽").enableLogging(true)
+
     }
 
     private fun createNotificationChannel() {

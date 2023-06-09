@@ -116,7 +116,10 @@ dependencies {
     implementation 'com.google.dagger:hilt-android:2.46.1'
     kapt 'com.google.dagger:hilt-compiler:2.46.1'
 
-    //郭神的数据库可视化库——Glance
+    // 郭神的数据库可视化库——Glance
     debugImplementation 'com.guolindev.glance:glance:1.1.0'
+
+    // 能定位到代码的 Log 库
+    implementation 'com.github.ardakaplan:RDALogger:1.0.0'
 
 }

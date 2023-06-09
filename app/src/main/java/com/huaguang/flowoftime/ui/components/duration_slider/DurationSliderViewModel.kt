@@ -25,11 +25,13 @@ import javax.inject.Inject
 @HiltViewModel
 class DurationSliderViewModel @Inject constructor(
     private val repository: EventRepository,
-    sharedState: SharedState,
+    private val sharedState: SharedState,
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
-    private val newEventName = sharedState.newEventName.value
+    // 共享属性
+    private val newEventName
+        get() = sharedState.newEventName.value
 
     // 专有
     val coreDuration = mutableStateOf(Duration.ZERO)
@@ -112,7 +114,7 @@ class DurationSliderViewModel @Inject constructor(
     }
 
 
-    fun generalHandleFromNotClicked(currentEvent: Event) {
+    fun handleCoreOrSleepEvent(currentEvent: Event) {
         fun isSleepEvent(startTime: LocalDateTime): Boolean {
             return sleepNames.contains(newEventName) && isSleepingTime(startTime.toLocalTime())
         }

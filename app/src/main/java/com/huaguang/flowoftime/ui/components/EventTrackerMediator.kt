@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
@@ -45,8 +46,15 @@ class EventTrackerMediator @Inject constructor(
 ) : AndroidViewModel(application) {
 
     // 依赖子 ViewModel 的状态
-    private val beModifiedEvent = eventNameViewModel.beModifiedEvent
-    private var currentEvent = currentItemViewModel.currentEvent.value
+    private val beModifiedEvent
+        get() = eventNameViewModel.beModifiedEvent
+    private val subEventButtonText
+        get() = eventButtonsViewModel.subEventButtonText.value
+    private var currentEvent // 访问其他类的属性一定要用 getter 方法，否则，获取的始终是初始获取值。
+        get() = currentItemViewModel.currentEvent.value
+        set(value) {
+            currentItemViewModel.currentEvent.value = value
+        }
 
     // 辅助构成函数逻辑
     private var updateJob: Job? = null
@@ -151,14 +159,25 @@ class EventTrackerMediator @Inject constructor(
         if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null（事件可能在进行中）
             generalHandleFromNameClicked()
         } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
-            currentEvent?.let {
-                durationSliderViewModel.generalHandleFromNotClicked(it)
-                currentEvent = it.copy(name = sharedState.newEventName.value)
+            sharedState.apply {
+                currentEvent?.let {
+                    if (eventType.value == EventType.SUB && isCoreEvent(newEventName.value)) {
+                        Toast.makeText(getApplication(), "禁止在子事务中执行核心事务！", Toast.LENGTH_SHORT).show()
+                        restoreToReInsertedState()
+                        return
+                    }
+
+                    durationSliderViewModel.handleCoreOrSleepEvent(it)
+                    currentEvent = it.copy(name = newEventName.value)
+                }
             }
         }
     }
 
-
+    private fun restoreToReInsertedState() {
+        eventButtonsViewModel.toggleSubButtonState("插入结束")
+        currentItemViewModel.restoreOnMainEvent()
+    }
 
     fun updateOnDragStopped(updatedEvent: Event, originalDuration: Duration?) {
         updateJob?.cancel()
@@ -201,15 +220,16 @@ class EventTrackerMediator @Inject constructor(
     }
 
     private fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now()) {
+        sharedState.updateStateOnStart()
+
         viewModelScope.launch {
             currentItemViewModel.apply {
                 saveInCompleteMainEvent()
 
                 currentEvent.value = createCurrentEvent(startTime)
+                RDALogger.info("开始事件，创建后的：currentEvent.value = ${currentEvent.value}")
             }
         }
-
-        sharedState.updateStateOnStart()
     }
 
 
@@ -267,12 +287,14 @@ class EventTrackerMediator @Inject constructor(
     }
 
     fun onSubButtonLongClick() {
+        if (subEventButtonText == "插入") return
+
         viewModelScope.launch {
             // 结束子事件————————————————————————————————————————————————————
             currentItemViewModel.apply {
+                updateCurrentEventOnStop()
                 saveCurrentEvent()
-
-                resetCurrentItem()
+                restoreOnMainEvent()
             }
 
             // 切换按钮状态——————————————————————————————————————————————————
@@ -282,15 +304,12 @@ class EventTrackerMediator @Inject constructor(
             }
 
             // 结束主事件——————————————————————————————————————————————————————————
-
             stopCurrentEvent()
 
             Toast.makeText(getApplication(), "全部结束！", Toast.LENGTH_SHORT).show()
 
         }
     }
-
-
 
     fun toggleMainEvent() {
         eventButtonsViewModel.apply {

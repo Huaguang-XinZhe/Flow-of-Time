@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.components.event_buttons
 
-import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
@@ -12,18 +11,21 @@ import javax.inject.Inject
 
 @HiltViewModel
 class EventButtonsViewModel @Inject constructor(
-    sharedState: SharedState,
+    private val sharedState: SharedState,
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
-    private var eventType = sharedState.eventType.value
+    private var eventType
+        get() = sharedState.eventType.value
+        set(value) {
+            sharedState.eventType.value = value
+        }
 
     // 专用
     val mainEventButtonText = mutableStateOf("开始")
     val subEventButtonText = mutableStateOf("插入")
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
-
 
     fun toggleButtonStateStopped() {
         if (eventType == EventType.SUB) {
@@ -66,7 +68,6 @@ class EventButtonsViewModel @Inject constructor(
         if (mainEventButtonText.value == "开始") return
 
         if (subEventButtonText.value == "插入结束") {
-            Log.i("打标签喽", "插入结束部分恢复！")
             mainButtonShow.value = false
         }
 

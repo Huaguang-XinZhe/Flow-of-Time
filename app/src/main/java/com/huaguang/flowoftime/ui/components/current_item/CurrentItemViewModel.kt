@@ -6,7 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
@@ -14,7 +14,6 @@ import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -22,13 +21,16 @@ import javax.inject.Inject
 @HiltViewModel
 class CurrentItemViewModel @Inject constructor(
     private val repository: EventRepository,
-    sharedState: SharedState,
+    private val sharedState: SharedState,
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
     // 共享依赖
-    private var eventType = sharedState.eventType.value
-    private var isTracking = sharedState.isTracking.value
+    private var eventType
+        get() = sharedState.eventType.value
+        set(value) {
+            sharedState.eventType.value = value
+        }
 
     val currentEvent: MutableState<Event?> =  mutableStateOf(null)
     var incompleteMainEvent: Event? by mutableStateOf(null)
@@ -42,20 +44,21 @@ class CurrentItemViewModel @Inject constructor(
         if (eventType == EventType.SUB) {
             restoreOnMainEvent(fromDelete)
         } else {
-            resetCurrentItem(fromDelete)
+            stopCurrentMainEvent(fromDelete)
         }
 
         Log.i("打标签喽", "currentEvent.value = ${currentEvent.value}")
     }
 
-    private fun restoreOnMainEvent(fromDelete: Boolean = false) {
+    fun restoreOnMainEvent(fromDelete: Boolean = false) {
         Log.i("打标签喽", "结束的是子事件")
         if (!fromDelete) {
-            currentEvent.value?.let {
-                it.id = it.parentId!!
+            RDALogger.info("currentEvent.value = ${currentEvent.value}")
+            currentEvent.value?.let { // 这么写是为了不引起重组
+                it.id = incompleteMainEvent!!.id
                 it.startTime = incompleteMainEvent!!.startTime
                 it.name = incompleteMainEvent!!.name
-                it.endTime = LocalDateTime.MIN // 为优化显示，实际业务不需要
+                it.endTime = LocalDateTime.MIN // 为优化显示，实际业务不需要（为不显示当前条目特别设置）
                 it.parentId = null
                 it.isCurrent = true
             }
@@ -70,7 +73,7 @@ class CurrentItemViewModel @Inject constructor(
         eventType = EventType.MAIN // 必须放在 stop 逻辑中
     }
 
-    fun resetCurrentItem(fromDelete: Boolean = false) {
+    private fun stopCurrentMainEvent(fromDelete: Boolean = false) {
         Log.i("打标签喽", "结束的是主事件")
         if (fromDelete) {
             currentEvent.value = null
@@ -79,7 +82,7 @@ class CurrentItemViewModel @Inject constructor(
         }
 
         isLastStopFromSub = false
-        isTracking = false
+        sharedState.isTracking.value = false
     }
 
     suspend fun updateCurrentEventOnStop() {
@@ -94,13 +97,15 @@ class CurrentItemViewModel @Inject constructor(
             it.duration = Duration.between(it.startTime, it.endTime).minus(subEventsDuration)
             it.isCurrent = false
         }
+        RDALogger.info("currentEvent.value = ${currentEvent.value}")
     }
 
     suspend fun saveCurrentEvent() {
         val updateCondition = isLastStopFromSub && eventType == EventType.MAIN
-
+        RDALogger.info("updateCondition = $updateCondition")
+        RDALogger.info("currentEvent.value = ${currentEvent.value}")
         currentEvent.value?.let {
-            repository.saveCurrentEvent(updateCondition, it)
+            repository.saveCurrentEvent(it, updateCondition)
         }
     }
 
@@ -111,13 +116,17 @@ class CurrentItemViewModel @Inject constructor(
     }
 
     suspend fun saveInCompleteMainEvent() {
+        RDALogger.info("保存未完成的主事件")
         if (eventType == EventType.SUB) {
+            RDALogger.info("插入子事务")
             subButtonClickCount++
 
             if (subButtonClickCount == 1) { // 首次点击插入按钮
+                RDALogger.info("首次点击插入按钮，存储主事件")
                 val id = repository.insertEvent(currentEvent.value!!)
                 // 存储每个未完成的主事件，以备后边插入的子事件结束后获取
                 incompleteMainEvent = currentEvent.value!!.copy(id = id)
+                RDALogger.info("incompleteMainEvent = $incompleteMainEvent")
             }
 
         } else {
@@ -127,26 +136,22 @@ class CurrentItemViewModel @Inject constructor(
     }
 
 
-    fun createCurrentEvent(
+    suspend fun createCurrentEvent(
         startTime: LocalDateTime
     ) = Event(
-        startTime = startTime,
-        eventDate = getEventDate(startTime),
-        parentId = fetchMainEventId(),
-        isCurrent = true
-    )
+            startTime = startTime,
+            eventDate = getEventDate(startTime),
+            parentId = fetchMainEventId(),
+            isCurrent = true
+        )
 
-    private fun fetchMainEventId(): Long? {
-        var mainEventId: Long? = null
 
-        viewModelScope.launch {
-            mainEventId = if (eventType == EventType.SUB) {
-                repository.fetchMainEventId()
-            } else null
-        }
-
-        return mainEventId
+    private suspend fun fetchMainEventId(): Long? {
+        return if (eventType == EventType.SUB) {
+            repository.fetchMainEventId()
+        } else null
     }
+
 
 
 }

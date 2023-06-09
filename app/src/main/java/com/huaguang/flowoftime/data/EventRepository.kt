@@ -84,7 +84,7 @@ class EventRepository(
         eventDao.insertEvent(event)
     }
 
-    suspend fun saveCurrentEvent(updateCondition: Boolean, currentEvent: Event) {
+    suspend fun saveCurrentEvent(currentEvent: Event, updateCondition: Boolean) {
         withContext(Dispatchers.IO) {
             if (updateCondition) {
                 Log.i("打标签喽", "结束：更新主事件到数据库！")

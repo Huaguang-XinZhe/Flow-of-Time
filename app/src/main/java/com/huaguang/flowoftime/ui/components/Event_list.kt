@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.components
 
-import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,7 +19,7 @@ fun EventList(
     listState: LazyListState,
     modifier: Modifier = Modifier
 ) {
-    Log.i("打标签喽", "EventList 重组！！！")
+
 //    val lazyPagingItems = viewModel.pager.collectAsLazyPagingItems()
     val eventsWithSubEvents by mediator.eventsWithSubEvents.collectAsState(emptyList())
 
