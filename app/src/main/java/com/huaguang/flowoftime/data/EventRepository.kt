@@ -18,7 +18,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class EventRepository(
-    private val eventDao: EventDao,
+    val eventDao: EventDao,
     private val dateDurationDao: DateDurationDao
 ) {
 
@@ -76,13 +76,15 @@ class EventRepository(
         }
     }
 
-    suspend fun fetchMainEventId() = withContext(Dispatchers.IO) {
-        eventDao.getLastMainEventId() // 在插入子事件之前一定存在主事件，不会有问题
-    }
+    suspend fun fetchMainEventId() =
+        withContext(Dispatchers.IO) {
+            eventDao.getLastMainEventId() // 在插入子事件之前一定存在主事件，不会有问题
+        }
 
-    suspend fun insertEvent(event: Event) = withContext(Dispatchers.IO) {
-        eventDao.insertEvent(event)
-    }
+    suspend fun insertEvent(event: Event) =
+        withContext(Dispatchers.IO) {
+            eventDao.insertEvent(event)
+        }
 
     suspend fun saveCurrentEvent(currentEvent: Event, updateCondition: Boolean) {
         withContext(Dispatchers.IO) {
@@ -115,5 +117,10 @@ class EventRepository(
             }
         }
     }
+
+    suspend fun getLastMainEvent() =
+        withContext(Dispatchers.IO) {
+            eventDao.getLastMainEvent()
+        }
 
 }

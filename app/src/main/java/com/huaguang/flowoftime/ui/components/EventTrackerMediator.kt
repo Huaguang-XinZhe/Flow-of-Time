@@ -5,8 +5,7 @@ import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
@@ -31,7 +30,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
 
-
 class EventTrackerMediator @Inject constructor(
     val headerViewModel: HeaderViewModel,
     val durationSliderViewModel: DurationSliderViewModel,
@@ -45,11 +43,17 @@ class EventTrackerMediator @Inject constructor(
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
+    // 共享状态
+    private val currentStatus
+        get() = sharedState.eventStatus.value
+    private val newEventName
+        get() = sharedState.newEventName.value
+
     // 依赖子 ViewModel 的状态
     private val beModifiedEvent
         get() = eventNameViewModel.beModifiedEvent
     private val subEventButtonText
-        get() = eventButtonsViewModel.subEventButtonText.value
+        get() = eventButtonsViewModel.subButtonText.value
     private var currentEvent // 访问其他类的属性一定要用 getter 方法，否则，获取的始终是初始获取值。
         get() = currentItemViewModel.currentEvent.value
         set(value) {
@@ -79,12 +83,30 @@ class EventTrackerMediator @Inject constructor(
             initialized.value = true
         }
 
-        if (!durationSliderViewModel.isCoreDurationReset) {
-            durationSliderViewModel.coreDuration.value = Duration.ZERO
-            durationSliderViewModel.isCoreDurationReset = true
+        durationSliderViewModel.apply {
+            if (!isCoreDurationReset) {
+                coreDuration.value = Duration.ZERO
+                isCoreDurationReset = true
+            }
         }
 
-        durationSliderViewModel.updateCoreDuration()
+    }
+
+    fun increaseCDonResume() {
+        durationSliderViewModel.apply {
+            if (currentStatus == EventStatus.fromInt(1)) {
+                // 仅有主事务正在进行
+                updateCoreDuration(currentItemViewModel.currentEvent.value!!.id)
+            } else if (currentStatus == EventStatus.fromInt(2)) {
+                // 同时有子事务正在计时
+                currentItemViewModel.apply {
+                    val mainEventId = currentEvent.value!!.parentId!!
+                    val currentST = currentEvent.value!!.startTime
+
+                    updateCoreDuration(mainEventId, currentST)
+                }
+            }
+        }
     }
 
     fun deleteItem(event: Event, subEvents: List<Event> = listOf()) {
@@ -98,7 +120,7 @@ class EventTrackerMediator @Inject constructor(
                 repository.deleteEventWithSubEvents(event, subEvents)
             }
 
-            durationSliderViewModel.reduceStoredDuration(event.duration!!)
+            durationSliderViewModel.reduceDuration(event.duration!!)
         } else { // 删除的是当前项（正在计时）
             resetState(isCoreEvent, true)
         }
@@ -130,7 +152,6 @@ class EventTrackerMediator @Inject constructor(
     }
 
 
-
     /**
      * 这里边是两个分支，分为点击和没点击
      */
@@ -159,25 +180,33 @@ class EventTrackerMediator @Inject constructor(
         if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null（事件可能在进行中）
             generalHandleFromNameClicked()
         } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
-            sharedState.apply {
-                currentEvent?.let {
-                    if (eventType.value == EventType.SUB && isCoreEvent(newEventName.value)) {
-                        Toast.makeText(getApplication(), "禁止在子事务中执行核心事务！", Toast.LENGTH_SHORT).show()
-                        restoreToReInsertedState()
-                        return
-                    }
-
-                    durationSliderViewModel.handleCoreOrSleepEvent(it)
-                    currentEvent = it.copy(name = newEventName.value)
-                }
+            currentEvent?.let {
+                subProhibitCore() // 禁止子事项输入核心事务
+                durationSliderViewModel.handleCoreOrSleepEvent(it)
+                currentEvent = it.copy(name = newEventName)
             }
         }
     }
 
-    private fun restoreToReInsertedState() {
-        eventButtonsViewModel.toggleSubButtonState("插入结束")
-        currentItemViewModel.restoreOnMainEvent()
+    /**
+     * 插入的子事项输入名称后点击确认，会执行此方法进行验证，以确保子事项不进行当下核心事务（包括名称修改）
+     */
+    private fun subProhibitCore() {
+        if (isCoreEvent(newEventName) &&
+            currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+            Toast
+                .makeText(getApplication(), "禁止在子事务中执行核心事务！", Toast.LENGTH_SHORT)
+                .show()
+
+            eventButtonsViewModel.toggleStateOnSubStop()
+
+            viewModelScope.launch {
+                currentItemViewModel.restoreOnMainEvent()
+                return@launch
+            }
+        }
     }
+
 
     fun updateOnDragStopped(updatedEvent: Event, originalDuration: Duration?) {
         updateJob?.cancel()
@@ -207,9 +236,9 @@ class EventTrackerMediator @Inject constructor(
                 updateNameChangedToDB()
 
                 durationSliderViewModel.updateCDonNameChangeConfirmed(
-                    name = sharedState.newEventName.value,
+                    previousName = previousName.value,
+                    presentName = newEventName,
                     event = beModifiedEvent!!,
-                    clickFlag = coreNameClickFlag
                 )
 
                 // 延迟一下，让边框再飞一会儿
@@ -220,122 +249,140 @@ class EventTrackerMediator @Inject constructor(
     }
 
     private fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now()) {
-        sharedState.updateStateOnStart()
-
         viewModelScope.launch {
             currentItemViewModel.apply {
-                saveInCompleteMainEvent()
+                // 通用状态更新
+                sharedState.updateStateOnStart()
 
+                if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
+                    // 开始主事项
+                    clearSubEventCount()
+                } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+                    // 开始子事项
+                    increaseSubEventCount() // 放在这里好些，虽然不是在点击的源头
+                    saveInCompleteMainEvent() // 首次插入时保存
+                }
+
+                // 通用创建，但必须放在后边，尤其是对于子事项（需要先保存当前主事件，然后再创建新事件）
                 currentEvent.value = createCurrentEvent(startTime)
-                RDALogger.info("开始事件，创建后的：currentEvent.value = ${currentEvent.value}")
             }
-        }
-    }
-
-
-    private fun stopCurrentEvent() {
-        viewModelScope.launch {
-            currentItemViewModel.apply {
-                updateCurrentEventOnStop()
-
-                saveCurrentEvent()
-
-//                cancelAlarm()
-
-                resetCurrentEvent()
-
-                durationSliderViewModel.increaseCDonCurrentStop(currentEvent.value!!)
-            }
-
         }
 
     }
 
-    fun resetState(isCoreEvent: Boolean = false, fromDelete: Boolean = false) {
-        // 按钮状态
-        eventButtonsViewModel.toggleButtonStateStopped()
 
-        // CurrentItem 状态
+    private suspend fun stopCurrentEvent() {
         currentItemViewModel.apply {
-            resetCurrentEvent(fromDelete)
+            // 通用逻辑
+            updateCurrentEventOnStop()
+            saveCurrentEvent() // 插入或更新到数据库
+
+            if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
+                // 停止主事项
+                hideCurrentItem()
+                // 使用 let 块更安全，这里有必要，为避免各种意外的崩溃情况！！！
+                currentEvent.value?.let { durationSliderViewModel.updateCDonCurrentStop(it) }
+
+            } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+                // 停止子事项
+                restoreOnMainEvent()
+            }
+        }
+
+    }
+
+    /**
+     * 撤销或删除时执行的方法，回到它处理后该有的状态。
+     */
+    fun resetState(isCoreEvent: Boolean = false, fromDelete: Boolean = false) {
+        // 输入状态
+        sharedState.resetInputState()
+
+        if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
+            // 撤销或删除主事项
+            eventButtonsViewModel.toggleStateOnMainStop() // 按钮状态
+            currentItemViewModel.hideCurrentItem(fromDelete) // CurrentItem 状态
 
             // 更新 CoreDuration
             durationSliderViewModel.reduceCDonCurrentCancel(
-                currentEvent.value!!.startTime,
+                currentEvent!!.startTime,
                 isCoreEvent
             )
+        } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+            // 撤销或删除子事项
+            eventButtonsViewModel.toggleStateOnSubStop()
+            viewModelScope.launch {
+                currentItemViewModel.restoreOnMainEvent(fromDelete)
+            }
         }
 
-        // 输入状态
-        sharedState.resetInputState()
     }
 
-    fun onMainButtonLongClick() {
+    fun onMainButtonLongClicked() {
         eventButtonsViewModel.apply {
-            if (mainEventButtonText.value == "结束") return
+            if (mainButtonText.value == "结束") return
 
             // ButtonText 的值除了结束就是开始了，不可能为 null
             viewModelScope.launch {
                 val startTime = repository.getOffsetStartTime()
-                startNewEvent(startTime = startTime)
 
-                toggleMainButtonState("开始")
+                startNewEvent(startTime = startTime)
+                toggleStateOnMainStart()
             }
         }
 
         Toast.makeText(getApplication(), "开始补计……", Toast.LENGTH_SHORT).show()
     }
 
-    fun onSubButtonLongClick() {
+    fun onSubButtonLongClicked() {
         if (subEventButtonText == "插入") return
 
-        viewModelScope.launch {
-            // 结束子事件————————————————————————————————————————————————————
-            currentItemViewModel.apply {
-                updateCurrentEventOnStop()
-                saveCurrentEvent()
-                restoreOnMainEvent()
+        eventButtonsViewModel.apply {
+            viewModelScope.launch {
+                // 结束子事件————————————————
+                stopCurrentEvent()
+                toggleStateOnSubStop()
+
+                // 结束主事件————————————————
+                stopCurrentEvent()
+                toggleStateOnMainStop()
+
             }
-
-            // 切换按钮状态——————————————————————————————————————————————————
-            eventButtonsViewModel.apply {
-                toggleSubButtonState("插入结束")
-                toggleMainButtonState("结束")
-            }
-
-            // 结束主事件——————————————————————————————————————————————————————————
-            stopCurrentEvent()
-
-            Toast.makeText(getApplication(), "全部结束！", Toast.LENGTH_SHORT).show()
-
         }
+
+        Toast.makeText(getApplication(), "全部结束！", Toast.LENGTH_SHORT).show()
+
     }
 
-    fun toggleMainEvent() {
+    fun onMainButtonClicked() {
         eventButtonsViewModel.apply {
-            when (mainEventButtonText.value) {
+            when (mainButtonText.value) {
                 "开始" -> {
-                    toggleMainButtonState("开始")
+                    toggleStateOnMainStart()
                     startNewEvent()
                 }
                 "结束" -> {
-                    toggleMainButtonState("结束")
-                    stopCurrentEvent()
+                    viewModelScope.launch {
+                        stopCurrentEvent()
+                        toggleStateOnMainStop()
+                    }
                 }
             }
         }
     }
 
-    fun toggleSubEvent() {
+    fun onSubButtonClicked() {
         eventButtonsViewModel.apply {
-            when (subEventButtonText.value) {
+            when (subButtonText.value) {
                 "插入" -> {
-                    toggleSubButtonState("插入") // 这个必须放在前边，否则 start 逻辑会出问题
+                    toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
                     startNewEvent()
                 }
                 "插入结束" -> {
-                    stopCurrentEvent()
-                    toggleSubButtonState("插入结束")
+                    viewModelScope.launch {
+                        stopCurrentEvent()
+                        toggleStateOnSubStop()
+                    }
                 }
             }
         }
@@ -350,7 +397,7 @@ class EventTrackerMediator @Inject constructor(
         // 在主线程中使用取出的数据更新状态
         sharedState.apply { // 共享状态
             isInputShow.value = data.isInputShow
-            eventType.value = if (data.isSubEventType) EventType.SUB else EventType.MAIN
+            eventStatus.value = data.eventStatus
 
             if (data.scrollIndex != -1) {
                 scrollIndex.value = data.scrollIndex
@@ -362,20 +409,17 @@ class EventTrackerMediator @Inject constructor(
 
         durationSliderViewModel.apply {
             coreDuration.value = data.coreDuration
-            startTimeTracking = data.startTimeTracking
             isCoreDurationReset = data.isCoreDurationReset
         }
 
         currentItemViewModel.apply {
             currentEvent.value = data.currentEvent
-            incompleteMainEvent = data.incompleteMainEvent
-            subButtonClickCount = data.subButtonClickCount
             isLastStopFromSub = data.isLastStopFromSub
         }
 
         eventButtonsViewModel.apply {
-            mainEventButtonText.value = data.buttonText
-            subEventButtonText.value = data.subButtonText
+            mainButtonText.value = data.buttonText
+            subButtonText.value = data.subButtonText
         }
 
     }
@@ -385,17 +429,12 @@ class EventTrackerMediator @Inject constructor(
             spHelper.saveState(
                 headerViewModel.isOneDayButtonClicked.value,
                 sharedState.isInputShow.value,
-                eventButtonsViewModel.mainEventButtonText.value,
-                eventButtonsViewModel.subEventButtonText.value,
+                eventButtonsViewModel.mainButtonText.value,
+                eventButtonsViewModel.subButtonText.value,
                 sharedState.scrollIndex.value,
-                sharedState.isTracking.value,
-                durationSliderViewModel.isCoreEventTracking,
                 durationSliderViewModel.coreDuration.value,
-                durationSliderViewModel.startTimeTracking,
                 currentItemViewModel.currentEvent.value,
-                currentItemViewModel.incompleteMainEvent,
-                currentItemViewModel.subButtonClickCount,
-                sharedState.eventType.value,
+                currentStatus,
                 currentItemViewModel.isLastStopFromSub,
                 durationSliderViewModel.isCoreDurationReset
             )

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
@@ -66,7 +67,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
 
-        mediator.durationSliderViewModel.updateCoreDuration()
+        mediator.increaseCDonResume()
     }
 
     override fun onStop() {

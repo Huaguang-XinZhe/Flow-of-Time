@@ -14,8 +14,8 @@ import com.huaguang.flowoftime.widget.LongPressTextButton
 
 @Composable
 fun EventButtons(mediator: EventTrackerMediator) {
-    val mainEventButtonText by mediator.eventButtonsViewModel.mainEventButtonText
-    val subEventButtonText by mediator.eventButtonsViewModel.subEventButtonText
+    val mainEventButtonText by mediator.eventButtonsViewModel.mainButtonText
+    val subEventButtonText by mediator.eventButtonsViewModel.subButtonText
     val mainButtonShow by mediator.eventButtonsViewModel.mainButtonShow.observeAsState()
     val subButtonShow by mediator.eventButtonsViewModel.subButtonShow.observeAsState()
     val initialized by mediator.initialized
@@ -27,16 +27,16 @@ fun EventButtons(mediator: EventTrackerMediator) {
         ) {
             if (mainButtonShow == true) {
                 LongPressButton(
-                    onClick = { mediator.toggleMainEvent() },
-                    onLongClick = { mediator.onMainButtonLongClick() },
+                    onClick = { mediator.onMainButtonClicked() },
+                    onLongClick = { mediator.onMainButtonLongClicked() },
                     text = mainEventButtonText
                 )
             }
 
             if (subButtonShow == true) {
                 LongPressTextButton(
-                    onClick = { mediator.toggleSubEvent() },
-                    onLongClick = { mediator.onSubButtonLongClick() },
+                    onClick = { mediator.onSubButtonClicked() },
+                    onLongClick = { mediator.onSubButtonLongClicked() },
                     text = subEventButtonText,
                     modifier = Modifier.padding(start = 5.dp)
                 )

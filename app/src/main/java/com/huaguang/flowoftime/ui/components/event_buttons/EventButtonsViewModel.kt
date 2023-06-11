@@ -3,7 +3,7 @@ package com.huaguang.flowoftime.ui.components.event_buttons
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.ui.components.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,59 +15,46 @@ class EventButtonsViewModel @Inject constructor(
     application: TimeStreamApplication
 ) : AndroidViewModel(application) {
 
-    private var eventType
-        get() = sharedState.eventType.value
+    private var currentStatus
+        get() = sharedState.eventStatus.value
         set(value) {
-            sharedState.eventType.value = value
+            sharedState.eventStatus.value = value
         }
 
     // 专用
-    val mainEventButtonText = mutableStateOf("开始")
-    val subEventButtonText = mutableStateOf("插入")
+    val mainButtonText = mutableStateOf("开始")
+    val subButtonText = mutableStateOf("插入")
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
 
-    fun toggleButtonStateStopped() {
-        if (eventType == EventType.SUB) {
-            toggleSubButtonState("插入结束")
-        } else {
-            toggleMainButtonState("结束")
-        }
+    fun toggleStateOnMainStart() {
+        currentStatus = EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS
+        mainButtonText.value = "结束"
+        subButtonShow.value = true
     }
 
-    fun toggleMainButtonState(buttonText: String) {
-        when (buttonText) {
-            "开始" -> {
-                mainEventButtonText.value = "结束"
-                subButtonShow.value = true
-            }
-            "结束" -> {
-                mainEventButtonText.value = "开始"
-                subButtonShow.value = false
-            }
-        }
+    fun toggleStateOnMainStop() {
+        currentStatus = EventStatus.NO_EVENT_IN_PROGRESS
+        mainButtonText.value = "开始"
+        subButtonShow.value = false
     }
 
-    fun toggleSubButtonState(buttonText: String) {
-        when (buttonText) {
-            "插入" -> {
-                eventType = EventType.SUB
-                subEventButtonText.value = "插入结束"
-                mainButtonShow.value = false
-            }
-            "插入结束" -> {
-                // 不能放在这里，stop 里边的协程会挂起，这一段会先执行，必须放入 stop 里边
-//                eventTypeState.value = EventType.MAIN
-                subEventButtonText.value = "插入"
-                mainButtonShow.value = true
-            }
-        }
+    fun toggleStateOnSubInsert() {
+        currentStatus = EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS
+        subButtonText.value = "插入结束"
+        mainButtonShow.value = false
+    }
+
+    fun toggleStateOnSubStop() {
+        currentStatus = EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS
+        subButtonText.value = "插入"
+        mainButtonShow.value = true
     }
 
     fun restoreButtonShow() {
-        if (mainEventButtonText.value == "开始") return
+        if (mainButtonText.value == "开始") return
 
-        if (subEventButtonText.value == "插入结束") {
+        if (subButtonText.value == "插入结束") {
             mainButtonShow.value = false
         }
 
@@ -77,7 +64,7 @@ class EventButtonsViewModel @Inject constructor(
 
     fun updateStateOnGetUpConfirmed() {
         // 按钮文本直接还原为开始，不需要结束
-        mainEventButtonText.value = "开始"
+        mainButtonText.value = "开始"
         // 比较特殊，插入按钮不需要显示
         subButtonShow.value = false
     }

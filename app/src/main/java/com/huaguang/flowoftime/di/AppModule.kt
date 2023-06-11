@@ -2,6 +2,8 @@ package com.huaguang.flowoftime.di
 
 import android.app.Application
 import android.content.Context
+
+import com.huaguang.flowoftime.DataStoreHelper
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventDatabase
 import com.huaguang.flowoftime.data.EventRepository
@@ -51,6 +53,12 @@ object AppModule {
         val sharedPreferences =
             context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE)
         return SPHelper(sharedPreferences)
+    }
+
+    @Singleton
+    @Provides
+    fun provideDataStoreHelper(@ApplicationContext context: Context): DataStoreHelper {
+        return DataStoreHelper(context)
     }
 
     @Singleton

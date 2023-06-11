@@ -9,9 +9,11 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Dao
 interface EventDao {
@@ -85,6 +87,19 @@ interface EventDao {
         insertEvent(eventWithSubEvents.event)
         insertAll(eventWithSubEvents.subEvents)
     }
+
+    @Query("""
+        SELECT startTime, endTime
+        FROM events 
+        WHERE parentId = :parentId 
+          AND (startTime BETWEEN :startCursor AND :now OR endTime BETWEEN :startCursor AND :now)
+    """)
+    suspend fun getSubEventTimesWithinRange(
+        parentId: Long,
+        startCursor: LocalDateTime?,
+        now: LocalDateTime = LocalDateTime.now()
+    ): List<EventTimes>
+
 
 //    @Transaction
 //    @Query("SELECT * FROM events")

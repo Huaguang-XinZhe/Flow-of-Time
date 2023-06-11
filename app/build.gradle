@@ -122,4 +122,8 @@ dependencies {
     // 能定位到代码的 Log 库
     implementation 'com.github.ardakaplan:RDALogger:1.0.0'
 
+    // DataStore 库，替代 SP
+    implementation "androidx.datastore:datastore-preferences:1.0.0" // preferences（使用协程保证数据的一致性）
+    implementation "androidx.datastore:datastore:1.0.0" // proto（跨进程安全访问）
+
 }

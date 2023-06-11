@@ -1,18 +1,17 @@
 package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.runtime.mutableStateOf
-import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.EventStatus
 
 class SharedState {
-    val isTracking = mutableStateOf(false)
-    val eventType = mutableStateOf(EventType.MAIN)
+
     val isInputShow = mutableStateOf(false)
     val newEventName = mutableStateOf("")
     val scrollIndex = mutableStateOf(0)
     var eventCount = 0
+    val eventStatus = mutableStateOf(EventStatus.NO_EVENT_IN_PROGRESS)
 
     fun updateStateOnStart() {
-        isTracking.value = true
         isInputShow.value = true
         newEventName.value = ""
         // 更新事件数量
