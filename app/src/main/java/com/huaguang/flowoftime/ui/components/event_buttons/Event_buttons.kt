@@ -35,9 +35,9 @@ fun EventButtons(mediator: EventTrackerMediator) {
 
             if (subButtonShow == true) {
                 LongPressTextButton(
+                    text = subEventButtonText,
                     onClick = { mediator.onSubButtonClicked() },
                     onLongClick = { mediator.onSubButtonLongClicked() },
-                    text = subEventButtonText,
                     modifier = Modifier.padding(start = 5.dp)
                 )
             }

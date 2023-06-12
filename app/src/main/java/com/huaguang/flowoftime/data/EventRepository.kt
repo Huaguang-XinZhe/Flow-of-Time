@@ -9,6 +9,7 @@ import com.huaguang.flowoftime.data.models.DateDuration
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.utils.EventSerializer
+import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -60,15 +61,26 @@ class EventRepository(
         return Pair(eventWithSubEvents.event, eventWithSubEvents.subEvents)
     }
 
-    suspend fun updateCoreDurationForDate(date: LocalDate, duration: Duration) {
-        val dateDuration = dateDurationDao.getDateDuration(date)
-        if (dateDuration != null) {
-            dateDuration.duration = duration
-            dateDurationDao.updateDateDuration(dateDuration)
-        } else {
-            dateDurationDao.insertDateDuration(DateDuration(date, duration))
+    suspend fun saveCoreDurationForDate(date: LocalDate, duration: Duration) {
+        withContext(Dispatchers.IO) {
+            // 之所以要先查是为了应对晚睡更改为其他事项而后又有可能会改回来的情况，所以需要更新方法，而不仅仅是插入。
+            val dateDuration = dateDurationDao.getDateDuration(date)
+
+            if (dateDuration != null) {
+                dateDuration.let {
+                    it.duration = duration
+                    it.durationStr = formatDurationInText(duration)
+
+                    dateDurationDao.updateDateDuration(it)
+                }
+            } else {
+                dateDurationDao.insertDateDuration(
+                    DateDuration(date, duration, formatDurationInText(duration))
+                )
+            }
         }
     }
+
 
     suspend fun updateEvent(event: Event) {
         withContext(Dispatchers.IO) {

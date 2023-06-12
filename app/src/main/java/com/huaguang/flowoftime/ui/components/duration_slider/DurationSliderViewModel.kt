@@ -2,27 +2,29 @@ package com.huaguang.flowoftime.ui.components.duration_slider
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.DataStoreHelper
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
-import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.sleepNames
 import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.isCoreEvent
+import com.huaguang.flowoftime.utils.isGetUpTime
 import com.huaguang.flowoftime.utils.isSleepingTime
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.LocalTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -30,10 +32,9 @@ class DurationSliderViewModel @Inject constructor(
     private val repository: EventRepository,
     private val sharedState: SharedState,
     private val dataStoreHelper: DataStoreHelper,
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
-    // 共享属性
+    // 外界依赖（由 sharedState 共享）
     private val newEventName
         get() = sharedState.newEventName.value
 
@@ -44,57 +45,115 @@ class DurationSliderViewModel @Inject constructor(
     }
     val isAlarmSet = mutableStateOf(false)
     private var startCursor: LocalDateTime? = null // 记录正在进行的核心事务的开始时间
-    private var subEventCount = 0
-    var isCoreDurationReset = false
+    private var saveCoreDurationFlag = false
 
+//    // 这是为了能在多个方法中使用这一变量（紧跟着，如果把那两个方法合并到一处，就不需要这个变量了），
+//    // 本质上是观察 DataStore 中的变化
+//    private var subEventCount = 0
+
+    init {
+        viewModelScope.launch {
+            // 订阅获取 DataStore 中 startCursor 的最新值（冷流获取）
+            startCursor = dataStoreHelper.startCursorFlow.firstOrNull()
+            saveCoreDurationFlag = dataStoreHelper.saveCoreDurationFlagFlow.first()
+        }
+    }
+
+    // 核心事务持续时间更新的关键算法——————————————————————————————————————————————————————————————————
 
     /**
      * 这是个更新当下核心事务持续时间的关键方法，它综合了多个场景的应用，是为通用方法。
      * 1. Resume 时（包括启动时的场景）；
      * 2. 当下核心事务停止时；
-     * @param mainEventId 这是正在进行核心事务的主事项的 id，也即是子事项的 parentId
+     * @param mainEventId 这是正在进行核心事务的主事项的 id，也即是子事项的 parentId。
+     * @param currentSubEventST 这是当前子事项的开始时间，由于事件正在进行，所以没有存入数据库；
+     * 传入该参数就意味着当前的子事项正在计时，有开始时间，如果当前只有主事项正在计时就不需要传入了；
+     * 该参数的默认值为 now，这是因为只要当前子事项正在进行，subSum 的计算就需要加上 {now - currentSubEventST}；
+     * 将其默认值设为 now 可以继续沿用此公式，加上 0，这也就是没有子事项正在进行时的 subSum 的计算方式。
+     * @param start 这是传入的变更后的主事项的开始时间，默认为 null；
+     * 通过传入就免于从 DataStore 中获取了，一个小小地性能优化。
+     */
+    fun updateCoreDuration(
+        mainEventId: Long,
+        currentSubEventST: LocalDateTime = LocalDateTime.now(),
+        start: LocalDateTime? = null,
+    ) {
+        RDALogger.info("更新 CoreDuration！！！")
+        val now = LocalDateTime.now()
+
+        viewModelScope.launch {
+            if (start != null) {
+                startCursor = start
+            }
+
+            if (startCursor == null) return@launch
+            RDALogger.info("核心事务正在进行……")
+
+            // 获取当前事件的状态
+            val currentStatus = sharedState.eventStatus.value
+            val isMainEventTracking = currentStatus == EventStatus.fromInt(1)
+            val isSubEventTracking = currentStatus == EventStatus.fromInt(2)
+
+            // 如果当前子事项正在进行且 start >= 当前子事项的开始时间，那么便不做更新
+            if (isSubEventTracking && startCursor!! >= currentSubEventST) return@launch
+
+            // 获取子事件的数量
+            val subEventCount = dataStoreHelper.subEventCountFlow.first()
+
+            // 计算 subSum
+            val subSum =
+                calculateSubSumIfNecessary(
+                    mainEventId,
+                    currentSubEventST,
+                    isMainEventTracking,
+                    now,
+                    subEventCount
+                )
+
+            // 计算 delta，并更新总持续时间
+            val delta = Duration.between(startCursor!!, now) - subSum
+            RDALogger.info("delta = ${formatDurationInText(delta)}")
+            increaseDuration(delta)
+
+            // 收集并更新 delta
+            updateDeltaSum(delta)
+
+            // 更新 startCursor
+            updateStartCursor(now)
+        }
+    }
+
+
+    /**
+     * 如果必要的话，计算 subSum
      * @param currentSubEventST 这是当前子事项的开始时间，由于事件正在进行，所以没有存入数据库；
      * 传入该参数就意味着当前的子事项正在计时，有开始时间，如果当前只有主事项正在计时就不需要传入了；
      * 该参数的默认值为 now，这是因为只要当前子事项正在进行，subSum 的计算就需要加上 {now - currentSubEventST}；
      * 将其默认值设为 now 可以继续沿用此公式，加上 0，这也就是没有子事项正在进行时的 subSum 的计算方式。
      */
-    fun updateCoreDuration(
+    private suspend fun calculateSubSumIfNecessary(
         mainEventId: Long,
-        currentSubEventST: LocalDateTime = LocalDateTime.now()
-    ) {
-        val now = LocalDateTime.now()
+        currentSubEventST: LocalDateTime,
+        isMainEventTracking: Boolean,
+        now: LocalDateTime,
+        subEventCount: Int
+    ): Duration {
+        // 如果当前项是主事件且没有插入过子事件，那么 subSum 为 0
+        return if (subEventCount == 0 && isMainEventTracking) {
+            RDALogger.info("当前项是主事件，且没有插入过子事件")
+            Duration.ZERO
+        } else {
+            // 获取在 startCursor 和现在之间的所有子事件的时间
+            val subEventTimesList =
+                repository.eventDao.getSubEventTimesWithinRange(mainEventId, startCursor)
+            // 如果有子事项正在计时，那么还需要加上子事项开始时间到现在的这段时间
+            val isSubTrackingAdditional = Duration.between(currentSubEventST, now)
 
-        viewModelScope.launch {
-            // 订阅获取 DataStore 中 startCursor 的最新值（冷流获取）
-            startCursor = dataStoreHelper.startCursorFlow.firstOrNull()
-
-            // 核心事务正在进行（大前提）
-            if (startCursor != null) {
-                val isSubEventTracking = sharedState.eventStatus.value == EventStatus.fromInt(2)
-
-                // 1. 如果当前事项正在进行且 start >= 当前子事项的开始时间，那么便不做更新；
-                if (isSubEventTracking && startCursor!! >= currentSubEventST) return@launch
-
-                subEventCount = dataStoreHelper.subEventCountFlow.first()
-
-                // 2. 如果当前项是主事件且没有插入过子事件，那么 delta = now - start，subSum 为 0；
-                val subSum = if (subEventCount == 0 &&
-                    sharedState.eventStatus.value == EventStatus.fromInt(1)) {
-                    Duration.ZERO
-                } else { // 3. 除以上一二种可能的其他情况（子事项可能正在计时，也可能不在）
-                    val subEventTimesList =
-                        repository.eventDao.getSubEventTimesWithinRange(mainEventId, startCursor)
-                    // 当有子事项正在计时的时候，还要加上这一部分，没有的话就不传入 currentSubEventST，结果为 0
-                    val isSubTrackingAdditional = Duration.between(currentSubEventST, now)
-
-                    calculateSubSum(subEventTimesList, startCursor!!) + isSubTrackingAdditional
-                }
-
-                val delta = Duration.between(startCursor!!, now) - subSum
-                increaseDuration(delta)
-            }
+            // 计算子事件的总时间
+            calculateSubSum(subEventTimesList, startCursor!!) + isSubTrackingAdditional
         }
     }
+
 
     private fun calculateSubSum(eventTimes: List<EventTimes>, start: LocalDateTime): Duration {
         // 提取出重复的代码为一个局部函数
@@ -119,17 +178,15 @@ class DurationSliderViewModel @Inject constructor(
         }
     }
 
-
+    // ————————————————————————————————————————————————————————————————————————————————————————————
 
     /**
      * 更新 startCursor 并立即存入 DataStore
      */
-    private fun updateStartCursor(value: LocalDateTime?) {
+    private suspend fun updateStartCursor(value: LocalDateTime?) {
         startCursor = value
         // 立即存入 DataStore
-        viewModelScope.launch {
-            dataStoreHelper.saveStartCursor(value)
-        }
+        dataStoreHelper.saveStartCursor(value)
     }
 
 
@@ -141,61 +198,66 @@ class DurationSliderViewModel @Inject constructor(
 //        }
 //    }
 
+    private suspend fun updateDeltaSum(delta: Duration?) {
+        dataStoreHelper.saveDeltaSum(delta)
+    }
 
     fun updateCoreDurationOnDragStopped(
-        updatedEvent: Event,
+        updatedEvent: Event, // 滑动操作项
         originalDuration: Duration?,
-        currentBeforeST: LocalDateTime,
     ) {
-        if (!isCoreEvent(updatedEvent.name)) return // 更新当下核心事务的持续时间
-
-        if (updatedEvent.duration != null) {
-            updateCDonStoredItem(updatedEvent.duration!!, originalDuration!!)
-        } else {
-            updateCDonCurrentItem(currentBeforeST, updatedEvent.startTime)
+        if (isCoreEvent(updatedEvent.name)) {
+            if (updatedEvent.duration != null) {
+                // 1. 滑动的是 stored 的已经终结的核心事务；
+                updateCDonStoredItem(updatedEvent.duration!!, originalDuration!!)
+            } else {
+                // 2. 滑动的是 stored 或正在进行的主核心事务
+                updateCoreDuration(updatedEvent.id, start = updatedEvent.startTime)
+            }
         }
+
+        if (updatedEvent.parentId != null) {
+            // 3. 滑动的是正在进行的子事项的开始时间
+            updateCoreDuration(updatedEvent.parentId!!, currentSubEventST = updatedEvent.startTime)
+        }
+
     }
 
     private fun updateCDonStoredItem(updatedDuration: Duration, originalDuration: Duration) {
         coreDuration.value += updatedDuration - originalDuration
     }
 
-    private fun updateCDonCurrentItem(currentBeforeST: LocalDateTime, updatedST: LocalDateTime) {
-        coreDuration.value -= Duration.between(currentBeforeST, updatedST)
-    }
-
-    fun updateCDonNameChangeConfirmed(
+    suspend fun updateCDonNameChangeConfirmed(
         previousName: String,
         presentName: String, // 点击确认后的事项名称
         event: Event, // 点击确认后的事项
     ) {
         val isCoreNow = isCoreEvent(presentName)
         val isCorePrevious = isCoreEvent(previousName)
-        val isTrackingOnClicked = event.duration == null
+        // 之前的核心事务正在进行，现在改成别的事项了
+        val coreToOther = isCorePrevious && !isCoreNow
+        // 现在是核心事务，但之前不是，应该加上
+        val otherToCore = isCoreNow && !isCorePrevious
 
-        // 点击确认不会改变事项是否正在进行的性质！！！
-        val duration =
-            if (isTrackingOnClicked) { // 事件正在进行中（包括已经入库但还在进行中的主事件）
-                Duration.between(event.startTime, LocalDateTime.now()) // TODO:
-            } else event.duration!! // 事件已经结束
+        if (event.duration != null) {
+            // 修改的是 stored 的已经终结的事项名称
+            if (coreToOther) reduceDuration(event.duration!!)
+            if (otherToCore) increaseDuration(event.duration!!)
+        } else {
+            // 修改的是还在进行中的事件的名称（包括已经入库但还在进行中的主事件）
+            if (coreToOther) {
+                // 获取当前正在进行的主事项从开始到现在一共收集到的变化量的总和，也就是它加了多少，就减去多少
+                val deltaSum = dataStoreHelper.deltaSumFlow.first()
 
-        if (isCorePrevious && !isCoreNow) { // 之前的核心事务正在进行，现在改成别的事项了
-            reduceDuration(duration)
+                reduceDuration(deltaSum)
+                updateStartCursor(null)
+            }
 
-            if (isTrackingOnClicked) { //正在进行
-                viewModelScope.launch {
-                    dataStoreHelper.saveStartCursor(null)
-                }
+            if (otherToCore) {
+                updateCoreDuration(event.id, start = event.startTime)
             }
         }
 
-        if (isCoreNow && !isCorePrevious) { // 现在是核心事务，但之前不是，应该加上
-            increaseDuration(duration)
-
-            if (isTrackingOnClicked) {
-                updateStartCursor(event.startTime)
-            }
-        }
     }
 
     private fun increaseDuration(duration: Duration) {
@@ -209,7 +271,8 @@ class DurationSliderViewModel @Inject constructor(
     suspend fun updateCDonCurrentStop(currentEvent: Event) {
         if (isCoreEvent(currentEvent.name)) { // 结束的是当下核心事务
             updateCoreDuration(currentEvent.id)
-            dataStoreHelper.saveStartCursor(null)
+            updateStartCursor(null)
+            updateDeltaSum(null)
         }
     }
 
@@ -221,7 +284,10 @@ class DurationSliderViewModel @Inject constructor(
     }
 
 
-    fun handleCoreOrSleepEvent(currentEvent: Event) {
+    /**
+     * 这个函数是 onConfirmed 的一般分支处理的子分支，专门用于处理当下核心事务和晚睡文本的点击确认情况。
+     */
+    suspend fun handleCoreOrSleepEvent(currentEvent: Event) {
         fun isSleepEvent(startTime: LocalDateTime): Boolean {
             return sleepNames.contains(newEventName) && isSleepingTime(startTime.toLocalTime())
         }
@@ -231,16 +297,36 @@ class DurationSliderViewModel @Inject constructor(
                 updateStartCursor(currentEvent.startTime)
             }
 
+            RDALogger.info("isSleepEvent = ${isSleepEvent(currentEvent.startTime)}")
             if (isSleepEvent(currentEvent.startTime)) { // 晚睡
-                isCoreDurationReset = false
-
-                viewModelScope.launch(Dispatchers.IO) {
-                    // 更新或存储当下核心事务的总值
-                    repository.updateCoreDurationForDate(getAdjustedEventDate(), coreDuration.value)
-                }
+                // 更新或存储当下核心事务的总值
+                repository.saveCoreDurationForDate(getAdjustedEventDate(), coreDuration.value)
+                updateSaveCDFlag(true)
             }
         }
     }
+
+    suspend fun resetCoreDuration() {
+        // 只有在自定义的起床时间和保存了 CD 之后才能进行清零
+        if (isGetUpTime(LocalTime.now()) && saveCoreDurationFlag) {
+            coreDuration.value = Duration.ZERO
+            updateSaveCDFlag(false)
+        }
+    }
+
+    fun clearCD(displayText: String) {
+        if (displayText.isEmpty()) return
+
+        coreDuration.value = Duration.ZERO
+        sharedState.toastMessage.value = "已清空重置"
+    }
+
+    private suspend fun updateSaveCDFlag(value: Boolean) {
+        saveCoreDurationFlag = value
+        dataStoreHelper.saveCoreDurationFlag(value)
+    }
+
+
 
 
 //    private fun checkAndSetAlarm(name: String) {

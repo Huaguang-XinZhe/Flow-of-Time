@@ -16,6 +16,8 @@ data class DateDuration(
     val date: LocalDate,
 
     @Serializable(with = DurationSerializer::class)
-    var duration: Duration
+    var duration: Duration,
+
+    var durationStr: String,
 )
 

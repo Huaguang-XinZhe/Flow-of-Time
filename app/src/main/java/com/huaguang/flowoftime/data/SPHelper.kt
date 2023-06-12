@@ -18,7 +18,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         currentEvent: Event?,
         eventStatus: EventStatus,
         isLastStopFromSub: Boolean,
-        isCoreDurationReset: Boolean
     ) {
         sharedPreferences.edit().apply {
             putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
@@ -28,7 +27,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
             putInt("scroll_index", scrollIndex)
             putBoolean("isLastStopFromSub", isLastStopFromSub)
             putLong("core_duration", coreDuration.toMillis())
-            putBoolean("isCoreDurationReset", isCoreDurationReset)
             putInt("event_status_value", eventStatus.value)
 
             if (currentEvent != null) {
@@ -53,7 +51,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
 
         val scrollIndex = getScrollIndex()
         val isLastStopFromSub = getIsLastStopFromSub()
-        val isCoreDurationReset = getIsCoreDurationReset()
 
         // 将获取的所有数据封装在 SharedPreferencesData 类的实例中
         return SPData(
@@ -66,7 +63,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
             currentEvent,
             scrollIndex,
             isLastStopFromSub,
-            isCoreDurationReset
         )
     }
 
@@ -101,10 +97,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         return sharedPreferences.getString("sub_button_text", "插入") ?: "插入"
     }
 
-    private fun getSubButtonClickCount(): Int {
-        return sharedPreferences.getInt("subButtonClickCount", 0)
-    }
-
     private fun getScrollIndex(): Int {
         return sharedPreferences.getInt("scroll_index", -1)
     }
@@ -114,10 +106,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         return if (durationMillis != -1L) {
             Duration.ofMillis(durationMillis)
         } else Duration.ZERO
-    }
-
-    private fun getIsCoreDurationReset(): Boolean {
-        return sharedPreferences.getBoolean("isCoreDurationReset", false)
     }
 
 }

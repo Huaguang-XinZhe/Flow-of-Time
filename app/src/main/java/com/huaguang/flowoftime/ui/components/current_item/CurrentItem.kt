@@ -9,7 +9,6 @@ import java.time.LocalDateTime
 
 @Composable
 fun CurrentItem(mediator: EventTrackerMediator) {
-
     val currentEvent by mediator.currentItemViewModel.currentEvent
     val initialized by mediator.initialized
 

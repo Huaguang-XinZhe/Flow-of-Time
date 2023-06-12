@@ -1,10 +1,10 @@
 package com.huaguang.flowoftime
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
@@ -55,6 +55,10 @@ class MainActivity : ComponentActivity() {
             sharedState,
             application as TimeStreamApplication
         )
+
+        sharedState.toastMessage.observe(this) { toastMessage ->
+            Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show()
+        }
 
         setContent {
 

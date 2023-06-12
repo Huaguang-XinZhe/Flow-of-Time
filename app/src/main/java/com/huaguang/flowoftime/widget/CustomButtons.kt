@@ -57,9 +57,9 @@ fun LongPressButton(
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LongPressTextButton(
+    text: String,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    text: String,
     modifier: Modifier = Modifier
 ) {
     // 创建一个自定义的 InteractionSource
@@ -94,5 +94,5 @@ fun LongPressTextButton(
 @Preview(showBackground = true)
 @Composable
 fun LongPressButtonPreview() {
-    LongPressTextButton(onClick = { /*TODO*/ }, onLongClick = { /*TODO*/ }, text = "开始")
+    LongPressTextButton(text = "开始", onClick = { /*TODO*/ }, onLongClick = { /*TODO*/ })
 }

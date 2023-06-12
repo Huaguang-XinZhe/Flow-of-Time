@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -19,6 +20,8 @@ fun DurationSlider(viewModel: DurationSliderViewModel) {
     val rate by viewModel.rate
     val coreDuration by viewModel.coreDuration
     val isAlarmSet by viewModel.isAlarmSet
+
+    val coreDurationText = formatDurationInText(coreDuration)
 
     Row(
         verticalAlignment = Alignment.CenterVertically
@@ -48,9 +51,10 @@ fun DurationSlider(viewModel: DurationSliderViewModel) {
             modifier = Modifier.padding(start = 8.dp)
         )
 
-        Text(
-            text = formatDurationInText(coreDuration),
-            modifier = Modifier.padding(start = 8.dp, end = 8.dp)
-        )
+        TextButton(
+            onClick = { viewModel.clearCD(coreDurationText) },
+        ) {
+            Text(text = coreDurationText)
+        }
     }
 }

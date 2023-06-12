@@ -77,7 +77,7 @@ class CurrentItemViewModel @Inject constructor(
     fun hideCurrentItem(fromDelete: Boolean = false) {
         if (fromDelete) {
             currentEvent.value = null
-        } else { // 本来应该为 null，这里是为了优化显示
+        } else {
             currentEvent.value?.name = "￥为减少重组，优化频闪，不显示的特别设定￥"
         }
 
@@ -104,14 +104,12 @@ class CurrentItemViewModel @Inject constructor(
     suspend fun saveCurrentEvent() {
         val updateCondition = isLastStopFromSub &&
                 eventStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS
-        RDALogger.info("updateCondition = $updateCondition")
-        RDALogger.info("currentEvent.value = ${currentEvent.value}")
         currentEvent.value?.let {
             repository.saveCurrentEvent(it, updateCondition)
         }
     }
 
-    fun updateSTonDragStopped(updatedEvent: Event) {
+    fun updateCurrentST(updatedEvent: Event) {
         if (updatedEvent.isCurrent) { // 处理 currentItem
             currentEvent.value?.startTime = updatedEvent.startTime
         }

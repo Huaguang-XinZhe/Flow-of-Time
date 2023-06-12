@@ -14,5 +14,4 @@ data class SPData(
     val currentEvent: Event?,
     val scrollIndex: Int,
     val isLastStopFromSub: Boolean,
-    val isCoreDurationReset: Boolean
 )

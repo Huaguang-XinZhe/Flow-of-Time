@@ -12,11 +12,15 @@ import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.AlarmHelper
+import com.huaguang.flowoftime.utils.LocalDateTimeSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import java.time.LocalDateTime
 import javax.inject.Singleton
 
 @Module
@@ -57,8 +61,21 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideDataStoreHelper(@ApplicationContext context: Context): DataStoreHelper {
-        return DataStoreHelper(context)
+    fun provideJson(): Json {
+        return Json {
+            serializersModule = SerializersModule {
+                contextual(LocalDateTime::class, LocalDateTimeSerializer)
+            }
+        }
+    }
+
+    @Singleton
+    @Provides
+    fun provideDataStoreHelper(
+        @ApplicationContext context: Context,
+        json: Json
+    ): DataStoreHelper {
+        return DataStoreHelper(context, json)
     }
 
     @Singleton
@@ -72,6 +89,8 @@ object AppModule {
     fun provideCoreSharedState(): SharedState {
         return SharedState()
     }
+
+
 
     // 其他的依赖
 }

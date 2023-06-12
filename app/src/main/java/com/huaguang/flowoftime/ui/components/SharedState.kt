@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.EventStatus
 
 class SharedState {
@@ -10,6 +11,7 @@ class SharedState {
     val scrollIndex = mutableStateOf(0)
     var eventCount = 0
     val eventStatus = mutableStateOf(EventStatus.NO_EVENT_IN_PROGRESS)
+    val toastMessage = MutableLiveData<String>()
 
     fun updateStateOnStart() {
         isInputShow.value = true

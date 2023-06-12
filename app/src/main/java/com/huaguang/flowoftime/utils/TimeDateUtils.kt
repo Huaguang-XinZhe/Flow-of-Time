@@ -32,6 +32,16 @@ fun isSleepingTime(time: LocalTime): Boolean {
     return time.isAfter(sleepStartTime) || time.isBefore(sleepEndTime)
 }
 
+/**
+ * 判断现在的时间是不是在起床时间的范围内，如果是的话，就认为这是新的一天
+ */
+fun isGetUpTime(time: LocalTime): Boolean {
+    val getUpRangeStart = LocalTime.of(7, 30)
+    val getUpRangeEnd = LocalTime.of(11, 0)
+
+    return time.isAfter(getUpRangeStart) || time.isBefore(getUpRangeEnd)
+}
+
 fun formatLocalDateTime(dateTime: LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")
     return dateTime.format(formatter)
