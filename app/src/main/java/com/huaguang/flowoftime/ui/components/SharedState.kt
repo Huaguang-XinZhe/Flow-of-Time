@@ -1,10 +1,11 @@
 package com.huaguang.flowoftime.ui.components
 
+import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.EventStatus
 
-class SharedState {
+class SharedState(val application: Application) {
 
     val isInputShow = mutableStateOf(false)
     val newEventName = mutableStateOf("")

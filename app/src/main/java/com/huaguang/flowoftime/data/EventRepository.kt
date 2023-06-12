@@ -82,6 +82,15 @@ class EventRepository(
     }
 
 
+    suspend fun generateDurationStr() {
+        val dateDurations = dateDurationDao.getAll()
+        dateDurations.forEach { dateDuration ->
+            dateDuration.durationStr = formatDurationInText(dateDuration.duration)
+            dateDurationDao.updateDateDuration(dateDuration)
+        }
+    }
+
+
     suspend fun updateEvent(event: Event) {
         withContext(Dispatchers.IO) {
             eventDao.updateEvent(event)

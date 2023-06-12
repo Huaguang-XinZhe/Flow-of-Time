@@ -3,12 +3,11 @@ package com.huaguang.flowoftime.ui.components.current_item
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.DataStoreHelper
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.TimeStreamApplication
+import com.huaguang.flowoftime.data.DataStoreHelper
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.SharedState
@@ -25,8 +24,7 @@ class CurrentItemViewModel @Inject constructor(
     private val repository: EventRepository,
     private val sharedState: SharedState,
     private val dataStoreHelper: DataStoreHelper,
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     // 共享依赖
     private var eventStatus

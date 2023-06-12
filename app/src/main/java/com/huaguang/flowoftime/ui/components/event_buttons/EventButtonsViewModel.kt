@@ -1,19 +1,17 @@
 package com.huaguang.flowoftime.ui.components.event_buttons
 
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.ui.components.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
 class EventButtonsViewModel @Inject constructor(
-    private val sharedState: SharedState,
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+    private val sharedState: SharedState
+) : ViewModel() {
 
     private var currentStatus
         get() = sharedState.eventStatus.value

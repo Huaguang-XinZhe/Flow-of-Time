@@ -1,15 +1,12 @@
 package com.huaguang.flowoftime.ui.components.event_time
 
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import com.huaguang.flowoftime.ItemSelectionTracker
-import com.huaguang.flowoftime.TimeStreamApplication
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class EventTimeViewModel @Inject constructor(
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+class EventTimeViewModel @Inject constructor() : ViewModel() {
 
     val selectionTracker = ItemSelectionTracker()
 

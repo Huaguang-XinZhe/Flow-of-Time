@@ -2,9 +2,8 @@ package com.huaguang.flowoftime.di
 
 import android.app.Application
 import android.content.Context
-
-import com.huaguang.flowoftime.DataStoreHelper
 import com.huaguang.flowoftime.TimeStreamApplication
+import com.huaguang.flowoftime.data.DataStoreHelper
 import com.huaguang.flowoftime.data.EventDatabase
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
@@ -86,8 +85,8 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideCoreSharedState(): SharedState {
-        return SharedState()
+    fun provideSharedState(application: Application): SharedState {
+        return SharedState(application)
     }
 
 

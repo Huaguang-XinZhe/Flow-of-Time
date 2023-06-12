@@ -1,10 +1,9 @@
 package com.huaguang.flowoftime.ui.components.header
 
-import android.widget.Toast
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
+import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.copyToClipboard
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -16,8 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class HeaderViewModel @Inject constructor(
     private val repository: EventRepository,
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+    private val sharedState: SharedState,
+) : ViewModel() {
 
     // 专有
     val isOneDayButtonClicked = MutableStateFlow(false)
@@ -32,13 +31,14 @@ class HeaderViewModel @Inject constructor(
                 repository.exportEvents()
             }
 
-            copyToClipboard(getApplication(), exportText)
-            Toast.makeText(getApplication(), "导出数据已复制到剪贴板", Toast.LENGTH_SHORT).show()
+            copyToClipboard(sharedState.application, exportText)
+
+            sharedState.toastMessage.value = "导出数据已复制到剪贴板"
         }
     }
 
     fun importEvents(text: String) {
-        Toast.makeText(getApplication(), "导入成功", Toast.LENGTH_SHORT).show()
+        sharedState.toastMessage.value = "导入成功"
     }
 
 }

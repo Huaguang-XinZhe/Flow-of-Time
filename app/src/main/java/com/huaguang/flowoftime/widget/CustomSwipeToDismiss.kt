@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.widget
 
-import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -70,9 +69,7 @@ fun CustomSwipeToDismiss(
             ) {
                 isItemClicked.value = !isItemClicked.value
                 if (isItemClicked.value) {
-                    Toast
-                        .makeText(context, "解除限制，可右滑删除", Toast.LENGTH_SHORT)
-                        .show()
+                    sharedState.toastMessage.value = "解除限制，可右滑删除"
                 }
             }
             .then(borderModifier),

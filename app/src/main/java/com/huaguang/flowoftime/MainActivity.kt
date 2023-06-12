@@ -53,7 +53,6 @@ class MainActivity : ComponentActivity() {
             repository,
             spHelper,
             sharedState,
-            application as TimeStreamApplication
         )
 
         sharedState.toastMessage.observe(this) { toastMessage ->

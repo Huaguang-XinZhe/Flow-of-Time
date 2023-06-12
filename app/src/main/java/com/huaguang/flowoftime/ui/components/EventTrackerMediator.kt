@@ -2,11 +2,10 @@ package com.huaguang.flowoftime.ui.components
 
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.data.models.Event
@@ -28,9 +27,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDateTime
-import javax.inject.Inject
 
-class EventTrackerMediator @Inject constructor(
+class EventTrackerMediator(
     val headerViewModel: HeaderViewModel,
     val durationSliderViewModel: DurationSliderViewModel,
     val eventButtonsViewModel: EventButtonsViewModel,
@@ -40,10 +38,9 @@ class EventTrackerMediator @Inject constructor(
     private val repository: EventRepository,
     private val spHelper: SPHelper,
     val sharedState: SharedState,
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
-    // 共享状态
+    // 依赖的共享状态
     private val currentStatus
         get() = sharedState.eventStatus.value
     private val newEventName
@@ -77,10 +74,12 @@ class EventTrackerMediator @Inject constructor(
     init {
         viewModelScope.launch {
             retrieveStateFromSP() // 恢复相关状态
-            eventButtonsViewModel.restoreButtonShow()
-            durationSliderViewModel.resetCoreDuration()
 
             initialized.value = true
+
+            eventButtonsViewModel.restoreButtonShow()
+            durationSliderViewModel.resetCoreDuration()
+            repository.generateDurationStr()
         }
 
     }

@@ -71,13 +71,33 @@ object EventSerializer {
     }
 
     private fun formatEvent(event: Event): String {
-        return "${formatLocalDateTime(event.startTime)} " +
-                "${event.name} " +
-                "${event.endTime?.let { formatLocalDateTime(it) }} " +
-                event.duration?.let { formatDuration(it) }
+        val isGetUp = event.name == "起床"
+        val exportST = formatLocalDateTime(event.startTime)
+
+        val exportET =
+            if (isGetUp) exportST else {
+                event.endTime?.let { formatLocalDateTime(it) }
+            }
+
+        val exportDuration = if (isGetUp) exportET else {
+            event.duration?.let { formatDuration(it) }
+        }
+
+        return "$exportST " +
+                "${event.name.clearSpaces()} " +
+                "$exportET " +
+                exportDuration
     }
 
     private fun formatSubEvent(subEvent: Event): String {
-        return " ……${subEvent.name} ${subEvent.duration?.let { formatDuration(it) }}"
+        return " ……${subEvent.name} " +
+                "\uD83D\uDC4C " +
+                "${subEvent.duration?.let { formatDuration(it) }}"
     }
+
+    private fun String.clearSpaces(): String {
+        return this.replace(" ", "")
+    }
+
+
 }

@@ -1,14 +1,12 @@
 package com.huaguang.flowoftime.ui.components.event_name
 
 import android.util.Log
-import android.widget.Toast
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.other.NameClickedTracker
@@ -22,8 +20,7 @@ import javax.inject.Inject
 class EventNameViewModel @Inject constructor(
     private val repository: EventRepository,
     private val sharedState: SharedState,
-    application: TimeStreamApplication
-) : AndroidViewModel(application) {
+) : ViewModel() {
 
     var beModifiedEvent: Event? by mutableStateOf(null)
     val previousName = mutableStateOf("")
@@ -37,7 +34,7 @@ class EventNameViewModel @Inject constructor(
 
     fun onNameTextClicked(event: Event) {
         if (event.name == "起床") { // 起床项的名称禁止更改
-            Toast.makeText(getApplication(), "起床项名称禁止修改！", Toast.LENGTH_SHORT).show()
+            sharedState.toastMessage.value = "起床项名称禁止修改！"
             return
         }
 

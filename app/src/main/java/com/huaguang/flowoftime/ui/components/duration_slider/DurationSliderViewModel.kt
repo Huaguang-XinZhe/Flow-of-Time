@@ -5,9 +5,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.DataStoreHelper
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
+import com.huaguang.flowoftime.data.DataStoreHelper
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes

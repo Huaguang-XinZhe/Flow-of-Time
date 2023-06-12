@@ -14,6 +14,9 @@ interface DateDurationDao {
     @Query("SELECT * FROM date_durations WHERE date = :date")
     suspend fun getDateDuration(date: LocalDate): DateDuration?
 
+    @Query("SELECT * FROM date_durations")
+    suspend fun getAll(): List<DateDuration>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertDateDuration(dateDuration: DateDuration)
 
