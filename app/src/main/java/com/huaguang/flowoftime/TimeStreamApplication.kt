@@ -4,8 +4,6 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.room.Room
-import androidx.room.migration.Migration
-import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.EventDatabase
 import dagger.hilt.android.HiltAndroidApp
@@ -17,12 +15,12 @@ class TimeStreamApplication @Inject constructor() : Application() {
         const val NOTIFICATION_CHANNEL_ID = "my_service_channel"
 
         // Migration
-        val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // We add the new column to the table
-                database.execSQL("ALTER TABLE date_durations ADD COLUMN durationStr TEXT NOT NULL DEFAULT ''")
-            }
-        }
+//        val MIGRATION_1_2 = object : Migration(1, 2) {
+//            override fun migrate(database: SupportSQLiteDatabase) {
+//                // We add the new column to the table
+//                database.execSQL("ALTER TABLE date_durations ADD COLUMN durationStr TEXT NOT NULL DEFAULT ''")
+//            }
+//        }
     }
 
     val database: EventDatabase by lazy {
@@ -30,7 +28,9 @@ class TimeStreamApplication @Inject constructor() : Application() {
             this,
             EventDatabase::class.java,
             "event_database"
-        ).addMigrations(MIGRATION_1_2).build()
+        )
+//            .addMigrations(MIGRATION_1_2)
+            .build()
     }
 
     override fun onCreate() {

@@ -28,6 +28,7 @@ class DataStoreHelper (
     private val deltaSum = longPreferencesKey("deltaSum")
 //    private val isInputShowKey = booleanPreferencesKey("is_input_show")
     private val saveCoreDurationFlag = booleanPreferencesKey("save_core_duration_flag")
+    private val resetListDisplayFlag = booleanPreferencesKey("reset_list_display_flag")
 
 
     val startCursorFlow: Flow<LocalDateTime?> = context.dataStore.data
@@ -63,7 +64,10 @@ class DataStoreHelper (
             preferences[saveCoreDurationFlag] ?: false
         }
 
-
+    val resetListDisplayFlagFlow: Flow<Boolean> = context.dataStore.data
+        .map { preferences ->
+            preferences[resetListDisplayFlag] ?: true
+        }
 
 
     suspend fun saveStartCursor(value: LocalDateTime?) {
@@ -107,7 +111,10 @@ class DataStoreHelper (
         }
     }
 
-
-
+    suspend fun saveResetListAgainFlag(value: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[resetListDisplayFlag] = value
+        }
+    }
 
 }

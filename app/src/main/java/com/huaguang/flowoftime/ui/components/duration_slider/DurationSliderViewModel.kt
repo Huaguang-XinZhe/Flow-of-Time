@@ -37,6 +37,8 @@ class DurationSliderViewModel @Inject constructor(
     // 外界依赖（由 sharedState 共享）
     private val newEventName
         get() = sharedState.newEventName.value
+    private val isSubEventTracking
+        get() = sharedState.eventStatus.value == EventStatus.fromInt(2)
 
     // 专有
     val coreDuration = mutableStateOf(Duration.ZERO)
@@ -67,8 +69,8 @@ class DurationSliderViewModel @Inject constructor(
      * 2. 当下核心事务停止时；
      * @param mainEventId 这是正在进行核心事务的主事项的 id，也即是子事项的 parentId。
      * @param currentSubEventST 这是当前子事项的开始时间，由于事件正在进行，所以没有存入数据库；
-     * 传入该参数就意味着当前的子事项正在计时，有开始时间，如果当前只有主事项正在计时就不需要传入了；
-     * 该参数的默认值为 now，这是因为只要当前子事项正在进行，subSum 的计算就需要加上 {now - currentSubEventST}；
+     * 1. 传入该参数就意味着当前的子事项正在计时，有开始时间，如果当前只有主事项正在计时就不需要传入了；
+     * 2. 该参数的默认值为 now，这是因为只要当前子事项正在进行，subSum 的计算就需要加上 {now - currentSubEventST}；
      * 将其默认值设为 now 可以继续沿用此公式，加上 0，这也就是没有子事项正在进行时的 subSum 的计算方式。
      * @param start 这是传入的变更后的主事项的开始时间，默认为 null；
      * 通过传入就免于从 DataStore 中获取了，一个小小地性能优化。
@@ -89,13 +91,12 @@ class DurationSliderViewModel @Inject constructor(
             if (startCursor == null) return@launch
             RDALogger.info("核心事务正在进行……")
 
+            // 如果当前子事项正在进行且 start >= 当前子事项的开始时间，那么便不做更新
+            if (isSubEventTracking && startCursor!! >= currentSubEventST) return@launch
+
             // 获取当前事件的状态
             val currentStatus = sharedState.eventStatus.value
             val isMainEventTracking = currentStatus == EventStatus.fromInt(1)
-            val isSubEventTracking = currentStatus == EventStatus.fromInt(2)
-
-            // 如果当前子事项正在进行且 start >= 当前子事项的开始时间，那么便不做更新
-            if (isSubEventTracking && startCursor!! >= currentSubEventST) return@launch
 
             // 获取子事件的数量
             val subEventCount = dataStoreHelper.subEventCountFlow.first()
@@ -285,9 +286,10 @@ class DurationSliderViewModel @Inject constructor(
 
 
     /**
-     * 这个函数是 onConfirmed 的一般分支处理的子分支，专门用于处理当下核心事务和晚睡文本的点击确认情况。
+     * 这个函数是 onConfirmed 的一般分支处理的子分支，没有经过点击的一些其他可能的情况。
      */
-    suspend fun handleCoreOrSleepEvent(currentEvent: Event) {
+    private suspend fun otherHandle(currentEvent: Event): Event? {
+
         fun isSleepEvent(startTime: LocalDateTime): Boolean {
             return sleepNames.contains(newEventName) && isSleepingTime(startTime.toLocalTime())
         }
@@ -303,6 +305,50 @@ class DurationSliderViewModel @Inject constructor(
                 repository.saveCoreDurationForDate(getAdjustedEventDate(), coreDuration.value)
                 updateSaveCDFlag(true)
             }
+
+            return updateCEonMinutesTail(it) // 末尾两位数字
+        }
+    }
+
+    suspend fun otherHandle(
+        currentEvent: Event,
+        continueHandle: suspend (newCurrent: Event) -> Unit
+    ): Unit? {
+        val newCurrent = otherHandle(currentEvent)
+
+        return if (newCurrent != null) {
+            continueHandle(newCurrent)
+        } else null
+    }
+
+
+    /**
+     * @return 返回的是 currentEvent。
+     * 1. 如果输入名称的末尾没有两位分钟数，直接返回 null（以做区分），后期不做处理；
+     * 2. 如果有的话，就返回更新了 endTime 和 duration 值的 currentEvent，后面要停止事件！
+     */
+    private fun updateCEonMinutesTail(currentEvent: Event): Event? {
+
+        fun extractMinutes(text: String): Long? {
+            val regex = "\\d{2}$".toRegex()
+            val matchResult = regex.find(text)
+            return matchResult?.value?.toLong()
+        }
+
+        val minutes = extractMinutes(newEventName)
+
+        if (minutes == null || isSubEventTracking) return null // 末尾没有两位数字或是子事件，直接返回
+
+        currentEvent.let {
+            val endTime = it.startTime.plusMinutes(minutes)
+
+            it.name = newEventName.replace("$minutes", "")
+            it.endTime = endTime
+            it.duration = Duration.ofMinutes(minutes)
+            it.isCurrent = false
+
+            RDALogger.info("返回的 currentEvent = $it")
+            return it
         }
     }
 

@@ -8,7 +8,7 @@ import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.models.DateDuration
 import com.huaguang.flowoftime.data.models.Event
 
-@Database(entities = [Event::class, DateDuration::class], version = 2, exportSchema = false)
+@Database(entities = [Event::class, DateDuration::class], version = 1, exportSchema = false)
 @TypeConverters(LocalDateTimeConverter::class, DurationConverter::class,
     DurationConverter.LocalDateConverter::class)
 abstract class EventDatabase : RoomDatabase() {

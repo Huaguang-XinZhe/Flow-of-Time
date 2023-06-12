@@ -39,7 +39,7 @@ fun isGetUpTime(time: LocalTime): Boolean {
     val getUpRangeStart = LocalTime.of(7, 30)
     val getUpRangeEnd = LocalTime.of(11, 0)
 
-    return time.isAfter(getUpRangeStart) || time.isBefore(getUpRangeEnd)
+    return time.isAfter(getUpRangeStart) && time.isBefore(getUpRangeEnd)
 }
 
 fun formatLocalDateTime(dateTime: LocalDateTime): String {

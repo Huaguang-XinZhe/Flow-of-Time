@@ -16,6 +16,7 @@ import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.event_time.EventTimeViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.utils.isCoreEvent
+import com.huaguang.flowoftime.utils.isGetUpTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -27,6 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.LocalTime
 
 class EventTrackerMediator(
     val headerViewModel: HeaderViewModel,
@@ -65,8 +67,10 @@ class EventTrackerMediator(
     @OptIn(ExperimentalCoroutinesApi::class)
     val eventsWithSubEvents = headerViewModel.isOneDayButtonClicked.flatMapLatest { clicked ->
         if (clicked) {
+            RDALogger.info("oneDay")
             repository.getCustomTodayEvents()
         } else {
+            RDALogger.info("recentTwoDays")
             repository.getRecentTwoDaysEvents()
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), listOf())
@@ -79,7 +83,7 @@ class EventTrackerMediator(
 
             eventButtonsViewModel.restoreButtonShow()
             durationSliderViewModel.resetCoreDuration()
-            repository.generateDurationStr()
+//            repository.generateDurationStr()
         }
 
     }
@@ -175,11 +179,28 @@ class EventTrackerMediator(
             } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
                 currentEvent?.let {
                     subProhibitCore() // 禁止子事项输入核心事务
-                    durationSliderViewModel.handleCoreOrSleepEvent(it)
-                    currentEvent = it.copy(name = newEventName)
+
+                    durationSliderViewModel.otherHandle(it) {newCurrent ->
+                        stopEventOnConfirmed(newCurrent)
+                    } ?: run {
+                        // newCurrent 为 null，即末尾没有两位分钟数时才会执行这一段代码
+                        currentEvent = it.copy(name = newEventName)
+                    }
                 }
             }
         }
+    }
+
+
+
+    private suspend fun stopEventOnConfirmed(newCurrent: Event) {
+        currentEvent = newCurrent
+
+        currentItemViewModel.apply {
+            saveCurrentEvent()
+            hideCurrentItem()
+        }
+        eventButtonsViewModel.toggleStateOnMainStop()
     }
 
     /**
@@ -391,7 +412,14 @@ class EventTrackerMediator(
             }
         }
 
-        headerViewModel.isOneDayButtonClicked.value = data.isOneDayButtonClicked
+        headerViewModel.apply {
+            isOneDayButtonClicked.value =
+                if (isGetUpTime(LocalTime.now()) && resetListDisplayFlag) {
+                    RDALogger.info("满足重置列表显示模式的条件")
+                    false
+                } else data.isOneDayButtonClicked
+
+        }
 
         durationSliderViewModel.coreDuration.value = data.coreDuration
 
