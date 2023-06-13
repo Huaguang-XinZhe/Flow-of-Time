@@ -17,7 +17,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         coreDuration: Duration,
         currentEvent: Event?,
         eventStatus: EventStatus,
-        isLastStopFromSub: Boolean,
     ) {
         sharedPreferences.edit().apply {
             putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
@@ -25,7 +24,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
             putString("button_text", buttonText)
             putString("sub_button_text", subButtonText)
             putInt("scroll_index", scrollIndex)
-            putBoolean("isLastStopFromSub", isLastStopFromSub)
             putLong("core_duration", coreDuration.toMillis())
             putInt("event_status_value", eventStatus.value)
 
@@ -50,7 +48,6 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         val currentEvent = if (isTracking) getCurrentEvent() else null
 
         val scrollIndex = getScrollIndex()
-        val isLastStopFromSub = getIsLastStopFromSub()
 
         // 将获取的所有数据封装在 SharedPreferencesData 类的实例中
         return SPData(
@@ -62,14 +59,9 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
             eventStatus,
             currentEvent,
             scrollIndex,
-            isLastStopFromSub,
         )
     }
 
-
-    private fun getIsLastStopFromSub(): Boolean {
-        return sharedPreferences.getBoolean("isLastStopFromSub", false)
-    }
     private fun getEventStatus(): EventStatus {
         val eventStatusValue = sharedPreferences.getInt("event_status_value", 0)
         return EventStatus.fromInt(eventStatusValue)

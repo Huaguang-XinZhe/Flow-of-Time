@@ -1,11 +1,14 @@
-package com.huaguang.flowoftime.other
+package com.huaguang.flowoftime.utils
 
 import android.annotation.SuppressLint
 import androidx.compose.runtime.mutableStateOf
 
-class NameClickedTracker {
+class SelectionTracker {
     @SuppressLint("MutableCollectionMutableState")
     private val selectedIds = mutableStateOf(mutableMapOf<Long, Boolean>())
+
+//    private val newMap
+//        get() = selectedIds.value.toMutableMap()
 
     fun isSelected(id: Long): Boolean = selectedIds.value[id] ?: false
 
@@ -24,4 +27,5 @@ class NameClickedTracker {
     fun clearSelection() {
         selectedIds.value = mutableMapOf()
     }
+
 }

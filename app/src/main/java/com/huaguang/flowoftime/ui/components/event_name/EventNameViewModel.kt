@@ -9,8 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.other.NameClickedTracker
 import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.utils.SelectionTracker
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -24,12 +24,12 @@ class EventNameViewModel @Inject constructor(
 
     var beModifiedEvent: Event? by mutableStateOf(null)
     val previousName = mutableStateOf("")
-    private val clickedTracker = NameClickedTracker()
-    val isNameClicked = derivedStateOf {
-        Log.i("打标签喽", "beModifiedEvent = $beModifiedEvent")
-        val isClicked = beModifiedEvent?.let { clickedTracker.isSelected(it.id) } ?: false
-        Log.i("打标签喽", "isClicked = $isClicked")
-        isClicked
+    val clickedTracker = SelectionTracker()
+
+    // 这是修改项的点击状态（唯一的，不适用于全部 name）
+    val beModifiedItemNameClicked = derivedStateOf {
+        // 状态没存入 Map 和 beModifiedEvent 为空都为 false
+        beModifiedEvent?.let { clickedTracker.isSelected(it.id) } ?: false
     }
 
     fun onNameTextClicked(event: Event) {
@@ -40,9 +40,9 @@ class EventNameViewModel @Inject constructor(
 
         previousName.value = event.name
         sharedState.newEventName.value = event.name
+        beModifiedEvent = event
         // 点击的事项条目的状态会被设为 true
         clickedTracker.toggleSelection(event.id)
-        beModifiedEvent = event
 
         sharedState.isInputShow.value = true
     }

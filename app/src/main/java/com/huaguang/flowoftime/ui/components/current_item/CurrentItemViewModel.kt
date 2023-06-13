@@ -36,8 +36,6 @@ class CurrentItemViewModel @Inject constructor(
     val currentEvent: MutableState<Event?> =  mutableStateOf(null)
     private var subEventCount = 0
 
-    // 辅助函数逻辑变量
-    var isLastStopFromSub = false
 
     init {
         viewModelScope.launch {
@@ -69,7 +67,6 @@ class CurrentItemViewModel @Inject constructor(
 
         RDALogger.info("已经执行了恢复到主事件的逻辑：currentEvent.value = ${currentEvent.value}")
 
-        isLastStopFromSub = true
     }
 
     fun hideCurrentItem(fromDelete: Boolean = false) {
@@ -79,7 +76,6 @@ class CurrentItemViewModel @Inject constructor(
             currentEvent.value?.name = "￥为减少重组，优化频闪，不显示的特别设定￥"
         }
 
-        isLastStopFromSub = false
     }
 
     suspend fun updateCurrentEventOnStop() {

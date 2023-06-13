@@ -87,9 +87,9 @@ fun InputRow(mediator: EventTrackerMediator, focusRequester: FocusRequester) {
 
 @Composable
 fun UndoIconButton(mediator: EventTrackerMediator) {
-    val isNameClicked by mediator.eventNameViewModel.isNameClicked
+    val beModifiedItemNameClicked by mediator.eventNameViewModel.beModifiedItemNameClicked
 
-    if (!isNameClicked) {
+    if (!beModifiedItemNameClicked) {
         IconButton(
             onClick = {
                 mediator.resetState()

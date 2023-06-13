@@ -9,7 +9,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,10 +27,7 @@ fun EventName(
     modifier: Modifier = Modifier
 ) {
     val stateHolder = remember { EventNameState() }
-    val isNameClicked  by remember { // TODO:
-        viewModel.isNameClicked
-    }
-
+    val isNameClicked = viewModel.clickedTracker.isSelected(event.id)
     val textOptions = getTextOptions(stateHolder, event.name, showTime)
 
     Text(

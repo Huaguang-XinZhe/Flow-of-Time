@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components.event_time
+package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.utils.isCoreEvent
 import java.time.Duration
@@ -48,7 +47,7 @@ fun DraggableEventTime(
         modifier = Modifier.padding(end = if (isEndTime) 0.dp else 5.dp),
         text = text,
         isEndTime = isEndTime,
-        viewModel = mediator.eventTimeViewModel,
+        mediator = mediator,
         event = event,
         onDragDelta = { dragValue ->
             if (isEndTime) {
@@ -75,7 +74,7 @@ fun DraggableText(
     modifier: Modifier = Modifier,
     text: String,
     isEndTime: Boolean = false,
-    viewModel: EventTimeViewModel,
+    mediator: EventTrackerMediator,
     event: Event,
     onDragDelta: (Float) -> Unit,
     onDragStopped: () -> Unit
@@ -83,9 +82,9 @@ fun DraggableText(
     val speedList = remember { mutableStateListOf<Float>() }
     val lastDragTime = remember { mutableStateOf<Long?>(null) }
     val lastDelta = remember { mutableStateOf(0f) }
-    val selectionTracker = viewModel.selectionTracker
+    val dragTracker = remember { mediator.dragTracker }
     val isSelected by remember {
-        derivedStateOf { selectionTracker.isSelected(event.id) }
+        derivedStateOf { dragTracker.isSelected(event.id) }
     }
 
     val allow = isEndTime && event.endTime != null || !isEndTime
@@ -96,7 +95,7 @@ fun DraggableText(
             .clickable(
                 enabled = allow
             ) {  // 添加点击事件，点击后设置isClicked为true
-                selectionTracker.toggleSelection(event.id)
+                dragTracker.toggleSelection(event.id)
             }
             .then(
                 if (isSelected && allow) { // 如果Text被点击，添加阴影

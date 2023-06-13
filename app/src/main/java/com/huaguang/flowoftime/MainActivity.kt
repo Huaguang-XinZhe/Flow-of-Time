@@ -13,7 +13,6 @@ import com.huaguang.flowoftime.ui.components.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSliderViewModel
 import com.huaguang.flowoftime.ui.components.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
-import com.huaguang.flowoftime.ui.components.event_time.EventTimeViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.ui.screens.event_tracker.EventTrackerScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,7 +33,6 @@ class MainActivity : ComponentActivity() {
     private val headerViewModel: HeaderViewModel by viewModels()
     private val durationSliderViewModel: DurationSliderViewModel by viewModels()
     private val eventNameViewModel: EventNameViewModel by viewModels()
-    private val eventTimeViewModel: EventTimeViewModel by viewModels()
     private val eventButtonsViewModel: EventButtonsViewModel by viewModels()
     private val currentItemViewModel: CurrentItemViewModel by viewModels()
 
@@ -47,7 +45,6 @@ class MainActivity : ComponentActivity() {
             headerViewModel,
             durationSliderViewModel,
             eventButtonsViewModel,
-            eventTimeViewModel,
             currentItemViewModel,
             eventNameViewModel,
             repository,

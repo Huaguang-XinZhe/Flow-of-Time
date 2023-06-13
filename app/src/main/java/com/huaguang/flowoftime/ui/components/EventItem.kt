@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.event_name.EventName
-import com.huaguang.flowoftime.ui.components.event_time.DraggableEventTime
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.isCoreEvent

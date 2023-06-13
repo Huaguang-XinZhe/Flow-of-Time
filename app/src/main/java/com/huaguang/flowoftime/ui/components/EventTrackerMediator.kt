@@ -13,8 +13,8 @@ import com.huaguang.flowoftime.ui.components.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSliderViewModel
 import com.huaguang.flowoftime.ui.components.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
-import com.huaguang.flowoftime.ui.components.event_time.EventTimeViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
+import com.huaguang.flowoftime.utils.SelectionTracker
 import com.huaguang.flowoftime.utils.isCoreEvent
 import com.huaguang.flowoftime.utils.isGetUpTime
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +34,6 @@ class EventTrackerMediator(
     val headerViewModel: HeaderViewModel,
     val durationSliderViewModel: DurationSliderViewModel,
     val eventButtonsViewModel: EventButtonsViewModel,
-    val eventTimeViewModel: EventTimeViewModel,
     val currentItemViewModel: CurrentItemViewModel,
     val eventNameViewModel: EventNameViewModel,
     private val repository: EventRepository,
@@ -62,6 +61,7 @@ class EventTrackerMediator(
     // 辅助构成函数逻辑
     private var updateJob: Job? = null
     val initialized = mutableStateOf(false)
+    val dragTracker = SelectionTracker()
     private val dismissedItems = mutableSetOf<Long>() // 为了防止删除逻辑多次执行
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -243,7 +243,7 @@ class EventTrackerMediator(
             repository.updateEvent(updatedEvent)
             // 如果操作项是当前项，那就更新它的 startTime（没入库，所以要这么做！）
             currentItemViewModel.updateCurrentST(updatedEvent)
-            eventTimeViewModel.unBorder(updatedEvent.id)
+            dragTracker.cancelSelection(updatedEvent.id) // 取消滑块阴影，禁止点击
 
             // 2. 更新核心事务持续时间的 UI—————————————————————————————————————
             durationSliderViewModel.updateCoreDurationOnDragStopped(
@@ -443,10 +443,7 @@ class EventTrackerMediator(
 
         durationSliderViewModel.coreDuration.value = data.coreDuration
 
-        currentItemViewModel.apply {
-            currentEvent.value = data.currentEvent
-            isLastStopFromSub = data.isLastStopFromSub
-        }
+        currentEvent = data.currentEvent
 
         eventButtonsViewModel.apply {
             mainButtonText.value = data.buttonText
@@ -466,7 +463,6 @@ class EventTrackerMediator(
                 durationSliderViewModel.coreDuration.value,
                 currentItemViewModel.currentEvent.value,
                 currentStatus,
-                currentItemViewModel.isLastStopFromSub,
             )
         }
     }
