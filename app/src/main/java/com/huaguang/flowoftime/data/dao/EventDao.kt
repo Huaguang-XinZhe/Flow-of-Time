@@ -17,7 +17,7 @@ import java.time.LocalDateTime
 
 @Dao
 interface EventDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: Event): Long
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -31,6 +31,9 @@ interface EventDao {
 
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEvent(eventId: Long)
+
+    @Query("SELECT MAX(id) FROM events")
+    suspend fun getLastEventId(): Long
 
 //    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
 //            "AND duration IS NOT NULL")
@@ -54,6 +57,9 @@ interface EventDao {
         return getEventsWithCustomQuery(SimpleSQLiteQuery(queryString))
     }
 
+    @Query("SELECT COUNT(*) FROM events WHERE parentId = :parentId")
+    suspend fun countSubEvents(parentId: Long): Int
+
 
     @Query("SELECT * FROM events WHERE parentId IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun getLastMainEvent(): Event?
@@ -64,6 +70,9 @@ interface EventDao {
 
     @Query("SELECT MAX(id) FROM events WHERE parentId IS NULL")
     suspend fun getLastMainEventId(): Long
+
+    @Query("SELECT * FROM events ORDER BY id DESC LIMIT 1")
+    suspend fun getLastEvent(): Event
 
     @Transaction
     @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate = :eventDate")

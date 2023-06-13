@@ -183,12 +183,14 @@ class DurationSliderViewModel @Inject constructor(
     /**
      * 更新 startCursor 并立即存入 DataStore
      */
-    private suspend fun updateStartCursor(value: LocalDateTime?) {
+    suspend fun updateStartCursor(value: LocalDateTime?) {
         startCursor = value
         RDALogger.info("更新 startCursor 的值：$startCursor")
         // 立即存入 DataStore
         dataStoreHelper.saveStartCursor(value)
     }
+
+
 
 
 //    fun increaseCDifCoreTracking() {
@@ -268,6 +270,7 @@ class DurationSliderViewModel @Inject constructor(
     fun reduceDuration(duration: Duration) {
         coreDuration.value -= duration
     }
+
 
     suspend fun updateCDonCurrentStop(currentEvent: Event) {
         if (isCoreEvent(currentEvent.name)) { // 结束的是当下核心事务

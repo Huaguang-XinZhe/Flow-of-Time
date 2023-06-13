@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.data
 
-import android.util.Log
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
 import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.data.dao.DateDurationDao
@@ -107,17 +106,11 @@ class EventRepository(
             eventDao.insertEvent(event)
         }
 
-    suspend fun saveCurrentEvent(currentEvent: Event, updateCondition: Boolean) {
-        withContext(Dispatchers.IO) {
-            if (updateCondition) {
-                Log.i("打标签喽", "结束：更新主事件到数据库！")
-                eventDao.updateEvent(currentEvent)
-            } else {
-                Log.i("打标签喽", "结束：插入到数据库执行！")
-                eventDao.insertEvent(currentEvent)
-            }
-        }
+
+    suspend fun hasSubEvents(parentId: Long?): Boolean {
+        return parentId?.let { eventDao.countSubEvents(it) > 0 } ?: false
     }
+
 
     suspend fun getOffsetStartTime(): LocalDateTime? {
         val lastEvent = withContext(Dispatchers.IO) {
@@ -139,9 +132,20 @@ class EventRepository(
         }
     }
 
+    suspend fun deleteEvent(eventId: Long) {
+        withContext(Dispatchers.IO) {
+            eventDao.deleteEvent(eventId = eventId)
+        }
+    }
+
     suspend fun getLastMainEvent() =
         withContext(Dispatchers.IO) {
             eventDao.getLastMainEvent()
+        }
+
+    suspend fun getLastEvent() =
+        withContext(Dispatchers.IO) {
+            eventDao.getLastEvent()
         }
 
 }

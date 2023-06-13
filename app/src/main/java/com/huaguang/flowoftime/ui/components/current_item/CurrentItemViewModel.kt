@@ -100,10 +100,8 @@ class CurrentItemViewModel @Inject constructor(
      * 将更新后的当前项插入或更新到数据库
      */
     suspend fun saveCurrentEvent() {
-        val updateCondition = isLastStopFromSub &&
-                eventStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS
         currentEvent.value?.let {
-            repository.saveCurrentEvent(it, updateCondition)
+            repository.insertEvent(it) // 如果有冲突，则自动替换
         }
     }
 

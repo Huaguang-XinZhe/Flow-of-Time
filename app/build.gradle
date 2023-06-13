@@ -126,6 +126,9 @@ dependencies {
     implementation "androidx.datastore:datastore-preferences:1.0.0" // preferences（使用协程保证数据的一致性）
     implementation "androidx.datastore:datastore:1.0.0" // proto（跨进程安全访问）
 
+    // ConstraintLayout 库
+    implementation 'androidx.constraintlayout:constraintlayout-compose:1.0.1'
+
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

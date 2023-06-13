@@ -107,6 +107,23 @@ class EventTrackerMediator(
         }
     }
 
+    fun onUndoFilledClicked() {
+        viewModelScope.launch {
+            eventButtonsViewModel.onUndoFilledClicked { justEndedEvent ->
+                currentEvent = justEndedEvent.copy(
+                    endTime = null,
+                    duration = null
+                )
+
+                repository.deleteEvent(justEndedEvent.id)
+
+                if (isCoreEvent(justEndedEvent.name)) {
+                    durationSliderViewModel.updateStartCursor(justEndedEvent.endTime)
+                }
+            }
+        }
+    }
+
     fun deleteItem(event: Event, subEvents: List<Event> = listOf()) {
         if (dismissedItems.contains(event.id)) return
 
@@ -300,14 +317,14 @@ class EventTrackerMediator(
     /**
      * 撤销或删除时执行的方法，回到它处理后该有的状态。
      */
-    fun resetState(isCoreEvent: Boolean = false, fromDelete: Boolean = false) {
+    fun resetState(isCoreEvent: Boolean = false) {
         // 输入状态
         sharedState.resetInputState()
 
         if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
             // 撤销或删除主事项
             eventButtonsViewModel.toggleStateOnMainStop() // 按钮状态
-            currentItemViewModel.hideCurrentItem(fromDelete) // CurrentItem 状态
+            currentItemViewModel.hideCurrentItem() // CurrentItem 状态
 
             // 更新 CoreDuration
             durationSliderViewModel.reduceCDonCurrentCancel(
@@ -318,7 +335,7 @@ class EventTrackerMediator(
             // 撤销或删除子事项
             eventButtonsViewModel.toggleStateOnSubStop()
             viewModelScope.launch {
-                currentItemViewModel.restoreOnMainEvent(fromDelete)
+                currentItemViewModel.restoreOnMainEvent()
             }
         }
 
