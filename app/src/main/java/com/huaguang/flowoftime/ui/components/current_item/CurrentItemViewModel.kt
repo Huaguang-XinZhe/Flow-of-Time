@@ -49,7 +49,7 @@ class CurrentItemViewModel @Inject constructor(
 
     suspend fun restoreOnMainEvent(fromDelete: Boolean = false) {
         Log.i("打标签喽", "结束的是子事件")
-        val incompleteMainEvent = repository.getLastMainEvent()
+        val incompleteMainEvent = repository.getLastMainEvent()!!
 
         if (!fromDelete) {
             currentEvent.value?.let { // 这么写是为了不引起重组

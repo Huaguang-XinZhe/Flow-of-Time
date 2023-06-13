@@ -56,7 +56,7 @@ interface EventDao {
 
 
     @Query("SELECT * FROM events WHERE parentId IS NULL ORDER BY id DESC LIMIT 1")
-    suspend fun getLastMainEvent(): Event
+    suspend fun getLastMainEvent(): Event?
 
     @Query("SELECT * FROM events WHERE endTime IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun getLastIncompleteEvent(): Event

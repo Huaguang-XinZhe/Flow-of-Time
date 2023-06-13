@@ -89,18 +89,20 @@ class EventTrackerMediator(
     }
 
     fun increaseCDonResume() {
-        durationSliderViewModel.apply {
-            if (currentStatus == EventStatus.fromInt(1)) {
-                // 仅有主事务正在进行
-                RDALogger.info("resume: 仅有主事务正在进行！")
-                updateCoreDuration(currentEvent!!.id)
-            } else if (currentStatus == EventStatus.fromInt(2)) {
-                // 同时有子事务正在计时
-                RDALogger.info("resume: 同时有子事务正在进行！")
-                val mainEventId = currentEvent!!.parentId!!
-                val currentST = currentEvent!!.startTime
+        viewModelScope.launch {
+            durationSliderViewModel.apply {
+                if (currentStatus == EventStatus.fromInt(1)) {
+                    // 仅有主事务正在进行
+                    RDALogger.info("resume: 仅有主事务正在进行！")
+                    updateCoreDuration(currentEvent!!.id)
+                } else if (currentStatus == EventStatus.fromInt(2)) {
+                    // 同时有子事务正在计时
+                    RDALogger.info("resume: 同时有子事务正在进行！")
+                    val mainEventId = currentEvent!!.parentId!!
+                    val currentST = currentEvent!!.startTime
 
-                updateCoreDuration(mainEventId, currentSubEventST = currentST)
+                    updateCoreDuration(mainEventId, currentSubEventST = currentST)
+                }
             }
         }
     }
@@ -108,23 +110,19 @@ class EventTrackerMediator(
     fun deleteItem(event: Event, subEvents: List<Event> = listOf()) {
         if (dismissedItems.contains(event.id)) return
 
-        val isCoreEvent = isCoreEvent(event.name)
-
-        if (event.id != 0L) { // 删除项已经存入数据库中了，排除已经插入了子事件的主事件（有点复杂，不处理这样的场景）
+        if (event.duration != null) { // 删除 stored 且已经终结的事项
             Log.i("打标签喽", "删除已经入库的条目")
             viewModelScope.launch {
                 repository.deleteEventWithSubEvents(event, subEvents)
             }
 
-            durationSliderViewModel.reduceDuration(event.duration!!)
-        } else { // 删除的是当前项（正在计时）
-            resetState(isCoreEvent, true)
+            if (isCoreEvent(event.name)) {
+                durationSliderViewModel.reduceDuration(event.duration!!)
+            }
         }
 
         // 在删除完成后，将该 id 添加到已删除项目的记录器中
-        if (event.id != 0L) { // 当前项的 id 始终是 0，就不要加进来限制执行次数了。
-            dismissedItems.add(event.id)
-        }
+        dismissedItems.add(event.id)
     }
 
     fun onConfirmed() {
@@ -287,7 +285,7 @@ class EventTrackerMediator(
             if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
                 // 停止主事项——————————————————————————————————————————————————
                 // 先把 currentEvent 记录下来，隐藏后再更新 CoreDuration，要不然可能出现异常！！！
-                val currentRecord = currentEvent.value
+                val currentRecord = currentEvent.value?.copy()
                 hideCurrentItem()
                 // 使用 let 块更安全，这里有必要，为避免各种意外的崩溃情况！！！
                 currentRecord?.let { durationSliderViewModel.updateCDonCurrentStop(it) }
@@ -334,12 +332,17 @@ class EventTrackerMediator(
             viewModelScope.launch {
                 val startTime = repository.getOffsetStartTime()
 
+                if (startTime == null) {
+                    sharedState.toastMessage.value = "当前无法补计，直接开始吧"
+                    return@launch
+                }
+
                 startNewEvent(startTime = startTime)
                 toggleStateOnMainStart()
+
+                sharedState.toastMessage.value = "开始补计……"
             }
         }
-
-        sharedState.toastMessage.value = "开始补计……"
     }
 
     fun onSubButtonLongClicked() {

@@ -29,7 +29,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.SharedState
@@ -43,15 +42,14 @@ fun CustomSwipeToDismiss(
     dismissed: () -> Unit,
     dismissContent: @Composable (RowScope.() -> Unit)
 ) {
-
-    val context = LocalContext.current
     val dismissState = rememberDismissState()
     val isItemClicked = remember { mutableStateOf(false) }
     val isInputShow by sharedState.isInputShow
 
-    val direction = if (isItemClicked.value) {
-        setOf(DismissDirection.StartToEnd)
-    } else setOf()
+    val direction =
+        if (isItemClicked.value) {
+            setOf(DismissDirection.StartToEnd)
+        } else setOf()
 
     val borderModifier = if (isItemClicked.value) {
         Modifier.border(2.dp, Color.Red, RoundedCornerShape(12.dp))
@@ -63,14 +61,21 @@ fun CustomSwipeToDismiss(
         state = dismissState,
         modifier = Modifier
             .padding(8.dp)
-            .clickable( // 弹出输入框时禁止点击解除限制，滑动删除
-                // 已经插入数据库，且子事项正在计时的主事项禁止点击
-                enabled = !isInputShow && event?.let { it.endTime != null } ?: true
-            ) {
-                isItemClicked.value = !isItemClicked.value
-                if (isItemClicked.value) {
-                    sharedState.toastMessage.value = "解除限制，可右滑删除"
+            .clickable { // TODO: 这个地方有待优化，可以利用 StateHolder 精简
+                when {
+                    isInputShow -> sharedState.toastMessage.value = "当前状态禁止删除，确认后继续操作"
+                    event?.endTime == null -> {
+                        sharedState.toastMessage.value = "计时项禁止删除！"
+                    }
+                    else -> {
+                        isItemClicked.value = !isItemClicked.value
+
+                        if (isItemClicked.value) {
+                            sharedState.toastMessage.value = "解除限制，可右滑删除"
+                        }
+                    }
                 }
+
             }
             .then(borderModifier),
         directions = direction,

@@ -90,7 +90,8 @@ object EventSerializer {
     }
 
     private fun formatSubEvent(subEvent: Event): String {
-        return " ……${subEvent.name} " +
+        return "\uD83D\uDC4C " +
+                "……${subEvent.name} " +
                 "\uD83D\uDC4C " +
                 "${subEvent.duration?.let { formatDuration(it) }}"
     }

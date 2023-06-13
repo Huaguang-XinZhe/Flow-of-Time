@@ -75,7 +75,7 @@ class DurationSliderViewModel @Inject constructor(
      * @param start 这是传入的变更后的主事项的开始时间，默认为 null；
      * 通过传入就免于从 DataStore 中获取了，一个小小地性能优化。
      */
-    fun updateCoreDuration(
+    suspend fun updateCoreDuration(
         mainEventId: Long,
         currentSubEventST: LocalDateTime = LocalDateTime.now(),
         start: LocalDateTime? = null,
@@ -83,45 +83,44 @@ class DurationSliderViewModel @Inject constructor(
         RDALogger.info("更新 CoreDuration！！！")
         val now = LocalDateTime.now()
 
-        viewModelScope.launch {
-            if (start != null) {
-                startCursor = start
-            }
-
-            if (startCursor == null) return@launch
-            RDALogger.info("核心事务正在进行……")
-
-            // 如果当前子事项正在进行且 start >= 当前子事项的开始时间，那么便不做更新
-            if (isSubEventTracking && startCursor!! >= currentSubEventST) return@launch
-
-            // 获取当前事件的状态
-            val currentStatus = sharedState.eventStatus.value
-            val isMainEventTracking = currentStatus == EventStatus.fromInt(1)
-
-            // 获取子事件的数量
-            val subEventCount = dataStoreHelper.subEventCountFlow.first()
-
-            // 计算 subSum
-            val subSum =
-                calculateSubSumIfNecessary(
-                    mainEventId,
-                    currentSubEventST,
-                    isMainEventTracking,
-                    now,
-                    subEventCount
-                )
-
-            // 计算 delta，并更新总持续时间
-            val delta = Duration.between(startCursor!!, now) - subSum
-            RDALogger.info("delta = ${formatDurationInText(delta)}")
-            increaseDuration(delta)
-
-            // 收集并更新 delta
-            updateDeltaSum(delta)
-
-            // 更新 startCursor
-            updateStartCursor(now)
+        if (start != null) {
+            startCursor = start
         }
+
+        RDALogger.info("startCursor = $startCursor")
+        if (startCursor == null) return
+        RDALogger.info("核心事务正在进行……")
+
+        // 如果当前子事项正在进行且 start >= 当前子事项的开始时间，那么便不做更新
+        if (isSubEventTracking && startCursor!! >= currentSubEventST) return
+
+        // 获取当前事件的状态
+        val currentStatus = sharedState.eventStatus.value
+        val isMainEventTracking = currentStatus == EventStatus.fromInt(1)
+
+        // 获取子事件的数量
+        val subEventCount = dataStoreHelper.subEventCountFlow.first()
+
+        // 计算 subSum
+        val subSum =
+            calculateSubSumIfNecessary(
+                mainEventId,
+                currentSubEventST,
+                isMainEventTracking,
+                now,
+                subEventCount
+            )
+
+        // 计算 delta，并更新总持续时间
+        val delta = Duration.between(startCursor!!, now) - subSum
+        RDALogger.info("delta = ${formatDurationInText(delta)}")
+        increaseDuration(delta)
+
+        // 收集并更新 delta
+        updateDeltaSum(delta)
+
+        // 更新 startCursor
+        updateStartCursor(now)
     }
 
 
@@ -186,6 +185,7 @@ class DurationSliderViewModel @Inject constructor(
      */
     private suspend fun updateStartCursor(value: LocalDateTime?) {
         startCursor = value
+        RDALogger.info("更新 startCursor 的值：$startCursor")
         // 立即存入 DataStore
         dataStoreHelper.saveStartCursor(value)
     }
@@ -203,7 +203,7 @@ class DurationSliderViewModel @Inject constructor(
         dataStoreHelper.saveDeltaSum(delta)
     }
 
-    fun updateCoreDurationOnDragStopped(
+    suspend fun updateCoreDurationOnDragStopped(
         updatedEvent: Event, // 滑动操作项
         originalDuration: Duration?,
     ) {

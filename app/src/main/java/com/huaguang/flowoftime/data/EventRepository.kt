@@ -119,12 +119,12 @@ class EventRepository(
         }
     }
 
-    suspend fun getOffsetStartTime(): LocalDateTime {
+    suspend fun getOffsetStartTime(): LocalDateTime? {
         val lastEvent = withContext(Dispatchers.IO) {
             eventDao.getLastMainEvent()
         }
-        return lastEvent.endTime?.plus(DEFAULT_EVENT_INTERVAL)
-            ?: lastEvent.startTime.plus(DEFAULT_EVENT_INTERVAL)
+        return lastEvent?.endTime?.plus(DEFAULT_EVENT_INTERVAL)
+            ?: lastEvent?.startTime?.plus(DEFAULT_EVENT_INTERVAL)
     }
 
     suspend fun deleteEventWithSubEvents(
