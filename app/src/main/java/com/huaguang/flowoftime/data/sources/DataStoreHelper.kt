@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data
+package com.huaguang.flowoftime.data.sources
 
 import android.content.Context
 import androidx.datastore.core.DataStore

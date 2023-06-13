@@ -22,7 +22,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.utils.formatLocalDateTime
+import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
 import com.huaguang.flowoftime.utils.isCoreEvent
 import java.time.Duration
 import java.time.LocalDateTime

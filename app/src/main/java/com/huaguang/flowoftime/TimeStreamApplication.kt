@@ -5,7 +5,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.room.Room
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.data.EventDatabase
+import com.huaguang.flowoftime.data.sources.EventDatabase
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

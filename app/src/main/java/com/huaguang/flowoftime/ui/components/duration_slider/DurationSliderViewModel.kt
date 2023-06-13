@@ -7,17 +7,17 @@ import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
-import com.huaguang.flowoftime.data.DataStoreHelper
-import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
+import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.sleepNames
 import com.huaguang.flowoftime.ui.components.SharedState
-import com.huaguang.flowoftime.utils.formatDurationInText
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.extensions.formatDurationInText
+import com.huaguang.flowoftime.utils.extensions.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.extensions.isGetUpTime
+import com.huaguang.flowoftime.utils.extensions.isSleepingTime
 import com.huaguang.flowoftime.utils.isCoreEvent
-import com.huaguang.flowoftime.utils.isGetUpTime
-import com.huaguang.flowoftime.utils.isSleepingTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -145,7 +145,7 @@ class DurationSliderViewModel @Inject constructor(
         } else {
             // 获取在 startCursor 和现在之间的所有子事件的时间
             val subEventTimesList =
-                repository.eventDao.getSubEventTimesWithinRange(mainEventId, startCursor)
+                repository.getSubEventTimesWithinRange(mainEventId, startCursor)
             // 如果有子事项正在计时，那么还需要加上子事项开始时间到现在的这段时间
             val isSubTrackingAdditional = Duration.between(currentSubEventST, now)
 

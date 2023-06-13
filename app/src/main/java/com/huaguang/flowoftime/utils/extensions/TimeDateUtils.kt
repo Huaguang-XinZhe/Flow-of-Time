@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.utils
+package com.huaguang.flowoftime.utils.extensions
 
 import java.time.Duration
 import java.time.LocalDate

@@ -5,8 +5,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.components.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject

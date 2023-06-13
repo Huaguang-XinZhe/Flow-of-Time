@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.event_name.EventName
 import com.huaguang.flowoftime.ui.theme.DarkGray24
-import com.huaguang.flowoftime.utils.formatDurationInText
+import com.huaguang.flowoftime.utils.extensions.formatDurationInText
 import com.huaguang.flowoftime.utils.isCoreEvent
 
 @Composable

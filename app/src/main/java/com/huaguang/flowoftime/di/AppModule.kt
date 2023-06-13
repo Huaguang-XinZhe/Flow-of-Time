@@ -3,12 +3,12 @@ package com.huaguang.flowoftime.di
 import android.app.Application
 import android.content.Context
 import com.huaguang.flowoftime.TimeStreamApplication
-import com.huaguang.flowoftime.data.DataStoreHelper
-import com.huaguang.flowoftime.data.EventDatabase
-import com.huaguang.flowoftime.data.EventRepository
-import com.huaguang.flowoftime.data.SPHelper
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
+import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.sources.DataStoreHelper
+import com.huaguang.flowoftime.data.sources.EventDatabase
+import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.LocalDateTimeSerializer

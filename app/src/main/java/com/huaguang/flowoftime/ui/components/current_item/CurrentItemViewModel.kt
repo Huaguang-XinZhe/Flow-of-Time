@@ -7,11 +7,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.data.DataStoreHelper
-import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.ui.components.SharedState
-import com.huaguang.flowoftime.utils.getEventDate
+import com.huaguang.flowoftime.utils.extensions.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch

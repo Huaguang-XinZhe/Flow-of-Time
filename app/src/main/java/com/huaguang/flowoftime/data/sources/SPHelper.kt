@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data
+package com.huaguang.flowoftime.data.sources
 
 import android.content.SharedPreferences
 import com.huaguang.flowoftime.EventStatus
@@ -102,3 +102,13 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
 
 }
 
+data class SPData(
+    val isOneDayButtonClicked: Boolean,
+    val isInputShow: Boolean,
+    val buttonText: String,
+    val subButtonText: String,
+    val coreDuration: Duration,
+    val eventStatus: EventStatus,
+    val currentEvent: Event?,
+    val scrollIndex: Int,
+)

@@ -7,9 +7,6 @@ class SelectionTracker {
     @SuppressLint("MutableCollectionMutableState")
     private val selectedIds = mutableStateOf(mutableMapOf<Long, Boolean>())
 
-//    private val newMap
-//        get() = selectedIds.value.toMutableMap()
-
     fun isSelected(id: Long): Boolean = selectedIds.value[id] ?: false
 
     fun toggleSelection(id: Long) {

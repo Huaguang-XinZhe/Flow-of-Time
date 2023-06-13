@@ -5,8 +5,8 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import com.huaguang.flowoftime.data.EventRepository
-import com.huaguang.flowoftime.data.SPHelper
+import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.components.current_item.CurrentItemViewModel

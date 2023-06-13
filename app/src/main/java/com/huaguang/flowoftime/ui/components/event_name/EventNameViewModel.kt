@@ -7,8 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.huaguang.flowoftime.data.EventRepository
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.SelectionTracker
 import dagger.hilt.android.lifecycle.HiltViewModel

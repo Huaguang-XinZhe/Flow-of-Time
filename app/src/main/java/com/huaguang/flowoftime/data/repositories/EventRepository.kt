@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data
+package com.huaguang.flowoftime.data.repositories
 
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
 import com.huaguang.flowoftime.coreEventKeyWords
@@ -6,10 +6,11 @@ import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.models.DateDuration
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.utils.EventSerializer
-import com.huaguang.flowoftime.utils.formatDurationInText
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.extensions.formatDurationInText
+import com.huaguang.flowoftime.utils.extensions.getAdjustedEventDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -18,9 +19,17 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 class EventRepository(
-    val eventDao: EventDao,
+    private val eventDao: EventDao,
     private val dateDurationDao: DateDurationDao
 ) {
+
+    suspend fun getSubEventTimesWithinRange(
+        mainEventId: Long,
+        startCursor: LocalDateTime?,
+    ): List<EventTimes> =
+        withContext(Dispatchers.IO) {
+            eventDao.getSubEventTimesWithinRange(mainEventId, startCursor)
+        }
 
     suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
         var totalDuration = Duration.ZERO
@@ -79,15 +88,6 @@ class EventRepository(
             }
         }
     }
-
-
-//    suspend fun generateDurationStr() {
-//        val dateDurations = dateDurationDao.getAll()
-//        dateDurations.forEach { dateDuration ->
-//            dateDuration.durationStr = formatDurationInText(dateDuration.duration)
-//            dateDurationDao.updateDateDuration(dateDuration)
-//        }
-//    }
 
 
     suspend fun updateEvent(event: Event) {

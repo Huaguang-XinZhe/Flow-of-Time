@@ -1,6 +1,9 @@
 package com.huaguang.flowoftime.utils
 
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.utils.extensions.formatDuration
+import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
+import com.huaguang.flowoftime.utils.extensions.parseToLocalDateTime
 import java.time.LocalDate
 
 object EventSerializer {
