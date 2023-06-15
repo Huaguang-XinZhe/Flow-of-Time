@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.ui.components.duration_slider
 
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
@@ -17,7 +18,6 @@ import com.huaguang.flowoftime.utils.extensions.formatDurationInText
 import com.huaguang.flowoftime.utils.extensions.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.extensions.isGetUpTime
 import com.huaguang.flowoftime.utils.extensions.isSleepingTime
-import com.huaguang.flowoftime.utils.isCoreEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -49,6 +49,8 @@ class DurationSliderViewModel @Inject constructor(
     private var startCursor: LocalDateTime? = null // 记录正在进行的核心事务的开始时间
     private var saveCoreDurationFlag = false
 
+    private val _coreEventKeyWords = MutableLiveData<List<String>>()
+
 //    // 这是为了能在多个方法中使用这一变量（紧跟着，如果把那两个方法合并到一处，就不需要这个变量了），
 //    // 本质上是观察 DataStore 中的变化
 //    private var subEventCount = 0
@@ -58,7 +60,23 @@ class DurationSliderViewModel @Inject constructor(
             // 订阅获取 DataStore 中 startCursor 的最新值（冷流获取）
             startCursor = dataStoreHelper.startCursorFlow.firstOrNull()
             saveCoreDurationFlag = dataStoreHelper.saveCoreDurationFlagFlow.first()
+
+            dataStoreHelper.coreEventKeyWordsFlow.collect { newKeyWords ->
+                // 缓存同步 DataStore 中的更改
+                _coreEventKeyWords.value = newKeyWords
+            }
         }
+    }
+
+    fun isCoreEvent(name: String): Boolean {
+        val keyWords = _coreEventKeyWords.value ?: emptyList()
+
+        for (keyWord in keyWords) {
+            val contains = name.contains(keyWord, true)
+            if (contains) return true
+        }
+
+        return false
     }
 
     // 核心事务持续时间更新的关键算法——————————————————————————————————————————————————————————————————

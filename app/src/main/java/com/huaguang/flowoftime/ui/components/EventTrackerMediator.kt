@@ -16,7 +16,6 @@ import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.utils.SelectionTracker
 import com.huaguang.flowoftime.utils.extensions.isGetUpTime
-import com.huaguang.flowoftime.utils.isCoreEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -58,7 +57,6 @@ class EventTrackerMediator(
             currentItemViewModel.currentEvent.value = value
         }
 
-    // 辅助构成函数逻辑
     private var updateJob: Job? = null
     val initialized = mutableStateOf(false)
     val dragTracker = SelectionTracker()
@@ -84,8 +82,13 @@ class EventTrackerMediator(
             eventButtonsViewModel.restoreButtonShow()
             durationSliderViewModel.resetCoreDuration()
 //            repository.generateDurationStr()
+
         }
 
+    }
+
+    fun isCoreEvent(name: String): Boolean {
+        return durationSliderViewModel.isCoreEvent(name)
     }
 
     fun increaseCDonResume() {
@@ -131,10 +134,10 @@ class EventTrackerMediator(
             Log.i("打标签喽", "删除已经入库的条目")
             viewModelScope.launch {
                 repository.deleteEventWithSubEvents(event, subEvents)
-            }
 
-            if (isCoreEvent(event.name)) {
-                durationSliderViewModel.reduceDuration(event.duration!!)
+                if (isCoreEvent(event.name)) {
+                    durationSliderViewModel.reduceDuration(event.duration!!)
+                }
             }
         }
 
@@ -466,5 +469,7 @@ class EventTrackerMediator(
             )
         }
     }
+
+
 
 }

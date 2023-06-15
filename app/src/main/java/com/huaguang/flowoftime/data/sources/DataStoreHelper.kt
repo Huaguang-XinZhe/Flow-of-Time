@@ -29,7 +29,7 @@ class DataStoreHelper (
 //    private val isInputShowKey = booleanPreferencesKey("is_input_show")
     private val saveCoreDurationFlag = booleanPreferencesKey("save_core_duration_flag")
     private val resetListDisplayFlag = booleanPreferencesKey("reset_list_display_flag")
-
+    private val coreKeyWords = stringPreferencesKey("core_event_key_words")
 
     val startCursorFlow: Flow<LocalDateTime?> = context.dataStore.data
         .map { preferences ->
@@ -69,6 +69,18 @@ class DataStoreHelper (
             preferences[resetListDisplayFlag] ?: true
         }
 
+    val coreEventKeyWordsFlow: Flow<List<String>> = context.dataStore.data
+        .map { preferences ->
+            preferences[coreKeyWords]?.split(",")
+                ?: listOf("学习", "输出", "总结")
+        }
+
+
+    suspend fun saveCoreEventKeyWords(value: List<String>) {
+        context.dataStore.edit { preferences ->
+            preferences[coreKeyWords] = value.joinToString(separator = ",")
+        }
+    }
 
     suspend fun saveStartCursor(value: LocalDateTime?) {
         context.dataStore.edit { preferences ->

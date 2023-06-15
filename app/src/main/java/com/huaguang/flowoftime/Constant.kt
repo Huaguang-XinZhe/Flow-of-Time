@@ -14,7 +14,10 @@ val coreEventKeyWords = listOf(
     "扔物线",
     "时光流",
     "吃什么",
+    "输出",
+    "总结",
 )
+
 
 val sleepNames = listOf("睡", "睡觉", "晚睡")
 

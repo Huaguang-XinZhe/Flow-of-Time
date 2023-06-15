@@ -1,7 +1,7 @@
 package com.huaguang.flowoftime.ui.components.header
 
+
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -10,6 +10,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.delay
 
 @Composable
 fun HeaderRow(viewModel: HeaderViewModel) {
@@ -34,7 +40,7 @@ fun HeaderRow(viewModel: HeaderViewModel) {
         Button(
             onClick = { showDialog = true }
         ) {
-            Text("导入")
+            Text("关键词")
         }
 
         Button(
@@ -54,38 +60,53 @@ fun HeaderRow(viewModel: HeaderViewModel) {
     }
 
     if (showDialog) {
-        ImportEventsDialog(
-            onDismiss = { showDialog = false },
-            onImport = { text -> viewModel.importEvents(text) }
-        )
+        KeyWordsSettingDialog(
+            viewModel = viewModel,
+            onDismiss = { showDialog = false }
+        ) { text -> viewModel.updateKeyWords(text) }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-fun ImportEventsDialog(
+fun KeyWordsSettingDialog(
+    viewModel: HeaderViewModel,
     onDismiss: () -> Unit,
-    onImport: (String) -> Unit
+    onConfirm: (String) -> Unit
 ) {
-    var inputText by remember { mutableStateOf("") }
+    var keyWordsInputValue by remember {
+        mutableStateOf(TextFieldValue(text = ""))
+    }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        val keyWordsInput = viewModel.getCoreKeyWordsInput()
+
+        keyWordsInputValue = TextFieldValue(
+            text = keyWordsInput,
+            selection = TextRange(keyWordsInput.length)
+        )
+        delay(100)
+        focusRequester.requestFocus()
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("导入时间记录") },
+        title = { Text("设定核心事务关键词") },
         text = {
             OutlinedTextField(
-                value = inputText,
-                onValueChange = { inputText = it },
-                label = { Text("请输入要导入的源文本") },
-                modifier = Modifier.heightIn(min = 56.dp, max = 560.dp)  // Assuming each line is 56.dp
+                value = keyWordsInputValue,
+                onValueChange = { keyWordsInputValue = it },
+                label = { Text("可设定多个，换行分隔") },
+                modifier = Modifier.focusRequester(focusRequester)
             )
         },
         confirmButton = {
             Button(onClick = {
-                onImport(inputText)
+                onConfirm(keyWordsInputValue.text)
                 onDismiss()
             }) {
-                Text("导入")
+                Text("确认")
             }
         },
         dismissButton = {

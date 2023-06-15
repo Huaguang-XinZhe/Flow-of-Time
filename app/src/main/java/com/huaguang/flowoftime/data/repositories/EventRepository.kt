@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.data.repositories
 
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
-import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.models.DateDuration
@@ -31,17 +30,17 @@ class EventRepository(
             eventDao.getSubEventTimesWithinRange(mainEventId, startCursor)
         }
 
-    suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
-        var totalDuration = Duration.ZERO
-        val events = eventDao.getFilteredEvents(coreEventKeyWords, eventDate)
-
-        // 当 events 为空，里边的代码就不会执行
-        for (event in events) {
-            totalDuration = totalDuration.plus(event.duration)
-        }
-
-        return totalDuration
-    }
+//    suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
+//        var totalDuration = Duration.ZERO
+//        val events = eventDao.getFilteredEvents(coreEventKeyWords, eventDate)
+//
+//        // 当 events 为空，里边的代码就不会执行
+//        for (event in events) {
+//            totalDuration = totalDuration.plus(event.duration)
+//        }
+//
+//        return totalDuration
+//    }
 
     fun getRecentTwoDaysEvents(): Flow<List<EventWithSubEvents>> {
         val customToday = getAdjustedEventDate()

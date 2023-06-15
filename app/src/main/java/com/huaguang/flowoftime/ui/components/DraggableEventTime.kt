@@ -23,7 +23,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
-import com.huaguang.flowoftime.utils.isCoreEvent
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -99,7 +98,7 @@ fun DraggableText(
             }
             .then(
                 if (isSelected && allow) { // 如果Text被点击，添加阴影
-                    if (isCoreEvent(event.name)) {
+                    if (mediator.isCoreEvent(event.name)) {
                         Modifier.border(1.dp, Color.White)
                     } else Modifier.shadow(1.dp)
                 } else Modifier
@@ -107,19 +106,22 @@ fun DraggableText(
     ) {
         Text(
             text = text,
-            modifier = Modifier.padding(5.dp).draggable(
-                orientation = Orientation.Horizontal,
-                enabled = allow && isSelected, // 只有当Text被点击时，才能拖动
-                state = rememberDraggableState { delta ->
-                    calculateDragSpeed(delta, speedList, lastDragTime, lastDelta)
-                },
-                onDragStarted = { speedList.clear() },
-                onDragStopped = {
-                    handleDragStopped(speedList, lastDelta.value, onDragDelta, onDragStopped)
-                }
-            )
+            modifier = Modifier
+                .padding(5.dp)
+                .draggable(
+                    orientation = Orientation.Horizontal,
+                    enabled = allow && isSelected, // 只有当Text被点击时，才能拖动
+                    state = rememberDraggableState { delta ->
+                        calculateDragSpeed(delta, speedList, lastDragTime, lastDelta)
+                    },
+                    onDragStarted = { speedList.clear() },
+                    onDragStopped = {
+                        handleDragStopped(speedList, lastDelta.value, onDragDelta, onDragStopped)
+                    }
+                )
         )
     }
+
 }
 
 private fun calculateDragSpeed(

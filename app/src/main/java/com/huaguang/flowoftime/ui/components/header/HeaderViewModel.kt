@@ -21,7 +21,7 @@ import javax.inject.Inject
 class HeaderViewModel @Inject constructor(
     private val repository: EventRepository,
     private val sharedState: SharedState,
-    private val dateStoreHelper: DataStoreHelper,
+    private val dataStoreHelper: DataStoreHelper,
 ) : ViewModel() {
 
     // 专有
@@ -31,8 +31,13 @@ class HeaderViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            resetListDisplayFlag = dateStoreHelper.resetListDisplayFlagFlow.first()
+            resetListDisplayFlag = dataStoreHelper.resetListDisplayFlagFlow.first()
         }
+    }
+
+    suspend fun getCoreKeyWordsInput(): String {
+        val keyWords = dataStoreHelper.coreEventKeyWordsFlow.first()
+        return keyWords.joinToString(separator = "\n")
     }
 
     fun toggleListDisplayState() {
@@ -50,7 +55,7 @@ class HeaderViewModel @Inject constructor(
 
     private suspend fun updateResetFlag(value: Boolean) {
         resetListDisplayFlag = value
-        dateStoreHelper.saveResetListAgainFlag(value)
+        dataStoreHelper.saveResetListAgainFlag(value)
     }
 
     fun exportEvents() {
@@ -65,8 +70,13 @@ class HeaderViewModel @Inject constructor(
         }
     }
 
-    fun importEvents(text: String) {
-        sharedState.toastMessage.value = "导入成功"
+    fun updateKeyWords(text: String) {
+        // 按行提取文本，加入到列表，并保存
+        viewModelScope.launch {
+            val keyWords = text.split("\n")
+            dataStoreHelper.saveCoreEventKeyWords(keyWords)
+            sharedState.toastMessage.value = "应用成功"
+        }
     }
 
 }

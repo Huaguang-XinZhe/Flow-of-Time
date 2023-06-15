@@ -19,7 +19,6 @@ import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.event_name.EventName
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.utils.extensions.formatDurationInText
-import com.huaguang.flowoftime.utils.isCoreEvent
 
 @Composable
 fun EventItem(
@@ -27,7 +26,7 @@ fun EventItem(
     subEvents: List<Event> = listOf(),
     mediator: EventTrackerMediator
 ) {
-    val cardColors = if (isCoreEvent(event.name)) {
+    val cardColors = if (mediator.isCoreEvent(event.name)) {
         CardDefaults.cardColors(
             containerColor = DarkGray24,
             contentColor = Color.White
