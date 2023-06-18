@@ -30,6 +30,10 @@ data class Event(
 
     var parentId: Long? = null,   // 用于存储该事件关联的主事件的ID，如果该事件是主事件，则此字段为null
 
-    var isCurrent: Boolean = false
+    var isCurrent: Boolean = false,
+
+    var category: String = "",
+
+    var subCategory: String? = null
 )
 

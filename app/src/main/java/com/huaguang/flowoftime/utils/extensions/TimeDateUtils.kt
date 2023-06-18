@@ -6,6 +6,15 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
+fun Duration.toHoursPartCompat(): Int {
+    return (this.seconds / 3600).toInt()
+}
+
+fun Duration.toMinutesPartCompat(): Int {
+    return ((this.seconds % 3600) / 60).toInt()
+}
+
+
 fun getEventDate(startTime: LocalDateTime): LocalDate {
     return if (startTime.hour in 0..4) {
         startTime.toLocalDate().minusDays(1)
