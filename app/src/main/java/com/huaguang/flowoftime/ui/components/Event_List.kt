@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -76,7 +77,7 @@ fun MyList(listItems: List<ListItem>) {
             )
         }
 
-        items(listItems) { item ->
+        itemsIndexed(listItems) { index, item ->
             when (item) {
                 is ListItem.DateItem -> DateItem(item)
                 is ListItem.MainItem -> MainItem(item)

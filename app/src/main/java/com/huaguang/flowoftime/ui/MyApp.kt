@@ -15,7 +15,6 @@ fun MyApp(mediator: EventTrackerMediator) {
     val systemUiController = rememberSystemUiController()
     val useDarkIcons = MaterialTheme.colors.isLight
 
-
     // 在 SideEffect 中更新系统 UI
     SideEffect {
 
