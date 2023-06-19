@@ -165,7 +165,7 @@ fun SubItem(item: ListItem.SubItem) {
         Divider(
             height = 58.dp,
             modifier = Modifier.constrainAs(dividerRef) {
-                start.linkTo(parent.start, 46.dp)
+                start.linkTo(parent.start, 47.3.dp)
             }
         )
 
@@ -221,7 +221,7 @@ fun SubItem(item: ListItem.SubItem) {
 fun Interval(item: ListItem.Interval) {
     NumberCircle(
         number = item.value,
-        modifier = Modifier.padding(start = 45.dp)
+        modifier = Modifier.padding(start = 46.dp)
     )
 }
 

@@ -129,6 +129,9 @@ dependencies {
     // ConstraintLayout 库
     implementation 'androidx.constraintlayout:constraintlayout-compose:1.0.1'
 
+    //使用 Compose 修改系统 UI
+    implementation 'com.google.accompanist:accompanist-systemuicontroller:0.31.1-alpha'
+
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

@@ -3,7 +3,10 @@ package com.huaguang.flowoftime.ui.screens.event_tracker
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -31,7 +34,12 @@ fun EventTrackerScreen(mediator: EventTrackerMediator) {
     HandleScrollEffect(mediator.sharedState, listState)
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding(),
+//            .padding(10.dp) 注意，如果此处加 padding，那么上下左右都会加 padding，输入框和软键盘的连接处也会加！！！
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {

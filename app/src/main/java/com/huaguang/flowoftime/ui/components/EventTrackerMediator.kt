@@ -38,6 +38,7 @@ class EventTrackerMediator(
     private val repository: EventRepository,
     private val spHelper: SPHelper,
     val sharedState: SharedState,
+
 ) : ViewModel() {
 
     // 依赖的共享状态
@@ -162,6 +163,7 @@ class EventTrackerMediator(
             }
 
             isInputShow.value = false
+
         }
     }
 
@@ -291,6 +293,8 @@ class EventTrackerMediator(
                 // 通用创建，但必须放在后边，尤其是对于子事项（需要先保存当前主事件，然后再创建新事件）
                 currentEvent.value = createCurrentEvent(startTime)
             }
+
+
         }
 
     }

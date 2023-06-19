@@ -3,6 +3,7 @@ package com.huaguang.flowoftime.utils
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.res.Resources
 import android.os.VibrationEffect
 import android.os.Vibrator
 
@@ -27,4 +28,14 @@ fun vibrate(context: Context) {
             VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE)
         vibrator.vibrate(vibrationEffect)
     }
+}
+
+fun getNavigationBarHeight(context: Context) {
+    val resources: Resources = context.resources
+    val resourceId: Int = resources.getIdentifier("navigation_bar_height", "dimen", "android")
+    if (resourceId > 0) {
+        val navigationBarHeight: Int = resources.getDimensionPixelSize(resourceId)
+        // You now have the navigation bar height
+    }
+
 }

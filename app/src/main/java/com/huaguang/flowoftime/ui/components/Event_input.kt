@@ -2,9 +2,7 @@ package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -34,12 +32,14 @@ import com.huaguang.flowoftime.R
 fun EventInputField(mediator: EventTrackerMediator) {
     val focusRequester = remember { FocusRequester() }
 
-    Column {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
+    ) {
         UndoIconButton(mediator = mediator)
 
         InputRow(mediator = mediator, focusRequester = focusRequester)
 
-        Spacer(modifier = Modifier.fillMaxWidth().height(280.dp))
+//        Spacer(modifier = Modifier.fillMaxWidth().height(280.dp))
     }
 
     LaunchedEffect(Unit) {
@@ -47,6 +47,7 @@ fun EventInputField(mediator: EventTrackerMediator) {
     }
 
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
