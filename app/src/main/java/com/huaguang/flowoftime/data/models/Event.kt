@@ -26,14 +26,16 @@ data class Event(
     var duration: Duration? = null,
 
     @Serializable(with = LocalDateSerializer::class)
-    var eventDate: LocalDate? = null, // 用于存储事件发生的日期
+    var eventDate: LocalDate = LocalDate.now(), // 用于存储事件发生的日期
 
     var parentId: Long? = null,   // 用于存储该事件关联的主事件的ID，如果该事件是主事件，则此字段为null
 
+    var category: String = "类属",
+
+    var subCategory: String? = null,
+
+    var interval: Int? = null, // 子事件没有间隔，为 null，主事件正常时为正数，异常时为 -1（人为设置）
+
     var isCurrent: Boolean = false,
-
-    var category: String = "",
-
-    var subCategory: String? = null
 )
 

@@ -4,9 +4,9 @@ package com.huaguang.flowoftime.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -22,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
@@ -36,8 +37,9 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.huaguang.flowoftime.ListItem
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.theme.LightGray93
+import com.huaguang.flowoftime.ui.theme.Purple40
+import com.huaguang.flowoftime.ui.theme.warningBg
 import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
 import java.time.Duration
 import java.time.LocalDate
@@ -45,7 +47,7 @@ import java.time.LocalDateTime
 
 
 @Composable
-fun DateItem(item: ListItem.DateItem) {
+fun DateItem(date: LocalDate) {
     Surface(
         shape = CircleShape,
         color = LightGray93,
@@ -57,7 +59,7 @@ fun DateItem(item: ListItem.DateItem) {
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = item.value.toString(),
+                text = date.toString(),
                 modifier = Modifier.padding(vertical = 5.dp)
             )
         }
@@ -71,14 +73,14 @@ fun MainItem(item: ListItem.MainItem) {
             .padding(horizontal = 10.dp)
             .fillMaxWidth()
     ) {
-        val (startTimeTextRef, dotRef, topDividerRef, bottomDividerRef, categoryIconRef,
-            eventNameRef, durationTextRef, categoryTagRowRef) = remember { createRefs() }
+        val (startTimeTextRef, dotRef, topDividerRef, numberCircleRef, bottomDividerRef,
+            categoryIconRef, eventNameRef, durationTextRef, categoryTagRowRef) = remember { createRefs() }
 
         StartTimeText(
             startTime = item.event.startTime,
             modifier = Modifier.constrainAs(startTimeTextRef) {
                 start.linkTo(parent.start)
-                top.linkTo(parent.top, 20.dp)
+                top.linkTo(parent.top, 40.dp)
             }
         )
 
@@ -90,12 +92,22 @@ fun MainItem(item: ListItem.MainItem) {
         })
 
         Divider(
-            height = 27.dp,
+            height = 30.5.dp,
             modifier = Modifier.constrainAs(topDividerRef) {
                 // 居于 dotRef 的中间
                 start.linkTo(dotRef.start)
                 end.linkTo(dotRef.end)
                 bottom.linkTo(dotRef.top)
+            }
+        )
+
+        NumberCircle(
+            number = item.event.interval!!,
+            modifier = Modifier.constrainAs(numberCircleRef) {
+                // 居于 dotRef 的中间
+                start.linkTo(dotRef.start)
+                end.linkTo(dotRef.end)
+                bottom.linkTo(topDividerRef.top)
             }
         )
 
@@ -145,7 +157,6 @@ fun MainItem(item: ListItem.MainItem) {
             modifier = Modifier.constrainAs(categoryTagRowRef) {
                 start.linkTo(eventNameRef.start)
                 top.linkTo(eventNameRef.bottom, 6.dp)
-                bottom.linkTo(parent.bottom, 10.dp)
             }
         )
 
@@ -159,13 +170,22 @@ fun SubItem(item: ListItem.SubItem) {
             .padding(horizontal = 10.dp)
             .fillMaxWidth()
     ) {
-        val (dividerRef, categoryIconRef, eventNameRef,
+        val (invisibleSTRef, dividerRef, categoryIconRef, eventNameRef,
             durationTextRef, categoryTagRowRef) = remember { createRefs() }
+
+        Text(
+            text = formatLocalDateTime(item.event.startTime),
+            modifier = Modifier
+                .alpha(0f)
+                .constrainAs(invisibleSTRef) {
+                    top.linkTo(parent.top, 5.dp)
+                }
+        )
 
         Divider(
             height = 58.dp,
             modifier = Modifier.constrainAs(dividerRef) {
-                start.linkTo(parent.start, 47.3.dp)
+                start.linkTo(invisibleSTRef.end, 13.5.dp)
             }
         )
 
@@ -174,7 +194,9 @@ fun SubItem(item: ListItem.SubItem) {
             icon = painterResource(id = R.drawable.family), // TODO: 靠类属去推理（需要相关的映射函数）
             modifier = Modifier.constrainAs(categoryIconRef) {
                 start.linkTo(dividerRef.end, 46.dp)
-                top.linkTo(parent.top, 5.dp)
+                // 对齐 invisibleSTRef
+                top.linkTo(invisibleSTRef.top)
+                bottom.linkTo(invisibleSTRef.bottom)
             }
         )
 
@@ -183,9 +205,9 @@ fun SubItem(item: ListItem.SubItem) {
             name = item.event.name,
             modifier = Modifier.constrainAs(eventNameRef) {
                 start.linkTo(categoryIconRef.end, 6.dp)
-                // 对齐 categoryIconRef
-                top.linkTo(categoryIconRef.top)
-                bottom.linkTo(categoryIconRef.bottom)
+                // 对齐 invisibleSTRef
+                top.linkTo(invisibleSTRef.top)
+                bottom.linkTo(invisibleSTRef.bottom)
             }
         )
 
@@ -196,9 +218,9 @@ fun SubItem(item: ListItem.SubItem) {
             duration = item.event.duration ?: Duration.ZERO,
             modifier = Modifier.constrainAs(durationTextRef) {
                 start.linkTo(eventNameRef.end, 6.dp)
-                // 对齐 categoryIconRef
-                top.linkTo(categoryIconRef.top)
-                bottom.linkTo(categoryIconRef.bottom)
+                // 对齐 invisibleSTRef
+                top.linkTo(invisibleSTRef.top)
+                bottom.linkTo(invisibleSTRef.bottom)
             }
         )
 
@@ -210,20 +232,13 @@ fun SubItem(item: ListItem.SubItem) {
             modifier = Modifier.constrainAs(categoryTagRowRef) {
                 start.linkTo(eventNameRef.start)
                 top.linkTo(eventNameRef.bottom, 4.dp)
-                bottom.linkTo(parent.bottom, 10.dp)
             }
         )
 
     }
 }
 
-@Composable
-fun Interval(item: ListItem.Interval) {
-    NumberCircle(
-        number = item.value,
-        modifier = Modifier.padding(start = 46.dp)
-    )
-}
+
 
 
 @Composable
@@ -333,18 +348,7 @@ fun CategoryOutlined(
     }
 }
 
-@Composable
-fun Dot(
-    modifier: Modifier = Modifier,
-    size: Dp = 5.dp,
-    color: Color = MaterialTheme.colorScheme.primary,
-) {
-    Box(
-        modifier = modifier
-            .size(size)
-            .background(color, shape = CircleShape)
-    )
-}
+
 
 
 @Composable
@@ -360,20 +364,30 @@ fun Divider(
     )
 }
 
+/**
+ * @param number 异常时为英文问号
+ */
 @Composable
 fun NumberCircle(
     modifier: Modifier = Modifier,
     number: Int,
-    backgroundColor: Color = MaterialTheme.colorScheme.primary,
 ) {
+    val text = if (number == -1) "?" else number.toString()
+    
+    val bgColor = if (number == -1 || number >= 20) { // TODO: 报警间隔，可自定义 
+        Color.Red
+    } else if (number >= 10) { // TODO: 提示间隔，可自定义
+        warningBg
+    } else Purple40
+    
     Box(
         modifier = modifier
-            .background(backgroundColor, shape = CircleShape)
+            .background(bgColor, shape = CircleShape)
             .padding(horizontal = 4.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
-            text = number.toString(),
+            text = text,
             color = Color.White,
             style = MaterialTheme.typography.labelSmall
         )
@@ -442,42 +456,49 @@ fun DurationText(
 @Preview(showBackground = true)
 @Composable
 fun Test() {
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        PulsingDot()
+    }
+
+
+
 //    val dateItem = ListItem.DateItem(LocalDate.now())
 //
 //    DateItem(item = dateItem)
 
-    val event = Event(
-        name = "时光流开发",
-        startTime = LocalDateTime.now(),
-        duration = Duration.ofMinutes(205),
-        category = "当下核心",
-        subCategory = "实战开发"
-    )
+//    val event = Event(
+//        name = "时光流开发",
+//        startTime = LocalDateTime.now(),
+//        duration = Duration.ofMinutes(205),
+//        category = "当下核心",
+//        subCategory = "实战开发",
+//        interval = 12,
+//    )
+//
+//    val subEvent = Event(
+//        name = "老妈来电",
+//        startTime = LocalDateTime.now(),
+//        duration = Duration.ofMinutes(19),
+//        category = "家人",
+//    )
 
-    val subEvent = Event(
-        name = "老妈来电",
-        startTime = LocalDateTime.now(),
-        duration = Duration.ofMinutes(19),
-        category = "家人",
-    )
-
-    Column {
-
-        DateItem(item = ListItem.DateItem(LocalDate.now()))
-
-        MainItem(item = ListItem.MainItem(event))
-
-        SubItem(item = ListItem.SubItem(subEvent))
-
-        Interval(item = ListItem.Interval(12))
-
-        MainItem(item = ListItem.MainItem(event))
-
-        Interval(item = ListItem.Interval(12))
-
-        MainItem(item = ListItem.MainItem(event))
-    }
+//    SubItem(item = ListItem.SubItem(subEvent))
     
+//    Column {
+//        MainItem(item = ListItem.MainItem(event))
+//
+//        MainItem(item = ListItem.MainItem(event))
+//
+//        SubItem(item = ListItem.SubItem(subEvent))
+//
+//        MainItem(item = ListItem.MainItem(event))
+//    }
+
+
 //    CategoryTagRow(
 //        category = "当下核心",
 //        subCategory = "实战开发"

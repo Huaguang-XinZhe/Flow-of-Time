@@ -5,9 +5,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DismissDirection
@@ -15,12 +18,18 @@ import androidx.compose.material.DismissState
 import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
+import androidx.compose.material.SnackbarResult
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.rememberDismissState
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +38,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.SharedState
@@ -63,10 +75,13 @@ fun CustomSwipeToDismiss(
             .padding(8.dp)
             .clickable { // TODO: 这个地方有待优化，可以利用 StateHolder 精简
                 when {
-                    isInputShow -> sharedState.toastMessage.value = "当前状态禁止删除，确认后继续操作"
+                    isInputShow -> sharedState.toastMessage.value =
+                        "当前状态禁止删除，确认后继续操作"
+
                     event?.endTime == null -> {
                         sharedState.toastMessage.value = "计时项禁止删除！"
                     }
+
                     else -> {
                         isItemClicked.value = !isItemClicked.value
 
@@ -120,4 +135,102 @@ fun SwipeBackground(dismissState: DismissState) {
             tint = if (isDefault) Color.Black else Color.White
         )
     }
+}
+
+enum class SwipeState { Idle, Swiping, Deleted }
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SwipeToDeleteItem(
+    item: String,
+    onDelete: () -> Unit,
+    onUndo: () -> Unit
+) {
+    val scaffoldState = rememberScaffoldState()
+    val width = LocalConfiguration.current.screenWidthDp.dp
+    val swipeableState = rememberSwipeableState(SwipeState.Idle)
+
+    Box(
+        Modifier
+            .background(Color.LightGray)
+            .fillMaxWidth()
+            .swipeable(
+                state = swipeableState,
+                thresholds = { _, _ -> FractionalThreshold(0.4f) },
+                orientation = Orientation.Horizontal,
+                enabled = true,
+                reverseDirection = false,
+                velocityThreshold = width,
+                anchors = mapOf(
+                    0f to SwipeState.Idle,
+                    -width.value to SwipeState.Deleted
+                )
+            )
+    ) {
+        // Draw deletion background
+        if (swipeableState.currentValue != SwipeState.Idle) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .background(Color.Red)) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Delete",
+                    Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(16.dp)
+                )
+            }
+        }
+        // Display the item content
+        Text(
+            text = item,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp)
+                .offset(x = swipeableState.offset.value.dp),
+            textAlign = TextAlign.Center
+        )
+    }
+
+    LaunchedEffect(swipeableState.currentValue) {
+        if (swipeableState.currentValue == SwipeState.Deleted) {
+            onDelete()
+            val result = scaffoldState.snackbarHostState.showSnackbar(
+                message = "Item deleted",
+                actionLabel = "Undo"
+            )
+            if (result == SnackbarResult.ActionPerformed) {
+                onUndo()
+            }
+        }
+    }
+}
+
+@Composable
+fun DeleteBackground() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.Red, shape = RoundedCornerShape(8.dp))
+    ) {
+        Icon(
+            imageVector = Icons.Default.Delete,
+            contentDescription = "Delete",
+            tint = Color.White,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(16.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun Text3() {
+//    SwipeToDeleteItem(item = "这是要滑动删除的条目", onDelete = { /*TODO*/ }) {
+//
+//    }
+
+    DeleteBackground()
 }

@@ -20,12 +20,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
@@ -64,7 +67,7 @@ class EventTrackerMediator(
     private val dismissedItems = mutableSetOf<Long>() // 为了防止删除逻辑多次执行
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val eventsWithSubEvents = headerViewModel.isOneDayButtonClicked.flatMapLatest { clicked ->
+    val eventsFlow = headerViewModel.isOneDayButtonClicked.flatMapLatest { clicked ->
         if (clicked) {
             RDALogger.info("oneDay")
             repository.getCustomTodayEvents()
@@ -73,6 +76,11 @@ class EventTrackerMediator(
             repository.getRecentTwoDaysEvents()
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), listOf())
+
+    val eventsByDateFlow: Flow<Map<LocalDate, List<Event>>> = eventsFlow.map { events ->
+        events.groupBy { event -> event.eventDate }
+    }
+
 
     init {
         viewModelScope.launch {

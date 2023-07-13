@@ -20,9 +20,7 @@ import com.huaguang.flowoftime.widget.LongPressTextButton
 
 @Composable
 fun EventButtons(mediator: EventTrackerMediator) {
-
-
-    val initialized by mediator.initialized
+  val initialized by mediator.initialized
 
     if (initialized) {
         ConstraintLayout (

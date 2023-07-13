@@ -2,14 +2,19 @@ package com.huaguang.flowoftime.other
 
 import android.widget.Toast
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -19,12 +24,16 @@ import androidx.compose.material.DismissValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.FractionalThreshold
 import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
 import androidx.compose.material.SwipeToDismiss
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.rememberDismissState
+import androidx.compose.material.rememberSwipeableState
+import androidx.compose.material.swipeable
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,14 +47,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.ui.theme.DarkGreen39
 import com.huaguang.flowoftime.utils.LocalDateTimeSerializer
@@ -53,6 +69,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import java.time.LocalDateTime
+import kotlin.math.min
 
 
 @ExperimentalMaterialApi
@@ -122,6 +139,8 @@ fun <T> CustomSwipeToDismiss2(
     }
 }
 
+
+
 //                    Card(
 //                        elevation = animateDpAsState(
 //                            if (dismissState.dismissDirection != null) 4.dp else 0.dp
@@ -172,7 +191,7 @@ fun main() {
 /**
  * 将 Item 定位到屏幕中等偏上的位置
  */
-@Preview(showBackground = true)
+
 @Composable
 fun MyScreen() {
     val list = listOf(
@@ -268,3 +287,165 @@ fun MyScreen() {
 
 }
 
+
+/**
+ * Swipeable 滑动 Demo（开关）
+ */
+
+// 开关的状态，枚举类
+enum class State { OPEN, CLOSE }
+
+//@Preview(showBackground = true)
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SwitchDemo() {
+    val blockSize = 48.dp
+    val blockSizePx = with(LocalDensity.current) { blockSize.toPx() }
+    val swipeableState = rememberSwipeableState(initialValue = State.CLOSE)
+
+    val anchors = mapOf(
+        0f to State.CLOSE,
+        blockSizePx to State.OPEN // 这里为什么要使用 Px 呢？
+    )
+
+    Box(
+        modifier = Modifier.size(width = blockSize * 2, height = blockSize)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(blockSize)
+                .offset(x = swipeableState.offset.value.dp, y = 0.dp)
+//                .offset {
+//                    IntOffset(swipeableState.offset.value.toInt(), 0) // 这两种写法有什么区别？
+//                }
+                .background(Color.Red)
+                .swipeable(
+                    state = swipeableState,
+                    orientation = Orientation.Horizontal,
+                    anchors = anchors,
+                    thresholds = { from, _ ->
+                        if (from == State.CLOSE) {
+                            FractionalThreshold(0.3f)
+                        } else {
+                            FractionalThreshold(0.5f)
+                        }
+                    }
+                )
+        )
+    }
+}
+
+
+/**
+ * Canvas Demo（进度环）
+ */
+//@Preview
+@Composable
+fun ProgressLoop() {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(400.dp)
+            .padding(50.dp)
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TextCenter(text = "Loading")
+            TextCenter(text = "45%")
+        }
+
+        LoopCanvas(strokeWidth = 20.dp)
+
+    }
+}
+
+@Composable
+fun LoopCanvas(strokeWidth: Dp) {
+    Canvas(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(30.dp)
+    ) {
+        val strokeWidthPx = strokeWidth.toPx() // toPx 必须在 Density 的作用域中使用（DrawScope 为什么也可以？）
+        val width = drawContext.size.width
+        val height = drawContext.size.height
+        val center = Offset(x = width / 2f, y = height / 2f)
+        val radius = min(width, height) / 2f - strokeWidthPx / 2f
+
+        drawCircle(
+            color = Color.LightGray,
+            center = center,
+            radius = radius,
+            style = Stroke(strokeWidthPx)
+        )
+
+        drawArc(
+            color = Color.DarkGray,
+            startAngle = -90f,
+            sweepAngle = 162f,
+            useCenter = false, // 这是干嘛的？
+            topLeft = Offset(center.x - radius, center.y - radius),
+            size = Size(radius * 2, radius * 2),
+            style = Stroke(strokeWidthPx, cap = StrokeCap.Round)
+        )
+
+    }
+}
+
+@Composable
+fun TextCenter(text: String) {
+    Text(
+        text = text,
+        fontWeight = FontWeight.Bold,
+        color = Color.White,
+        fontSize = 30.sp
+    )
+}
+
+/**
+ * 红心动画 Demo
+ */
+
+@Preview(showBackground = true)
+@Composable
+fun FavoriteAnimate() {
+    var change by remember { mutableStateOf(false) }
+    var flag by remember { mutableStateOf(false) }
+
+    // 变化的大小
+    val size = animateDpAsState(
+        targetValue = if (change) 100.dp else 24.dp,
+
+    )
+
+    // 变化的颜色
+    val color = animateColorAsState(
+        targetValue = if (flag) Color.Red else Color.LightGray
+    )
+
+    if (size.value == 100.dp) {
+        // 复原
+        change = false
+    }
+
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        IconButton(
+            onClick = {
+                change = true
+                flag = !flag
+            },
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Favorite,
+                contentDescription = null,
+                tint = color.value,
+                modifier = Modifier.size(size.value) // 对 size 的设置最好放在图标处，不要放在 IconButton 处，有时候不起效果
+            )
+        }
+    }
+
+}

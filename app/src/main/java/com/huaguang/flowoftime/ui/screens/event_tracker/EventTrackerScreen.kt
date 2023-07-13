@@ -7,20 +7,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.huaguang.flowoftime.ui.components.EventInputField
-import com.huaguang.flowoftime.ui.components.EventList
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
-import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.ui.components.MyList
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSlider
 import com.huaguang.flowoftime.ui.components.event_buttons.EventButtons
 import com.huaguang.flowoftime.ui.components.header.HeaderRow
@@ -30,8 +26,15 @@ import kotlinx.coroutines.launch
 fun EventTrackerScreen(mediator: EventTrackerMediator) {
     val listState = rememberLazyListState()
     val isInputShow by mediator.sharedState.isInputShow
+    val scrollIndex by mediator.sharedState.scrollIndex
+    val scope = rememberCoroutineScope()
 
-    HandleScrollEffect(mediator.sharedState, listState)
+    LaunchedEffect(scrollIndex) {
+        scope.launch {
+            listState.animateScrollToItem(scrollIndex)
+            Log.i("打标签喽", "滚动到索引：$scrollIndex")
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -47,35 +50,15 @@ fun EventTrackerScreen(mediator: EventTrackerMediator) {
 
         DurationSlider(mediator.durationSliderViewModel)
 
-        EventList(mediator, listState, Modifier.weight(1f))
-
+//        EventList(mediator, listState, scrollIndex)
+        MyList(mediator = mediator)
+        
         if (isInputShow) {
             EventInputField(mediator)
         }
 
         if (!isInputShow) {
             EventButtons(mediator)
-        }
-    }
-}
-
-@Composable
-fun HandleScrollEffect(
-    sharedState: SharedState,
-    listState: LazyListState
-) {
-    val scrollIndex by sharedState.scrollIndex
-    val scope = rememberCoroutineScope()
-    val firstLaunch = remember { mutableStateOf(true) }
-
-    LaunchedEffect(scrollIndex) {
-        scope.launch {
-            if (firstLaunch.value) {
-                Log.i("打标签喽", "不延迟！！！")
-                firstLaunch.value = false
-            }
-            listState.animateScrollToItem(scrollIndex)
-            Log.i("打标签喽", "滚动到索引：$scrollIndex")
         }
     }
 }

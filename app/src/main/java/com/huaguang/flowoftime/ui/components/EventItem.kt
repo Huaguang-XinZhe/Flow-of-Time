@@ -52,8 +52,8 @@ fun EventItem(
                 EventItemRow(
                     mediator = mediator,
                     event = subEvent,
-                    showTime = false,  // 添加了一些左侧的 padding 以便缩进
-                    modifier = Modifier.padding(start = 30.dp)
+                    showTime = false,
+                    modifier = Modifier.padding(start = 30.dp) // 添加了一些左侧的 padding 以便缩进
                 )
             }
         }

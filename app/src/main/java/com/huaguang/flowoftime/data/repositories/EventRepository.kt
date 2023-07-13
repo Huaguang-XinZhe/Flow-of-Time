@@ -30,25 +30,13 @@ class EventRepository(
             eventDao.getSubEventTimesWithinRange(mainEventId, startCursor)
         }
 
-//    suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
-//        var totalDuration = Duration.ZERO
-//        val events = eventDao.getFilteredEvents(coreEventKeyWords, eventDate)
-//
-//        // 当 events 为空，里边的代码就不会执行
-//        for (event in events) {
-//            totalDuration = totalDuration.plus(event.duration)
-//        }
-//
-//        return totalDuration
-//    }
-
-    fun getRecentTwoDaysEvents(): Flow<List<EventWithSubEvents>> {
+    fun getRecentTwoDaysEvents(): Flow<List<Event>> {
         val customToday = getAdjustedEventDate()
-        return eventDao.getEventsWithSubEvents(customToday.minusDays(1), customToday)
+        return eventDao.getEventsWithinDateRange(customToday.minusDays(1), customToday)
     }
 
-    fun getCustomTodayEvents(): Flow<List<EventWithSubEvents>> {
-        return eventDao.getEventsWithSubEvents(getAdjustedEventDate())
+    fun getCustomTodayEvents(): Flow<List<Event>> {
+        return eventDao.getEventsOnSpecificDate(getAdjustedEventDate())
     }
 
     suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {
@@ -146,5 +134,27 @@ class EventRepository(
         withContext(Dispatchers.IO) {
             eventDao.getLastEvent()
         }
+
+
+//    suspend fun calEventDateDuration(eventDate: LocalDate): Duration {
+//        var totalDuration = Duration.ZERO
+//        val events = eventDao.getFilteredEvents(coreEventKeyWords, eventDate)
+//
+//        // 当 events 为空，里边的代码就不会执行
+//        for (event in events) {
+//            totalDuration = totalDuration.plus(event.duration)
+//        }
+//
+//        return totalDuration
+//    }
+
+//    fun getRecentTwoDaysEvents(): Flow<List<EventWithSubEvents>> {
+//        val customToday = getAdjustedEventDate()
+//        return eventDao.getEventsWithSubEvents(customToday.minusDays(1), customToday)
+//    }
+//
+//    fun getCustomTodayEvents(): Flow<List<EventWithSubEvents>> {
+//        return eventDao.getEventsWithSubEvents(getAdjustedEventDate())
+//    }
 
 }

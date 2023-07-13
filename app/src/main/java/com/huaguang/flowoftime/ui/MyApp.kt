@@ -17,7 +17,6 @@ fun MyApp(mediator: EventTrackerMediator) {
 
     // 在 SideEffect 中更新系统 UI
     SideEffect {
-
         // 设置状态栏图标的颜色
         systemUiController.setSystemBarsColor(
             color = Color.Transparent,
