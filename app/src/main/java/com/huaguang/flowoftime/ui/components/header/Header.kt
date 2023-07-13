@@ -23,7 +23,7 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun HeaderRow(viewModel: HeaderViewModel) {
-    var showDialog by remember { mutableStateOf(false) }
+//    var showDialog by remember { mutableStateOf(false) }
     val isOneDayButtonClicked by viewModel.isOneDayButtonClicked.collectAsState()
 
     val toggleButtonText = if (isOneDayButtonClicked) "RecentTwoDays" else "OneDay"
@@ -32,9 +32,9 @@ fun HeaderRow(viewModel: HeaderViewModel) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
-            onClick = { showDialog = true }
+            onClick = { viewModel.deleteAll() }
         ) {
-            Text("导入")
+            Text("Delete All")
         }
 
         Button(
@@ -53,12 +53,12 @@ fun HeaderRow(viewModel: HeaderViewModel) {
 
     }
 
-    if (showDialog) {
-        ImportEventsDialog(
-            onDismiss = { showDialog = false },
-            onImport = { text -> viewModel.importEvents(text) }
-        )
-    }
+//    if (showDialog) {
+//        ImportEventsDialog(
+//            onDismiss = { showDialog = false },
+//            onImport = { text -> viewModel.importEvents(text) }
+//        )
+//    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)

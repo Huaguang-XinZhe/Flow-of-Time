@@ -94,11 +94,13 @@ fun Modifier.getModifier(
     isNameClicked: Boolean = false
 ): Modifier {
 
-    return if (event.name.length > 10 && event.parentId == null) this else Modifier
-        .padding(end = 5.dp)
+    return Modifier.padding(end = 5.dp)
         .clickable {
             viewModel.onNameTextClicked(event)
         }
+        .then(
+            if (event.name.length > 10 && event.parentId == null) this else Modifier
+        )
         .then(
             if (isNameClicked) {
                 Modifier

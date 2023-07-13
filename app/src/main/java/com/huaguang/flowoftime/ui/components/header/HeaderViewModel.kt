@@ -65,8 +65,12 @@ class HeaderViewModel @Inject constructor(
         }
     }
 
-    fun importEvents(text: String) {
-        sharedState.toastMessage.value = "导入成功"
+    fun deleteAll() {
+        viewModelScope.launch {
+            repository.deleteAll()
+        }
+
+        sharedState.toastMessage.value = "所有数据全部清除！"
     }
 
 }

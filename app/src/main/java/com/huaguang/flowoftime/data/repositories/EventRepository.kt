@@ -23,6 +23,10 @@ class EventRepository(
     private val dateDurationDao: DateDurationDao
 ) {
 
+    suspend fun deleteAll() = withContext(Dispatchers.IO) {
+        eventDao.deleteAllEvents()
+    }
+
     suspend fun getSubEventTimesWithinRange(
         mainEventId: Long,
         startCursor: LocalDateTime?,
