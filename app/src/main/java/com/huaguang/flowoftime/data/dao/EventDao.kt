@@ -37,6 +37,10 @@ interface EventDao {
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEvent(eventId: Long)
 
+    @Query("DELETE FROM events")
+    suspend fun deleteAllEvents()
+
+
     // 查询数据———————————————————————————————————————————————————————————————————————
     // 1. 查询返回关系型数据
     @Transaction

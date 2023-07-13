@@ -83,7 +83,7 @@ fun getTextOptions(
 
     return TextOptions(
         text = if (showTime) eventName else "……$eventName",
-        maxLines = if (!isExpanded) 1 else 3,
+        maxLines = if (!isExpanded) 1 else 5,
         overflow = if (!isExpanded) TextOverflow.Ellipsis else TextOverflow.Visible
     )
 }
@@ -94,8 +94,7 @@ fun Modifier.getModifier(
     isNameClicked: Boolean = false
 ): Modifier {
 
-    return if (event.name.length > 10 && event.parentId == null) this else Modifier
-        .padding(end = 5.dp)
+    return this.padding(end = 5.dp)
         .clickable {
             viewModel.onNameTextClicked(event)
         }

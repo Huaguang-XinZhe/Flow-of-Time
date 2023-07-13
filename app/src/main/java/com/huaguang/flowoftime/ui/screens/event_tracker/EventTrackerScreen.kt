@@ -15,8 +15,8 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.huaguang.flowoftime.ui.components.EventInputField
+import com.huaguang.flowoftime.ui.components.EventList
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
-import com.huaguang.flowoftime.ui.components.MyList
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSlider
 import com.huaguang.flowoftime.ui.components.event_buttons.EventButtons
 import com.huaguang.flowoftime.ui.components.header.HeaderRow
@@ -50,8 +50,8 @@ fun EventTrackerScreen(mediator: EventTrackerMediator) {
 
         DurationSlider(mediator.durationSliderViewModel)
 
-//        EventList(mediator, listState, scrollIndex)
-        MyList(mediator = mediator)
+        EventList(mediator, listState, scrollIndex)
+//        MyList(mediator = mediator)
         
         if (isInputShow) {
             EventInputField(mediator)
