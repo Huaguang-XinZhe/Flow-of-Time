@@ -65,12 +65,12 @@ class HeaderViewModel @Inject constructor(
         }
     }
 
-    fun deleteAll() {
+    fun deleteEventsExceptToday() {
         viewModelScope.launch {
-            repository.deleteAll()
+            repository.deleteEventsExceptToday()
         }
 
-        sharedState.toastMessage.value = "所有数据全部清除！"
+        sharedState.toastMessage.value = "除今天以外的所有数据已全部清除！"
     }
 
 }

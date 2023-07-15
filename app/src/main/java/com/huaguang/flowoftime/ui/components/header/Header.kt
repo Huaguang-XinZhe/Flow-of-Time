@@ -32,9 +32,9 @@ fun HeaderRow(viewModel: HeaderViewModel) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         Button(
-            onClick = { viewModel.deleteAll() }
+            onClick = { viewModel.deleteEventsExceptToday() }
         ) {
-            Text("Delete All")
+            Text("Delete")
         }
 
         Button(

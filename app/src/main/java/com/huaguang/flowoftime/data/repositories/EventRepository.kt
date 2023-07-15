@@ -23,8 +23,12 @@ class EventRepository(
     private val dateDurationDao: DateDurationDao
 ) {
 
-    suspend fun deleteAll() = withContext(Dispatchers.IO) {
-        eventDao.deleteAllEvents()
+    suspend fun deleteEventsExceptToday() {
+        val customToday = getAdjustedEventDate()
+
+        withContext(Dispatchers.IO) {
+            eventDao.deleteEventsExceptToday(customToday)
+        }
     }
 
     suspend fun getSubEventTimesWithinRange(

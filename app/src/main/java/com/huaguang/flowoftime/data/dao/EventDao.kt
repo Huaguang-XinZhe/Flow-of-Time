@@ -32,8 +32,8 @@ interface EventDao {
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEvent(eventId: Long)
 
-    @Query("DELETE FROM events")
-    suspend fun deleteAllEvents()
+    @Query("DELETE FROM events WHERE eventDate < :today")
+    suspend fun deleteEventsExceptToday(today: LocalDate)
 
 
     @Query("SELECT MAX(id) FROM events")
