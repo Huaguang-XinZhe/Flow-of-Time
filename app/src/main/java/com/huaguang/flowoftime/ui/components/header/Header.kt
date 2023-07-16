@@ -31,17 +31,17 @@ fun HeaderRow(viewModel: HeaderViewModel) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Button(
-            onClick = { viewModel.deleteEventsExceptToday() }
-        ) {
-            Text("Delete")
-        }
+//        Button(
+//            onClick = { viewModel.deleteEventsExceptToday() }
+//        ) {
+//            Text("Delete")
+//        }
 
         Button(
-            onClick = { viewModel.exportEvents() },
+            onClick = { viewModel.exportAndDeleteEvents() },
             modifier = Modifier.padding(start = 8.dp)
         ) {
-            Text("导出")
+            Text("导出并删除")
         }
 
         OutlinedButton(

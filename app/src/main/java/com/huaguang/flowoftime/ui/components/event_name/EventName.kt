@@ -83,7 +83,7 @@ fun getTextOptions(
 
     return TextOptions(
         text = if (showTime) eventName else "……$eventName",
-        maxLines = if (!isExpanded) 1 else 3,
+        maxLines = if (!isExpanded) 1 else 5,
         overflow = if (!isExpanded) TextOverflow.Ellipsis else TextOverflow.Visible
     )
 }

@@ -35,7 +35,6 @@ interface EventDao {
     @Query("DELETE FROM events WHERE eventDate < :today")
     suspend fun deleteEventsExceptToday(today: LocalDate)
 
-
     @Query("SELECT MAX(id) FROM events")
     suspend fun getLastEventId(): Long
 
@@ -90,6 +89,10 @@ interface EventDao {
     @Transaction
     @Query("SELECT * FROM events WHERE parentId IS NULL")
     suspend fun getEventsWithSubEventsImmediate(): List<EventWithSubEvents>
+
+    @Transaction
+    @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate = :yesterday")
+    suspend fun getYesterdayEventsWithSubEventsImmediate(yesterday: LocalDate): List<EventWithSubEvents>
 
 
     @Query("SELECT * FROM events WHERE parentId = :mainEventId")

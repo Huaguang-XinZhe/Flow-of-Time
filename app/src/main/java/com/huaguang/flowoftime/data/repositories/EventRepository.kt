@@ -68,7 +68,8 @@ class EventRepository(
     }
 
     suspend fun exportEvents(): String {
-        val eventsWithSubEvents = eventDao.getEventsWithSubEventsImmediate()
+        val customYesterday = getAdjustedEventDate().minusDays(1)
+        val eventsWithSubEvents = eventDao.getYesterdayEventsWithSubEventsImmediate(customYesterday)
         val eventsWithSubEventsAsPairs = eventsWithSubEvents.map { convertToPair(it) }
         return EventSerializer.exportEvents(eventsWithSubEventsAsPairs)
     }
