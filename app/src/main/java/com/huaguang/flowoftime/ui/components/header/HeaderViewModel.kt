@@ -53,10 +53,10 @@ class HeaderViewModel @Inject constructor(
         dateStoreHelper.saveResetListAgainFlag(value)
     }
 
-    fun exportAndDeleteEvents() {
+    fun exportAndDeleteEvents(tag: String) {
         viewModelScope.launch {
             val exportText = withContext(Dispatchers.IO) {
-                repository.exportEvents()
+                repository.exportEvents(tag)
             }
 
             copyToClipboard(sharedState.application, exportText)
@@ -64,7 +64,7 @@ class HeaderViewModel @Inject constructor(
             repository.deleteEventsExceptToday()
         }
 
-        sharedState.toastMessage.value = "已导出昨日数据，并复制到剪贴板"
+        sharedState.toastMessage.value = "已导出${tag}数据，并复制到剪贴板"
         sharedState.toastMessage.value = "除当天以外的其他数据已全部清除"
     }
 

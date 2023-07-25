@@ -67,9 +67,17 @@ class EventRepository(
         return subEvents.fold(Duration.ZERO) { total, event -> total.plus(event.duration) }
     }
 
-    suspend fun exportEvents(): String {
-        val customYesterday = getAdjustedEventDate().minusDays(1)
-        val eventsWithSubEvents = eventDao.getYesterdayEventsWithSubEventsImmediate(customYesterday)
+    /**
+     * @param tag 根据标签选择是导出昨天的数据还是全部的数据。
+     */
+    suspend fun exportEvents(tag: String): String {
+        val eventsWithSubEvents = if (tag == "昨日") {
+            val customYesterday = getAdjustedEventDate().minusDays(1)
+            eventDao.getYesterdayEventsWithSubEventsImmediate(customYesterday)
+        } else {
+            eventDao.getEventsWithSubEventsImmediate()
+        }
+
         val eventsWithSubEventsAsPairs = eventsWithSubEvents.map { convertToPair(it) }
         return EventSerializer.exportEvents(eventsWithSubEventsAsPairs)
     }

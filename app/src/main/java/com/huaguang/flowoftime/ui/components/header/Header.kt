@@ -3,12 +3,15 @@ package com.huaguang.flowoftime.ui.components.header
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,12 +21,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.widget.TagGroup
 
 @Composable
 fun HeaderRow(viewModel: HeaderViewModel) {
-//    var showDialog by remember { mutableStateOf(false) }
+    var showDialog by remember { mutableStateOf(false) }
     val isOneDayButtonClicked by viewModel.isOneDayButtonClicked.collectAsState()
 
     val toggleButtonText = if (isOneDayButtonClicked) "RecentTwoDays" else "OneDay"
@@ -38,7 +44,7 @@ fun HeaderRow(viewModel: HeaderViewModel) {
 //        }
 
         Button(
-            onClick = { viewModel.exportAndDeleteEvents() },
+            onClick = { showDialog = true },
             modifier = Modifier.padding(start = 8.dp)
         ) {
             Text("导出并删除")
@@ -53,12 +59,71 @@ fun HeaderRow(viewModel: HeaderViewModel) {
 
     }
 
-//    if (showDialog) {
+    if (showDialog) {
+        SelectAndConfirmDialog(
+            onDismiss = { showDialog = false },
+            onConfirm = { tag ->
+                viewModel.exportAndDeleteEvents(tag)
+            }
+        )
+
 //        ImportEventsDialog(
 //            onDismiss = { showDialog = false },
 //            onImport = { text -> viewModel.importEvents(text) }
 //        )
-//    }
+    }
+}
+
+
+@Composable
+fun SelectAndConfirmDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit // 这个 String 是 Tag
+) {
+    var tag by remember { mutableStateOf("昨日") }
+
+    AlertDialog( // 由外至内
+        onDismissRequest = onDismiss,
+        title = {
+            TitleOfDialog()
+        },
+        text = {
+            TagGroup(
+                tags = listOf("昨日", "全部"),
+                onSelected = { chip ->
+                    tag = chip
+                }
+            )
+        },
+        dismissButton = {
+            TextButton(onClick = { onDismiss() }) {
+                Text("取消")
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                onConfirm(tag)
+                onDismiss()
+            }) {
+                Text("确认")
+            }
+        }
+    )
+}
+
+@Composable
+fun TitleOfDialog() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.export),
+            contentDescription = null,
+            modifier = Modifier.size(36.dp).padding(5.dp)
+        )
+
+        Text("选择导出范围并确认")
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -70,7 +135,7 @@ fun ImportEventsDialog(
     var inputText by remember { mutableStateOf("") }
 
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = onDismiss, // 在对话框外部被点击或者用户按下返回键时被调用
         title = { Text("导入时间记录") },
         text = {
             OutlinedTextField(
@@ -93,6 +158,7 @@ fun ImportEventsDialog(
                 Text("取消")
             }
         },
+        // 设置了这个属性可让弹窗的宽高随内容而变化
         properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }

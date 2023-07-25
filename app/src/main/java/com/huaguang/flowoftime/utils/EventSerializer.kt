@@ -87,7 +87,7 @@ object EventSerializer {
         }
 
         return "$exportST " +
-                "${event.name.clearSpaces()} " +
+                "${event.name.removeSpacesAndNewlines()} " +
                 "$exportET " +
                 exportDuration
     }
@@ -99,8 +99,8 @@ object EventSerializer {
                 "${subEvent.duration?.let { formatDuration(it) }}"
     }
 
-    private fun String.clearSpaces(): String {
-        return this.replace(" ", "")
+    private fun String.removeSpacesAndNewlines(): String {
+        return this.replace(Regex("[\\s\\n]"), "")
     }
 
 
