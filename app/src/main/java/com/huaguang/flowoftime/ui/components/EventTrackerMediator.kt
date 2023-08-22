@@ -156,13 +156,18 @@ class EventTrackerMediator(
                 }
                 // TODO: 不固定，可配置
                 "睡" -> {
-                    dndManager.openDND() // 开启免打扰
-
                     viewModelScope.launch {
+                        RDALogger.info("睡代码块执行！")
+                        if (dndManager.hasNotificationPolicyAccess()) {
+                            dndManager.openDND() // 开启免打扰
+                        } else {
+                            toastMessage.value = "需要勿扰控制权限才能\n为您自动开启、关闭勿扰模式"
+                            delay(200)
+                            dndManager.jumpAuth() // 跳到设置页授权，接下来的事儿就交给 MainActivity 的 onResume 回调了
+                        }
+
                         currentEvent?.let {
                             it.name = "睡"
-
-                            repository.insertEvent(it)
                         }
                     }
                 }
