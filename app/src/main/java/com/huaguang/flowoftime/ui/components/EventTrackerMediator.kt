@@ -157,6 +157,14 @@ class EventTrackerMediator(
                 // TODO: 不固定，可配置
                 "睡" -> {
                     dndManager.openDND() // 开启免打扰
+
+                    viewModelScope.launch {
+                        currentEvent?.let {
+                            it.name = "睡"
+
+                            repository.insertEvent(it)
+                        }
+                    }
                 }
                 else -> {
                     Log.i("打标签喽", "一般情况执行！！！")
