@@ -8,7 +8,6 @@ import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.data.sources.EventDatabase
-import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.LocalDateTimeSerializer
@@ -50,13 +49,13 @@ object AppModule {
         return EventRepository(eventDao, dateDurationDao)
     }
 
-    @Singleton
-    @Provides
-    fun provideSPHelper(@ApplicationContext context: Context): SPHelper {
-        val sharedPreferences =
-            context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE)
-        return SPHelper(sharedPreferences)
-    }
+//    @Singleton
+//    @Provides
+//    fun provideSPHelper(@ApplicationContext context: Context): SPHelper {
+//        val sharedPreferences =
+//            context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE)
+//        return SPHelper(sharedPreferences)
+//    }
 
     @Singleton
     @Provides

@@ -14,6 +14,7 @@ import com.huaguang.flowoftime.ui.components.duration_slider.DurationSliderViewM
 import com.huaguang.flowoftime.ui.components.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
+import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.SelectionTracker
 import com.huaguang.flowoftime.utils.extensions.isGetUpTime
 import com.huaguang.flowoftime.utils.isCoreEvent
@@ -38,6 +39,7 @@ class EventTrackerMediator(
     val eventNameViewModel: EventNameViewModel,
     private val repository: EventRepository,
     private val spHelper: SPHelper,
+    private val dndManager: DNDManager,
     val sharedState: SharedState,
 ) : ViewModel() {
 
@@ -152,16 +154,18 @@ class EventTrackerMediator(
                 "起床" -> { // 起床事件的特殊应对
                     getUpHandle()
                 }
+                // TODO: 不固定，可配置
+                "睡" -> {
+                    dndManager.openDND() // 开启免打扰
+                }
                 else -> {
                     Log.i("打标签喽", "一般情况执行！！！")
                     generalHandle()
                 }
             }
-
             isInputShow.value = false
         }
     }
-
 
     /**
      * 这里边是两个分支，分为点击和没点击
@@ -185,8 +189,6 @@ class EventTrackerMediator(
         eventNameViewModel.onGetUpTextClickThenConfirmed()
     }
 
-
-
     private fun generalHandle() { // 确认时文本不为空也不是 ”起床“
         viewModelScope.launch {
             if (beModifiedEvent != null) { // 来自 item 名称的点击，一定不为 null（事件可能在进行中）
@@ -205,8 +207,6 @@ class EventTrackerMediator(
             }
         }
     }
-
-
 
     private suspend fun stopEventOnConfirmed(newCurrent: Event) {
         currentEvent = newCurrent
@@ -231,7 +231,6 @@ class EventTrackerMediator(
             currentItemViewModel.restoreOnMainEvent()
         }
     }
-
 
     fun updateOnDragStopped(updatedEvent: Event, originalDuration: Duration?) {
         updateJob?.cancel()
@@ -292,7 +291,6 @@ class EventTrackerMediator(
 
     }
 
-
     private suspend fun stopCurrentEvent() {
         currentItemViewModel.apply {
             // 通用逻辑
@@ -306,6 +304,7 @@ class EventTrackerMediator(
                 hideCurrentItem()
                 // 使用 let 块更安全，这里有必要，为避免各种意外的崩溃情况！！！
                 currentRecord?.let { durationSliderViewModel.updateCDonCurrentStop(it) }
+                dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
             } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
                 // 停止子事项————————————————————————————————————————————————
                 restoreOnMainEvent()
@@ -414,7 +413,6 @@ class EventTrackerMediator(
             }
         }
     }
-
 
     private suspend fun retrieveStateFromSP() {
         val data = withContext(Dispatchers.IO) {

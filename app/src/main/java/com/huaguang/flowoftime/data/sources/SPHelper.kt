@@ -1,12 +1,38 @@
 package com.huaguang.flowoftime.data.sources
 
-import android.content.SharedPreferences
+import android.content.Context
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
 import kotlinx.serialization.json.Json
 import java.time.Duration
 
-class SPHelper(private val sharedPreferences: SharedPreferences) {
+/**
+ * 实现了单例的 SharedPreferences 帮助类
+ */
+class SPHelper private constructor(context: Context) {
+
+    private val sp = context.getSharedPreferences("sp", Context.MODE_PRIVATE)
+
+    companion object {
+        // SPHelper 类维护的一个自身类型的静态实例
+        private var instance: SPHelper? = null
+
+        // 获取自身单例的方法
+        fun getInstance(context: Context): SPHelper {
+            if (instance == null) {
+                instance = SPHelper(context)
+            }
+            return instance as SPHelper
+        }
+    }
+
+    fun saveRingVolume(value: Int) {
+        sp.edit().putInt("ring_volume", value).apply()
+    }
+
+    fun getRingVolume(): Int {
+        return sp.getInt("ring_volume", 0)
+    }
 
     fun saveState(
         isOneDayButtonClicked: Boolean,
@@ -18,7 +44,7 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
         currentEvent: Event?,
         eventStatus: EventStatus,
     ) {
-        sharedPreferences.edit().apply {
+        sp.edit().apply {
             putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
             putBoolean("is_input_show", isInputShow)
             putString("button_text", buttonText)
@@ -49,7 +75,7 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
 
         val scrollIndex = getScrollIndex()
 
-        // 将获取的所有数据封装在 SharedPreferencesData 类的实例中
+        // 将获取的所有数据封装在 spData 类的实例中
         return SPData(
             isOneDayButtonClicked,
             isInputShow,
@@ -63,38 +89,38 @@ class SPHelper(private val sharedPreferences: SharedPreferences) {
     }
 
     private fun getEventStatus(): EventStatus {
-        val eventStatusValue = sharedPreferences.getInt("event_status_value", 0)
+        val eventStatusValue = sp.getInt("event_status_value", 0)
         return EventStatus.fromInt(eventStatusValue)
     }
 
     private fun getCurrentEvent(): Event? {
-        val eventJson = sharedPreferences.getString("currentEvent", null)
+        val eventJson = sp.getString("currentEvent", null)
             ?: return null
         return Json.decodeFromString<Event>(eventJson)
     }
 
     private fun getIsOneDayButtonClicked(): Boolean {
-        return sharedPreferences.getBoolean("IS_ONE_DAY_BUTTON_CLICKED", false)
+        return sp.getBoolean("IS_ONE_DAY_BUTTON_CLICKED", false)
     }
 
     private fun getIsInputShow(): Boolean {
-        return sharedPreferences.getBoolean("is_input_show", false)
+        return sp.getBoolean("is_input_show", false)
     }
 
     private fun getButtonText(): String {
-        return sharedPreferences.getString("button_text", "开始") ?: "开始"
+        return sp.getString("button_text", "开始") ?: "开始"
     }
 
     private fun getSubButtonText(): String {
-        return sharedPreferences.getString("sub_button_text", "插入") ?: "插入"
+        return sp.getString("sub_button_text", "插入") ?: "插入"
     }
 
     private fun getScrollIndex(): Int {
-        return sharedPreferences.getInt("scroll_index", -1)
+        return sp.getInt("scroll_index", -1)
     }
 
     private fun getCoreDuration(): Duration {
-        val durationMillis = sharedPreferences.getLong("core_duration", -1L)
+        val durationMillis = sp.getLong("core_duration", -1L)
         return if (durationMillis != -1L) {
             Duration.ofMillis(durationMillis)
         } else Duration.ZERO

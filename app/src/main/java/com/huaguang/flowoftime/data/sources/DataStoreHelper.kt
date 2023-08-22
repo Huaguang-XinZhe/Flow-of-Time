@@ -36,7 +36,7 @@ class DataStoreHelper (
             val startCursorJson = preferences[startCursor]
 
             if (startCursorJson.isNullOrEmpty()) null else {
-                json.decodeFromString(startCursorJson)
+                json.decodeFromString(startCursorJson) // 这里自动使用了类型推断，解码后的类型是 LocalDateTime
             }
         }
 

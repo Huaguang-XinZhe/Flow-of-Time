@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.other
+package com.huaguang.flowoftime.wait
 
 import android.content.Context
 import android.widget.Toast

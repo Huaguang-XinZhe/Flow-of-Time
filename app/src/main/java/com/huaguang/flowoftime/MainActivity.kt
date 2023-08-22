@@ -15,6 +15,7 @@ import com.huaguang.flowoftime.ui.components.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.ui.screens.event_tracker.EventTrackerScreen
+import com.huaguang.flowoftime.utils.DNDManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -24,8 +25,6 @@ class MainActivity : ComponentActivity() {
     // Injected dependencies
     @Inject
     lateinit var repository: EventRepository
-    @Inject
-    lateinit var spHelper: SPHelper
     @Inject
     lateinit var sharedState: SharedState
 
@@ -48,7 +47,8 @@ class MainActivity : ComponentActivity() {
             currentItemViewModel,
             eventNameViewModel,
             repository,
-            spHelper,
+            SPHelper.getInstance(this),
+            DNDManager(this),
             sharedState,
         )
 

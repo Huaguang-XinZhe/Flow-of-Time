@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.other
+package com.huaguang.flowoftime.wait
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState

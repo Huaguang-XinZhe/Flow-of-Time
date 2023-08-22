@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.other
+package com.huaguang.flowoftime.wait
 
 import android.annotation.SuppressLint
 import androidx.compose.runtime.mutableStateOf
