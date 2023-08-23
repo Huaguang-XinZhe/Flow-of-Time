@@ -17,20 +17,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.sources.SPHelper
 import java.time.LocalDateTime
 
 //@Preview(showBackground = true)
 @Composable
-fun TimeRegulator(viewModel: TimeRegulatorViewModel) {
+fun TimeRegulator(initialTime: LocalDateTime, viewModel: TimeRegulatorViewModel) {
 
     val toggleState = remember { mutableStateOf(true) }
-    var time by remember { mutableStateOf(viewModel.time) }
+    var time by remember { mutableStateOf(initialTime) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -98,8 +96,8 @@ fun TimeRegulator(viewModel: TimeRegulatorViewModel) {
 @Preview(showBackground = true)
 @Composable
 fun test() {
-    val context = LocalContext.current
-    val viewModel = TimeRegulatorViewModel(LocalDateTime.now(), SPHelper.getInstance(context))
-
-    TimeRegulator(viewModel = viewModel)
+//    val context = LocalContext.current
+//    val viewModel = TimeRegulatorViewModel(LocalDateTime.now(), SPHelper.getInstance(context))
+//
+//    TimeRegulator(viewModel = viewModel)
 }

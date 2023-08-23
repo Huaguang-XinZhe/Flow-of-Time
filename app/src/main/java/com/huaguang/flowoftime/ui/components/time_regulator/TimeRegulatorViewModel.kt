@@ -2,11 +2,9 @@ package com.huaguang.flowoftime.ui.components.time_regulator
 
 import androidx.lifecycle.ViewModel
 import com.huaguang.flowoftime.data.sources.SPHelper
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 class TimeRegulatorViewModel(
-    val time: LocalDateTime,
     private val spHelper: SPHelper
 ) : ViewModel() {
 
