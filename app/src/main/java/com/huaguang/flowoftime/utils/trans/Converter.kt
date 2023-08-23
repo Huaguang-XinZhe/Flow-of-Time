@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data.sources
+package com.huaguang.flowoftime.utils.trans
 
 import androidx.room.TypeConverter
 import java.time.Duration

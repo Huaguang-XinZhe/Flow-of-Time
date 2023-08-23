@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.utils
+package com.huaguang.flowoftime.utils.trans
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer

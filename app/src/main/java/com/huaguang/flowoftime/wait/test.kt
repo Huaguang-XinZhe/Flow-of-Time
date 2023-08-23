@@ -27,7 +27,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.ui.theme.DarkGreen39
-import com.huaguang.flowoftime.utils.LocalDateTimeSerializer
+import com.huaguang.flowoftime.utils.trans.LocalDateTimeSerializer
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule

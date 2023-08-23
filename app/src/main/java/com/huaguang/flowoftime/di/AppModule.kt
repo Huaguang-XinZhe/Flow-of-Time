@@ -10,7 +10,7 @@ import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.data.sources.EventDatabase
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.AlarmHelper
-import com.huaguang.flowoftime.utils.LocalDateTimeSerializer
+import com.huaguang.flowoftime.utils.trans.LocalDateTimeSerializer
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

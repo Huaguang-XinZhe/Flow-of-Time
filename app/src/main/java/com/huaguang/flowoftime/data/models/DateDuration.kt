@@ -2,8 +2,8 @@ package com.huaguang.flowoftime.data.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.huaguang.flowoftime.utils.DurationSerializer
-import com.huaguang.flowoftime.utils.LocalDateSerializer
+import com.huaguang.flowoftime.utils.trans.DurationSerializer
+import com.huaguang.flowoftime.utils.trans.LocalDateSerializer
 import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.LocalDate
