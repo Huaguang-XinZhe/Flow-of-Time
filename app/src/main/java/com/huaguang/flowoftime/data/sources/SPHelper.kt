@@ -26,6 +26,19 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
+    fun savePauseInterval(value: Int) {
+        val accValue = getPauseInterval() + value
+        sp.edit().putInt("pause_interval", accValue).apply()
+    }
+
+    fun getPauseInterval(): Int {
+        return sp.getInt("pause_interval", 0)
+    }
+
+    fun resetPauseInterval() {
+        sp.edit().putInt("pause_interval", 0).apply()
+    }
+
     fun saveRingVolume(value: Int) {
         sp.edit().putInt("ring_volume", value).apply()
     }
