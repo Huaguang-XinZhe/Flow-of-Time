@@ -1,9 +1,9 @@
 package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -61,7 +61,13 @@ fun RecordingEventItem(
 
             FlagText(type = type)
 
-            TailLayout(name, type, isTiming)
+            TailLayout(name, type, false) {
+                if (isTiming) {
+                    Text(text = "……")
+                } else {
+                    TimeLabel(time = LocalDateTime.now())
+                }
+            }
 
         }
 
@@ -78,7 +84,20 @@ fun RecordingEventItem(
  * 使用 Layout 来自定义文本和时间标签的布局
  */
 @Composable
-fun RowScope.TailLayout(name: String, type: EventType, isTiming: Boolean) {
+fun TailLayout(
+    name: String,
+    type: EventType,
+    isDisplay: Boolean = true,
+    content: @Composable (type: EventType) -> Unit
+) {
+    val fontSize = if (type == EventType.SUBJECT) 22.sp else {
+        if (isDisplay) 14.sp else 16.sp
+    }
+
+    val fontWeight = if (type == EventType.SUBJECT) FontWeight.Bold else {
+        if (isDisplay) FontWeight.Light else FontWeight.Normal
+    }
+
     Layout(
         content = {
             // 事项名称
@@ -86,25 +105,16 @@ fun RowScope.TailLayout(name: String, type: EventType, isTiming: Boolean) {
                 text = name,
                 maxLines = 2, // 最多两行
                 overflow = TextOverflow.Ellipsis, // 如果文本太长，则使用省略号
-                fontSize = if (type == EventType.SUBJECT) 18.sp else 16.sp,
-                fontWeight = if (type == EventType.SUBJECT) FontWeight.ExtraBold else FontWeight.Normal,
+                color = Color.Black,
+                fontSize = fontSize,
+                fontWeight = fontWeight,
                 modifier = Modifier.clickable {
                     // TODO:
                 }
             )
 
-            Spacer(Modifier.weight(1f)) // 添加灵活的空间
-
-            if (isTiming) {
-                Text(
-                    text = "……",
-                    modifier = Modifier.padding(horizontal = 5.dp)
-                )
-            } else {
-                TimeLabel(
-                    time = LocalDateTime.now(),
-                    modifier = Modifier.padding(horizontal = 5.dp)
-                )
+            Box(modifier = Modifier.padding(horizontal = 5.dp)) {
+                content(type)
             }
         }
     ) { measurables, constraints ->
@@ -116,18 +126,14 @@ fun RowScope.TailLayout(name: String, type: EventType, isTiming: Boolean) {
         val textConstraints = constraints.copy(maxWidth = textWidth)
         val text = measurables.first().measure(textConstraints)
 
-        // 计算 Spacer 的大小
-        val spacer = measurables[1].measure(constraints.copy(maxWidth = textWidth - text.width))
-
         // 计算总宽度和高度
-        val width = text.width + spacer.width + timeLabel.width
+        val width = text.width + timeLabel.width
         val height = maxOf(text.height, timeLabel.height)
 
         layout(width, height) {
             // 布局元素
             text.placeRelative(0, 0)
-            spacer.placeRelative(x = text.width, y = 0)
-            timeLabel.placeRelative(x = text.width + spacer.width, y = (text.height - timeLabel.height) / 2) // y 这么写是为了居中
+            timeLabel.placeRelative(x = text.width, y = (text.height - timeLabel.height) / 2) // y 这么写是为了居中
         }
     }
 }

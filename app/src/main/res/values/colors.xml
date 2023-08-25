@@ -7,5 +7,5 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-<!--    <color name="content_time_label">#979799</color>-->
+    <color name="deep_green">#317d35</color>
 </resources>

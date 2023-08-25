@@ -25,7 +25,6 @@ import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
 import java.time.LocalDateTime
 
-
 @Composable
 fun TimeLabel(
     time: LocalDateTime,
@@ -50,7 +49,8 @@ fun TimeLabel(
 
     Box(
         modifier = modifier
-            .clip(shape = shape) // 必须放在 clickable 前边，要不然涟漪效果的形状依然是方形。其次，只 clip 没用，border 和 background 也必须指定 shape，否则会显示异常
+            // 必须放在 clickable 前边，要不然涟漪效果的形状依然是方形。其次，只 clip 没用，border 和 background 也必须指定 shape，否则会显示异常
+            .clip(shape = shape)
             .clickable(
                 interactionSource = interactionSource,
                 indication = rememberRipple(bounded = true), // 必须设为 true，为 false 的话水波纹的最大范围是一个以组件宽度为直径的圆形

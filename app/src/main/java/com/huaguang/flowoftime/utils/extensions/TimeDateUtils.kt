@@ -47,14 +47,25 @@ fun formatLocalDateTime(dateTime: LocalDateTime): String {
     return dateTime.format(formatter)
 }
 
-fun formatDurationInText(duration: Duration): String {
+fun formatDurationInText(duration: Duration, englishUnit: Boolean = true): String {
+    val hUnit: String
+    val mUnit: String
     val hours = duration.toHours()
     val remainingMinutes = duration.minusHours(hours).toMinutes()
+
+    if (englishUnit) {
+        hUnit = "h"
+        mUnit = "m"
+    } else {
+        hUnit = "小时"
+        mUnit = "分钟"
+    }
+
     return when {
         hours == 0L && remainingMinutes == 0L -> ""
-        hours == 0L -> "${remainingMinutes}分钟"
-        remainingMinutes == 0L -> "${hours}小时"
-        else -> "${hours}小时${remainingMinutes}分钟"
+        hours == 0L -> "$remainingMinutes$mUnit"
+        remainingMinutes == 0L -> "$hours$hUnit"
+        else -> "$hours$hUnit$remainingMinutes$mUnit"
     }
 }
 
