@@ -90,7 +90,7 @@ fun TailLayout(
     isDisplay: Boolean = true,
     content: @Composable (type: EventType) -> Unit
 ) {
-    val fontSize = if (type == EventType.SUBJECT) 22.sp else {
+    val fontSize = if (type == EventType.SUBJECT) 20.sp else {
         if (isDisplay) 14.sp else 16.sp
     }
 

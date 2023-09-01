@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.data.sources.IconMapping
 import com.huaguang.flowoftime.utils.extensions.formatDurationInText
 import com.huaguang.flowoftime.widget.CategoryLabel
 import com.huaguang.flowoftime.widget.LabelType
@@ -30,24 +32,21 @@ import java.time.Duration
 @Composable
 fun DisplayEventItem(eventDisplay: EventDisplay) {
     Card(
-        modifier = Modifier.fillMaxWidth().padding(5.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(5.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.elevatedCardElevation(
+            defaultElevation = 5.dp
+        )
     ) {
         Row(
             modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(
-                onClick = { /*TODO*/ },
-                modifier = Modifier.padding(end = 5.dp).size(24.dp)
-            ) {
-                Icon(
-                    painterResource(id = R.drawable.expand),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .padding(horizontal = 5.dp)
-                )
-            }
+            CategoryIconButton(eventDisplay.category)
 
             TailLayout(name = eventDisplay.name, type = EventType.SUBJECT) {// 首个一定是主题事件
                 DurationText(duration = eventDisplay.duration, type = it)
@@ -56,7 +55,7 @@ fun DisplayEventItem(eventDisplay: EventDisplay) {
         }
 
         Column(
-            modifier = Modifier.padding(start = 38.dp, end = 10.dp)
+            modifier = Modifier.padding(start = 45.dp, end = 10.dp)
         ) {
             ContentRowList(eventDisplay = eventDisplay)
 
@@ -79,6 +78,29 @@ fun DisplayEventItem(eventDisplay: EventDisplay) {
                 }
             }
         }
+    }
+}
+
+@Composable
+fun CategoryIconButton(category: String?) {
+
+    fun findIconByCategory(category: String?): Int {
+        return IconMapping.categoryToIconMap[category] ?: R.drawable.expand
+    }
+
+    IconButton(
+        onClick = { /*TODO*/ },
+        modifier = Modifier
+            .padding(end = 10.dp)
+            .size(24.dp)
+    ) {
+        Icon(
+            painterResource(id = findIconByCategory(category)),
+            contentDescription = null,
+            modifier = Modifier
+                .size(24.dp)
+                .padding(2.dp)
+        )
     }
 }
 
@@ -111,7 +133,7 @@ fun ContentRowList(
 fun PrefixText(type: EventType) {
     val prefix = when (type) {
         EventType.STEP -> "•"
-        EventType.INSERT -> "->"
+        EventType.INSERT -> ">"
         EventType.FOLLOW -> "*"
         else -> ""
     }
@@ -128,7 +150,7 @@ fun PrefixText(type: EventType) {
 fun DurationText(duration: Duration, type: EventType) {
     Text(
         text = formatDurationInText(duration),
-        fontSize = if (type == EventType.SUBJECT) 20.sp else 12.sp,
+        fontSize = if (type == EventType.SUBJECT) 18.sp else 12.sp,
         fontWeight = FontWeight.ExtraBold,
         fontStyle = FontStyle.Italic,
         modifier = Modifier.padding(start = 5.dp),
@@ -186,4 +208,8 @@ fun test() {
     )
 
     DisplayEventItem(eventDisplay = eventDisplay)
+
+
+
 }
+

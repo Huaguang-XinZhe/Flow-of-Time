@@ -16,7 +16,7 @@ import com.huaguang.flowoftime.utils.trans.LocalDateTimeConverter
     DurationConverter.LocalDateConverter::class)
 abstract class EventDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
-
     abstract fun dateDurationDao(): DateDurationDao
+
 }
 
