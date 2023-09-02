@@ -5,9 +5,12 @@ import android.content.Context
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
+import com.huaguang.flowoftime.data.dao.IconMappingDao
 import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.data.sources.EventDatabase
+import com.huaguang.flowoftime.data.sources.IconDatabase
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.trans.LocalDateTimeSerializer
@@ -27,8 +30,14 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideDatabase(application: Application): EventDatabase {
-        return (application as TimeStreamApplication).database
+    fun provideEventDB(application: Application): EventDatabase {
+        return (application as TimeStreamApplication).eventDB
+    }
+
+    @Singleton
+    @Provides
+    fun provideIconDB(application: Application): IconDatabase {
+        return (application as TimeStreamApplication).iconDB
     }
 
     @Singleton
@@ -45,8 +54,20 @@ object AppModule {
 
     @Singleton
     @Provides
+    fun provideIconMappingDao(database: IconDatabase): IconMappingDao {
+        return database.iconMappingDao()
+    }
+
+    @Singleton
+    @Provides
     fun provideEventRepository(eventDao: EventDao, dateDurationDao: DateDurationDao): EventRepository {
         return EventRepository(eventDao, dateDurationDao)
+    }
+
+    @Singleton
+    @Provides
+    fun provideIconMappingRepository(dao: IconMappingDao): IconMappingRepository {
+        return IconMappingRepository(dao)
     }
 
 //    @Singleton

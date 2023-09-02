@@ -65,7 +65,7 @@ fun CoilTest() {
         SubcomposeAsyncImage(
             model = ImageRequest.Builder(context)
                 .data("https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/image-2023180128735.png")
-                .error(R.drawable.explore)
+                .error(R.drawable.continute)
                 .size(200, 200)
                 .build(),
             contentDescription = null,

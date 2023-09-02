@@ -11,7 +11,7 @@ class MyAlarmWorker(appContext: Context, workerParams: WorkerParameters):
 
     override suspend fun doWork(): Result {
         val application = applicationContext as TimeStreamApplication
-        val database = application.database
+        val database = application.eventDB
         // 你的数据库操作
         // TODO:  
         Toast.makeText(application,

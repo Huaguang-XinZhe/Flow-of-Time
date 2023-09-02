@@ -89,8 +89,10 @@ dependencies {
     // 非测试依赖库————————————————————————————————————————————————————————
     // 原来的 material 库
     implementation 'androidx.compose.material:material'
+    implementation platform('androidx.compose:compose-bom:2022.10.00')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
 
     // Room components
     def room_version = "2.5.1"

@@ -7,13 +7,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -21,8 +21,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.sources.IconMapping
+import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.utils.extensions.formatDurationInText
 import com.huaguang.flowoftime.widget.CategoryLabel
 import com.huaguang.flowoftime.widget.LabelType
@@ -30,7 +33,7 @@ import com.huaguang.flowoftime.widget.TagsRow
 import java.time.Duration
 
 @Composable
-fun DisplayEventItem(eventDisplay: EventDisplay) {
+fun DisplayEventItem(eventDisplay: EventDisplay, iconRepository: IconMappingRepository) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -46,7 +49,7 @@ fun DisplayEventItem(eventDisplay: EventDisplay) {
             modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CategoryIconButton(eventDisplay.category)
+            CategoryIconButton(eventDisplay.category, iconRepository)
 
             TailLayout(name = eventDisplay.name, type = EventType.SUBJECT) {// 首个一定是主题事件
                 DurationText(duration = eventDisplay.duration, type = it)
@@ -82,11 +85,7 @@ fun DisplayEventItem(eventDisplay: EventDisplay) {
 }
 
 @Composable
-fun CategoryIconButton(category: String?) {
-
-    fun findIconByCategory(category: String?): Int {
-        return IconMapping.categoryToIconMap[category] ?: R.drawable.expand
-    }
+fun CategoryIconButton(category: String?, iconRepository: IconMappingRepository) {
 
     IconButton(
         onClick = { /*TODO*/ },
@@ -94,9 +93,16 @@ fun CategoryIconButton(category: String?) {
             .padding(end = 10.dp)
             .size(24.dp)
     ) {
-        Icon(
-            painterResource(id = findIconByCategory(category)),
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(iconRepository.getIconUrlByCategory(category))
+                .crossfade(true)
+                .build(),
             contentDescription = null,
+            error = painterResource(id = R.drawable.expand),
+            onSuccess = {
+                RDALogger.info("加载成功了！")
+            },
             modifier = Modifier
                 .size(24.dp)
                 .padding(2.dp)
@@ -207,9 +213,7 @@ fun test() {
         )
     )
 
-    DisplayEventItem(eventDisplay = eventDisplay)
-
-
+//    DisplayEventItem(eventDisplay = eventDisplay, iconRepository)
 
 }
 

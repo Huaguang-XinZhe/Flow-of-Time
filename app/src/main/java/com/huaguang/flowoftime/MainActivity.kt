@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.ui.components.SharedState
@@ -28,6 +29,8 @@ class MainActivity : ComponentActivity() {
     lateinit var repository: EventRepository
     @Inject
     lateinit var sharedState: SharedState
+    @Inject
+    lateinit var iconRepository: IconMappingRepository
     lateinit var dndManager: DNDManager
 
     // Injected ViewModels
