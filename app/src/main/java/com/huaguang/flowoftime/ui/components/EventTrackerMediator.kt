@@ -9,9 +9,9 @@ import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
+import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSliderViewModel
-import com.huaguang.flowoftime.ui.components.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.utils.DNDManager
@@ -34,7 +34,7 @@ import java.time.LocalTime
 class EventTrackerMediator(
     val headerViewModel: HeaderViewModel,
     val durationSliderViewModel: DurationSliderViewModel,
-    val eventButtonsViewModel: EventButtonsViewModel,
+    private val eventButtonsViewModel: EventButtonsViewModel,
     val currentItemViewModel: CurrentItemViewModel,
     val eventNameViewModel: EventNameViewModel,
     private val repository: EventRepository,
@@ -52,8 +52,7 @@ class EventTrackerMediator(
     // 依赖子 ViewModel 的状态
     private val beModifiedEvent
         get() = eventNameViewModel.beModifiedEvent
-    private val subEventButtonText
-        get() = eventButtonsViewModel.subButtonText.value
+
     private var currentEvent // 访问其他类的属性一定要用 getter 方法，否则，获取的始终是初始获取值。
         get() = currentItemViewModel.currentEvent.value
         set(value) {
@@ -104,23 +103,6 @@ class EventTrackerMediator(
                     val currentST = currentEvent!!.startTime
 
                     updateCoreDuration(mainEventId, currentSubEventST = currentST)
-                }
-            }
-        }
-    }
-
-    fun onUndoFilledClicked() {
-        viewModelScope.launch {
-            eventButtonsViewModel.onUndoFilledClicked { justEndedEvent ->
-                currentEvent = justEndedEvent.copy(
-                    endTime = null,
-                    duration = null
-                )
-
-                repository.deleteEvent(justEndedEvent.id)
-
-                if (isCoreEvent(justEndedEvent.name)) {
-                    durationSliderViewModel.updateStartCursor(justEndedEvent.endTime)
                 }
             }
         }
@@ -351,80 +333,6 @@ class EventTrackerMediator(
             }
         }
 
-    }
-
-    fun onMainButtonLongClicked() {
-        eventButtonsViewModel.apply {
-            if (mainButtonText.value == "结束") return
-
-            // ButtonText 的值除了结束就是开始了，不可能为 null
-            viewModelScope.launch {
-                val startTime = repository.getOffsetStartTime()
-
-                if (startTime == null) {
-                    sharedState.toastMessage.value = "当前无法补计，直接开始吧"
-                    return@launch
-                }
-
-                startNewEvent(startTime = startTime)
-                toggleStateOnMainStart()
-
-                sharedState.toastMessage.value = "开始补计……"
-            }
-        }
-    }
-
-    fun onSubButtonLongClicked() {
-        if (subEventButtonText == "插入") return
-
-        eventButtonsViewModel.apply {
-            viewModelScope.launch {
-                // 结束子事件————————————————
-                stopCurrentEvent()
-                toggleStateOnSubStop()
-
-                // 结束主事件————————————————
-                stopCurrentEvent()
-                toggleStateOnMainStop()
-
-            }
-        }
-
-        sharedState.toastMessage.value = "全部结束！"
-    }
-
-    fun onMainButtonClicked() {
-        eventButtonsViewModel.apply {
-            when (mainButtonText.value) {
-                "开始" -> {
-                    toggleStateOnMainStart()
-                    startNewEvent()
-                }
-                "结束" -> {
-                    viewModelScope.launch {
-                        stopCurrentEvent()
-                        toggleStateOnMainStop()
-                    }
-                }
-            }
-        }
-    }
-
-    fun onSubButtonClicked() {
-        eventButtonsViewModel.apply {
-            when (subButtonText.value) {
-                "插入" -> {
-                    toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
-                    startNewEvent()
-                }
-                "插入结束" -> {
-                    viewModelScope.launch {
-                        stopCurrentEvent()
-                        toggleStateOnSubStop()
-                    }
-                }
-            }
-        }
     }
 
     private suspend fun retrieveStateFromSP() {

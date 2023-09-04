@@ -11,6 +11,7 @@ import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.data.sources.EventDatabase
 import com.huaguang.flowoftime.data.sources.IconDatabase
+import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.AlarmHelper
 import com.huaguang.flowoftime.utils.trans.LocalDateTimeSerializer
@@ -70,13 +71,11 @@ object AppModule {
         return IconMappingRepository(dao)
     }
 
-//    @Singleton
-//    @Provides
-//    fun provideSPHelper(@ApplicationContext context: Context): SPHelper {
-//        val sharedPreferences =
-//            context.getSharedPreferences("my_preferences", Context.MODE_PRIVATE)
-//        return SPHelper(sharedPreferences)
-//    }
+    @Singleton
+    @Provides
+    fun provideSPHelper(@ApplicationContext context: Context): SPHelper {
+        return SPHelper.getInstance(context)
+    }
 
     @Singleton
     @Provides

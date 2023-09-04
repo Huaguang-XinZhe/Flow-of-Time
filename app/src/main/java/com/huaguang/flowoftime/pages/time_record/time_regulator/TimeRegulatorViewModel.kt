@@ -1,10 +1,13 @@
-package com.huaguang.flowoftime.ui.components.time_regulator
+package com.huaguang.flowoftime.pages.time_record.time_regulator
 
 import androidx.lifecycle.ViewModel
 import com.huaguang.flowoftime.data.sources.SPHelper
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.LocalTime
+import javax.inject.Inject
 
-class TimeRegulatorViewModel(
+@HiltViewModel
+class TimeRegulatorViewModel @Inject constructor(
     private val spHelper: SPHelper
 ) : ViewModel() {
 

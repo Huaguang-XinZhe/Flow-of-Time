@@ -19,7 +19,6 @@ import com.huaguang.flowoftime.ui.components.EventList
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSlider
-import com.huaguang.flowoftime.ui.components.event_buttons.EventButtons
 import com.huaguang.flowoftime.ui.components.header.HeaderRow
 import kotlinx.coroutines.launch
 
@@ -46,7 +45,7 @@ fun EventTrackerScreen(mediator: EventTrackerMediator) {
         }
 
         if (!isInputShow) {
-            EventButtons(mediator)
+//            EventButtons(mediator)
         }
     }
 }

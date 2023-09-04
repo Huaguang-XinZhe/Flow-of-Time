@@ -120,6 +120,7 @@ dependencies {
     // Hilt 依赖注入框架（模块部分）
     implementation 'com.google.dagger:hilt-android:2.46.1'
     kapt 'com.google.dagger:hilt-compiler:2.46.1'
+    implementation 'androidx.fragment:fragment-ktx:1.6.1' // 要让 Fragment 也实现依赖注入，就必须加这一行
 
     // 能定位到代码的 Log 库
     implementation 'com.github.ardakaplan:RDALogger:1.0.0'

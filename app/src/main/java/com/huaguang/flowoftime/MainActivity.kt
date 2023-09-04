@@ -9,11 +9,11 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
+import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.components.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.ui.components.duration_slider.DurationSliderViewModel
-import com.huaguang.flowoftime.ui.components.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.ui.screens.event_tracker.EventTrackerScreen

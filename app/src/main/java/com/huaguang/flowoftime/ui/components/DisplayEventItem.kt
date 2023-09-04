@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,16 +25,23 @@ import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
+import com.huaguang.flowoftime.pages.time_record.recording_event_item.EventType
+import com.huaguang.flowoftime.pages.time_record.recording_event_item.TailLayout
 import com.huaguang.flowoftime.utils.extensions.formatDurationInText
 import com.huaguang.flowoftime.widget.CategoryLabel
 import com.huaguang.flowoftime.widget.LabelType
 import com.huaguang.flowoftime.widget.TagsRow
 import java.time.Duration
+import java.time.LocalDateTime
 
 @Composable
-fun DisplayEventItem(eventDisplay: EventDisplay, iconRepository: IconMappingRepository) {
+fun DisplayEventItem(
+    eventDisplay: EventDisplay,
+    iconRepository: IconMappingRepository,
+    modifier: Modifier = Modifier
+) {
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(5.dp),
         colors = CardDefaults.cardColors(
@@ -52,7 +58,7 @@ fun DisplayEventItem(eventDisplay: EventDisplay, iconRepository: IconMappingRepo
             CategoryIconButton(eventDisplay.category, iconRepository)
 
             TailLayout(name = eventDisplay.name, type = EventType.SUBJECT) {// 首个一定是主题事件
-                DurationText(duration = eventDisplay.duration, type = it)
+                DurationText(duration = eventDisplay.duration!!, type = it)
             }
 
         }
@@ -126,7 +132,7 @@ fun ContentRowList(
             PrefixText(type = son.type)
 
             TailLayout(name = son.name, type = son.type) {
-                DurationText(duration = son.duration, type = it)
+                DurationText(duration = son.duration!!, type = it)
             }
         }
 
@@ -165,55 +171,14 @@ fun DurationText(duration: Duration, type: EventType) {
 
 data class EventDisplay(
     var name: String,
-    val duration: Duration,
-    val type: EventType, 
+    var startTime: LocalDateTime,
+    var endTime: LocalDateTime? = null,
+    val duration: Duration? = null,
+    val type: EventType,
     var category: String? = null, // 除主题事件外无类属
     val tags: List<String>? = null, // 除主题事件外无标签
     val contentEvents: List<EventDisplay>? = null, // 除主题事件外无内容事件
 )
 
-@Preview(showBackground = true)
-@Composable
-fun test() {
-    val event1 = EventDisplay(
-        name = "昨日作息统析，今日计划",
-        duration = Duration.ofHours(1) + Duration.ofMinutes(15),
-        type = EventType.STEP,
-    )
 
-    val event2 = EventDisplay(
-        name = "老妈来电",
-        duration = Duration.ofMinutes(15),
-        type = EventType.INSERT
-    )
-
-    val event3 = EventDisplay(
-        name = "项目更新",
-        duration = Duration.ofMinutes(42),
-        type = EventType.STEP,
-        contentEvents = listOf(event2)
-    )
-
-
-    val event4 = EventDisplay(
-        name = "尚硅谷 HTML + CSS 学习",
-        duration = Duration.ofMinutes(35),
-        type = EventType.FOLLOW,
-    )
-
-
-    val eventDisplay = EventDisplay(
-        name = "时间统计法",
-        duration = Duration.ofHours(3) + Duration.ofMinutes(35),
-        type = EventType.SUBJECT,
-        category = "个人框架",
-        tags = listOf("时间统计法", "自我应用", "项目", "非当前核心", "时间", "个人管理", "SB"),
-        contentEvents = listOf(
-            event1, event3, event4
-        )
-    )
-
-//    DisplayEventItem(eventDisplay = eventDisplay, iconRepository)
-
-}
 

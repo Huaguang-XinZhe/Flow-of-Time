@@ -14,7 +14,6 @@ import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
 import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
 import java.time.LocalDateTime
 
@@ -30,21 +30,21 @@ fun TimeLabel(
     time: LocalDateTime,
     modifier: Modifier = Modifier,
 ) {
-
-    val checkState = remember { mutableStateOf(false) }
+    val selectedTime = LocalSelectedTime.current
+    val isSelected = selectedTime?.value == time
     val interactionSource = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(4.dp)
 
-    val borderColor = if (!checkState.value) {
-        Color.LightGray
-    } else {
+    val borderColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
+    } else {
+        Color.LightGray
     }
 
-    val textColor = if(!checkState.value) {
-        Color.LightGray
-    } else {
+    val textColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
+    } else {
+        Color.LightGray
     }
 
     Box(
@@ -55,7 +55,7 @@ fun TimeLabel(
                 interactionSource = interactionSource,
                 indication = rememberRipple(bounded = true), // 必须设为 true，为 false 的话水波纹的最大范围是一个以组件宽度为直径的圆形
                 onClick = {
-                    checkState.value = !checkState.value // 一点就选中，每次都选中
+                    selectedTime?.value = time
                 }
             )
             .border(0.5.dp, borderColor, shape = shape)

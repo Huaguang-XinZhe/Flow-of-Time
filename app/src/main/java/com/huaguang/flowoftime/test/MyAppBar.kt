@@ -47,9 +47,14 @@ fun MyAppBar() {
                 tint = Color.White
             )
         },
-        colors = TopAppBarDefaults.centerAlignedTopAppBarColors()
+        colors = TopAppBarDefaults.mediumTopAppBarColors(
+            containerColor = Color.Black,
+            titleContentColor = Color.White
+        )
     )
 }
+
+
 
 @Preview(showBackground = true)
 @Composable

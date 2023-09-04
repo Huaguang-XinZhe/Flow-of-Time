@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components
+package com.huaguang.flowoftime.pages.time_record.recording_event_item
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -9,12 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -22,59 +19,60 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.ui.components.EventDisplay
 import com.huaguang.flowoftime.widget.TimeLabel
-import java.time.LocalDateTime
 
 @Composable
 fun RecordingEventItem(
-    name: String,
-    type: EventType,
-    isTiming: Boolean,
-    level: Int = 0,
-    expandStates: List<MutableState<Boolean>>, // 使用列表跟踪每个层级的展开状态
-    content: @Composable (() -> Unit)? = null
+    eventDisplay: EventDisplay,
+    viewModel: RecordingEventItemViewModel,
+    modifier: Modifier = Modifier
 ) {
+    val type = eventDisplay.type
+    val expandState = viewModel.getExpandStateFor(eventDisplay)
 
-    val expandState = expandStates[level] // 获取当前层级的展开状态
-
-    Column {
+    Column(
+        modifier = modifier
+    ) {
 
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(vertical = 5.dp)
         ) {
 
-            if (type.isExpandable() && content != null && level < 3) { // 限制嵌套层级到3
-                ExpandIcon(expandState)
+            if (type.isExpandable() && eventDisplay.contentEvents != null) {
+                ExpandIcon(expandState) // 直接传递MutableState<Boolean>给ExpandIcon
             } else {
                 Spacer(modifier = Modifier.size(24.dp)) // 占位用的
             }
 
             TimeLabel(
-                time = LocalDateTime.now(),
+                time = eventDisplay.startTime,
                 modifier = Modifier.padding(end = 5.dp)
             )
 
             FlagText(type = type)
 
-            TailLayout(name, type, false) {
-                if (isTiming) {
+            TailLayout(eventDisplay.name, type, false) {
+                if (eventDisplay.endTime == null) {
                     Text(text = "……")
                 } else {
-                    TimeLabel(time = LocalDateTime.now())
+                    TimeLabel(time = eventDisplay.endTime!!)
                 }
             }
 
         }
 
-        if (content != null && expandState.value) {
+        if (expandState.value && eventDisplay.contentEvents != null) {
             val indentModifier = Modifier.padding(start = 30.dp) // 添加缩进
+
             Column(modifier = indentModifier) {
-                content()
+                eventDisplay.contentEvents.forEach { childEvent ->
+                    RecordingEventItem(childEvent, viewModel) // 递归调用以显示子事件
+                }
             }
         }
     }
@@ -183,53 +181,4 @@ enum class EventType {
     INSERT;
 
     fun isExpandable() = this == SUBJECT || this == STEP
-}
-
-@Preview(showBackground = true)
-@Composable
-fun test1() {
-
-    val expandStates = List(3) { remember { mutableStateOf(false) } } // 创建一个列表来跟踪每个层级的展开状态
-
-    OutlinedCard(
-        modifier = Modifier.padding(10.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(5.dp)
-        ) {
-            RecordingEventItem(
-                name = "时间统计法",
-                type = EventType.SUBJECT,
-                isTiming = false,
-                level = 0, // 设置当前层级
-                expandStates = expandStates, // 传递展开状态列表
-            ) {
-                RecordingEventItem(
-                    name = "昨日作息统析，今日计划",
-                    type = EventType.STEP,
-                    isTiming = false,
-                    level = 1, // 设置当前层级
-                    expandStates = expandStates, // 传递展开状态列表
-                ) {
-                    RecordingEventItem(
-                        name = "老妈来电",
-                        type = EventType.INSERT,
-                        isTiming = false,
-                        level = 2,
-                        expandStates = expandStates
-                    )
-
-                    RecordingEventItem(
-                        name = "尚硅谷 HTML + CSS 学习bikjkfkjfdsjs ，陕西农业大学",
-                        type = EventType.FOLLOW,
-                        isTiming = true,
-                        level = 2,
-                        expandStates = expandStates
-                    )
-
-                }
-            }
-        }
-    }
-
 }
