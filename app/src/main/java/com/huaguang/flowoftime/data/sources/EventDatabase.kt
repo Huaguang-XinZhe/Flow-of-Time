@@ -7,13 +7,15 @@ import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.models.DateDuration
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.utils.trans.DurationConverter
-import com.huaguang.flowoftime.utils.trans.LocalDateTimeConverter
+import com.huaguang.flowoftime.data.trans.Converters
 
-@Database(entities = [Event::class, DateDuration::class], version = 1, exportSchema = false)
-@TypeConverters(
-    LocalDateTimeConverter::class, DurationConverter::class,
-    DurationConverter.LocalDateConverter::class)
+
+@Database(
+    entities = [Event::class, DateDuration::class],
+    version = 1,
+    exportSchema = false
+)
+@TypeConverters(Converters::class)
 abstract class EventDatabase : RoomDatabase() {
     abstract fun eventDao(): EventDao
     abstract fun dateDurationDao(): DateDurationDao

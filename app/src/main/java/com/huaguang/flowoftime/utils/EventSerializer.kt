@@ -1,9 +1,7 @@
 package com.huaguang.flowoftime.utils
 
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.utils.extensions.formatDuration
-import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
-import com.huaguang.flowoftime.utils.extensions.parseToLocalDateTime
 import java.time.LocalDate
 
 object EventSerializer {
@@ -46,6 +44,7 @@ object EventSerializer {
                     startTime = parseToLocalDateTime(startTime, date),
                     name = name,
                     endTime = parseToLocalDateTime(endTime, date),
+                    type = EventType.SUBJECT // TODO: 随便写的，为了通过编译 
                 )
 
                 if (ellipsis.isEmpty()) {
@@ -55,10 +54,10 @@ object EventSerializer {
                         subEvents.clear()
                     }
 
-                    mainEvent = event.copy(parentId = null)
+                    mainEvent = event.copy(parentEventId = null)
                 } else {
                     val subEvent = event.copy(
-                        parentId = mainEvent!!.id
+                        parentEventId = mainEvent!!.id
                     )
                     subEvents.add(subEvent)
                 }

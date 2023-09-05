@@ -99,7 +99,7 @@ fun Modifier.getModifier(
             viewModel.onNameTextClicked(event)
         }
         .then(
-            if (event.name.length > 10 && event.parentId == null) this else Modifier
+            if (event.name.length > 10 && event.parentEventId == null) this else Modifier
         )
         .then(
             if (isNameClicked) {

@@ -16,8 +16,8 @@ import com.huaguang.flowoftime.ui.components.event_name.EventNameViewModel
 import com.huaguang.flowoftime.ui.components.header.HeaderViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.SelectionTracker
-import com.huaguang.flowoftime.utils.extensions.isGetUpTime
 import com.huaguang.flowoftime.utils.isCoreEvent
+import com.huaguang.flowoftime.utils.isGetUpTime
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -99,7 +99,7 @@ class EventTrackerMediator(
                 } else if (currentStatus == EventStatus.fromInt(2)) {
                     // 同时有子事务正在计时
                     RDALogger.info("resume: 同时有子事务正在进行！")
-                    val mainEventId = currentEvent!!.parentId!!
+                    val mainEventId = currentEvent!!.parentEventId!!
                     val currentST = currentEvent!!.startTime
 
                     updateCoreDuration(mainEventId, currentSubEventST = currentST)
@@ -236,7 +236,7 @@ class EventTrackerMediator(
             // 更新 stored 型事项
             repository.updateEvent(updatedEvent)
             // 如果操作项是当前项，那就更新它的 startTime（没入库，所以要这么做！）
-            currentItemViewModel.updateCurrentST(updatedEvent)
+//            currentItemViewModel.updateCurrentST(updatedEvent)
             dragTracker.cancelSelection(updatedEvent.id) // 取消滑块阴影，禁止点击
 
             // 2. 更新核心事务持续时间的 UI—————————————————————————————————————
@@ -280,7 +280,7 @@ class EventTrackerMediator(
                 }
 
                 // 通用创建，但必须放在后边，尤其是对于子事项（需要先保存当前主事件，然后再创建新事件）
-                currentEvent.value = createCurrentEvent(startTime)
+//                currentEvent.value = createCurrentEvent(startTime)
             }
         }
 

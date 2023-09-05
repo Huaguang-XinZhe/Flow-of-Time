@@ -13,11 +13,11 @@ import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.sleepNames
 import com.huaguang.flowoftime.ui.components.SharedState
-import com.huaguang.flowoftime.utils.extensions.formatDurationInText
-import com.huaguang.flowoftime.utils.extensions.getAdjustedEventDate
-import com.huaguang.flowoftime.utils.extensions.isGetUpTime
-import com.huaguang.flowoftime.utils.extensions.isSleepingTime
+import com.huaguang.flowoftime.utils.formatDurationInText
+import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.isCoreEvent
+import com.huaguang.flowoftime.utils.isGetUpTime
+import com.huaguang.flowoftime.utils.isSleepingTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
@@ -219,9 +219,9 @@ class DurationSliderViewModel @Inject constructor(
             }
         }
 
-        if (updatedEvent.parentId != null) {
+        if (updatedEvent.parentEventId != null) {
             // 3. 滑动的是正在进行的子事项的开始时间
-            updateCoreDuration(updatedEvent.parentId!!, currentSubEventST = updatedEvent.startTime)
+            updateCoreDuration(updatedEvent.parentEventId!!, currentSubEventST = updatedEvent.startTime)
         }
 
     }
@@ -348,7 +348,7 @@ class DurationSliderViewModel @Inject constructor(
             it.name = newEventName.replace("$minutes", "")
             it.endTime = endTime
             it.duration = Duration.ofMinutes(minutes)
-            it.isCurrent = false
+
 
             RDALogger.info("返回的 currentEvent = $it")
             return it

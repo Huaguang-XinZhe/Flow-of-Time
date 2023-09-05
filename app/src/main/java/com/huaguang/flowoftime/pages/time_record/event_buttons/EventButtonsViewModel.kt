@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.components.SharedState
@@ -72,11 +73,11 @@ class EventButtonsViewModel @Inject constructor(
         when (mainButtonText.value) {
             "开始" -> {
                 toggleStateOnMainStart()
-                eventControl.startNewEvent()
+                eventControl.startEvent()
             }
             "结束" -> {
                 viewModelScope.launch {
-                    eventControl.stopCurrentEvent()
+                    eventControl.stopEvent()
                     toggleStateOnMainStop()
                 }
             }
@@ -95,7 +96,7 @@ class EventButtonsViewModel @Inject constructor(
                 return@launch
             }
 
-            eventControl.startNewEvent(startTime = startTime)
+            eventControl.startEvent(startTime = startTime)
             toggleStateOnMainStart()
 
             sharedState.toastMessage.value = "开始补计……"
@@ -106,11 +107,11 @@ class EventButtonsViewModel @Inject constructor(
         when (subButtonText.value) {
             "插入" -> {
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
-                eventControl.startNewEvent()
+                eventControl.startEvent()
             }
             "插入结束" -> {
                 viewModelScope.launch {
-                    eventControl.stopCurrentEvent()
+                    eventControl.stopEvent()
                     toggleStateOnSubStop()
                 }
             }
@@ -122,11 +123,11 @@ class EventButtonsViewModel @Inject constructor(
 
         viewModelScope.launch {
             // 结束子事件————————————————
-            eventControl.stopCurrentEvent()
+            eventControl.stopEvent()
             toggleStateOnSubStop()
 
             // 结束主事件————————————————
-            eventControl.stopCurrentEvent()
+            eventControl.stopEvent()
             toggleStateOnMainStop()
 
         }
@@ -148,7 +149,7 @@ class EventButtonsViewModel @Inject constructor(
             repository.deleteEvent(event.id)
 
             // 返回原先的结束状态
-            if (event.parentId == null) {
+            if (event.parentEventId == null) {
                 toggleStateOnMainStart()
             } else {
                 toggleStateOnSubInsert()
@@ -187,8 +188,11 @@ class EventButtonsViewModel @Inject constructor(
 }
 
 interface EventControl {
-    fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now())
+    fun startEvent(
+        startTime: LocalDateTime = LocalDateTime.now(),
+        type: EventType = EventType.SUBJECT
+    )
 
-    fun stopCurrentEvent()
+    fun stopEvent()
 
 }

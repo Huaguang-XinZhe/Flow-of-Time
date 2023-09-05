@@ -2,9 +2,10 @@ package com.huaguang.flowoftime.data.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import com.huaguang.flowoftime.utils.trans.DurationSerializer
-import com.huaguang.flowoftime.utils.trans.LocalDateSerializer
-import com.huaguang.flowoftime.utils.trans.LocalDateTimeSerializer
+import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.data.trans.DurationSerializer
+import com.huaguang.flowoftime.data.trans.LocalDateSerializer
+import com.huaguang.flowoftime.data.trans.LocalDateTimeSerializer
 import kotlinx.serialization.Serializable
 import java.time.Duration
 import java.time.LocalDate
@@ -25,11 +26,18 @@ data class Event(
     @Serializable(with = DurationSerializer::class)
     var duration: Duration? = null,
 
+    var pauseInterval: Int = 0, // 当前事件进行过程中所暂停的时间，原则上不许暂停，为应对现实变化而设置
+
+    val type: EventType,
+
+    var category: String? = null, // 除主题事件外无类属
+
+    val tags: List<String>? = null, // 除主题事件外无标签
+
+    // 为了辅助查询————————————————————————————————————————————
     @Serializable(with = LocalDateSerializer::class)
     var eventDate: LocalDate? = null, // 用于存储事件发生的日期
 
-    var parentId: Long? = null,   // 用于存储该事件关联的主事件的ID，如果该事件是主事件，则此字段为null
-
-    var isCurrent: Boolean = false
+    var parentEventId: Long? = null
 )
 

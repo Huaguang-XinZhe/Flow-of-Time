@@ -3,25 +3,31 @@ package com.huaguang.flowoftime.pages.time_record
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtons
-import com.huaguang.flowoftime.pages.time_record.recording_event_item.RecordingEventItem
 import com.huaguang.flowoftime.pages.time_record.time_regulator.TimeRegulator
 import com.huaguang.flowoftime.ui.components.DisplayEventItem
-import com.huaguang.flowoftime.ui.components.EventDisplay
 import java.time.LocalDateTime
 
 @Composable
 fun TimeRecordPage(
     pageViewModel: TimeRecordPageViewModel,
 ) {
-    val eventDisplay = pageViewModel.getEventDisplay()
+    val event by pageViewModel.currentEventState
     val selectedTime = remember { mutableStateOf<LocalDateTime>(LocalDateTime.now()) }
+    val lastEventState = remember {  mutableStateOf<Event?>(null) }
+
+    LaunchedEffect(event?.id) {
+        lastEventState.value = pageViewModel.eventRepository.getLastEvent(event?.id)
+    }
 
     ConstraintLayout(
         modifier = Modifier.padding(vertical = 10.dp)
@@ -36,8 +42,9 @@ fun TimeRecordPage(
 
         // 和数据源交互即可
         DisplayEventItem(
-            eventDisplay = pageViewModel.getLastEventDisplay(),
+            event = lastEventState.value,
             iconRepository = pageViewModel.iconRepository,
+            eventRepository = pageViewModel.eventRepository,
             modifier = Modifier.constrainAs(displayItem) {
                 top.linkTo(topBar.bottom)
                 start.linkTo(parent.start)
@@ -46,10 +53,12 @@ fun TimeRecordPage(
 
         EventRecordingSection(
             pageViewModel = pageViewModel,
-            eventDisplay = eventDisplay,
+            event = event,
             selectedTime = selectedTime,
             modifier = Modifier.constrainAs(recordingSection) {
-                top.linkTo(displayItem.bottom, 10.dp)
+                val reference = if (lastEventState.value?.duration == null) topBar else displayItem
+
+                top.linkTo(reference.bottom, 10.dp)
                 start.linkTo(parent.start)
             }
         )
@@ -84,14 +93,17 @@ fun TimeRecordPage(
 @Composable
 fun EventRecordingSection(
     pageViewModel: TimeRecordPageViewModel,
-    eventDisplay: EventDisplay,
+    event: Event?,
     selectedTime: MutableState<LocalDateTime>,
     modifier: Modifier = Modifier
 ) {
+    if (event == null) return
+
     if (pageViewModel.eventStop) {
         DisplayEventItem(
-            eventDisplay = eventDisplay,
+            event = event,
             iconRepository = pageViewModel.iconRepository,
+            eventRepository = pageViewModel.eventRepository,
             modifier = modifier
         )
     } else {
@@ -99,8 +111,8 @@ fun EventRecordingSection(
             LocalSelectedTime provides selectedTime
         ) {
             RecordingEventItem(
-                eventDisplay = eventDisplay,
-                viewModel = pageViewModel.recordingEventItemViewModel,
+                event = event,
+                repository = pageViewModel.eventRepository,
                 modifier = modifier
             )
         }

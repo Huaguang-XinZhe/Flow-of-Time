@@ -6,12 +6,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.ui.components.SharedState
-import com.huaguang.flowoftime.utils.extensions.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -55,13 +53,13 @@ class CurrentItemViewModel @Inject constructor(
                 it.startTime = incompleteMainEvent.startTime
                 it.name = incompleteMainEvent.name
                 it.endTime = LocalDateTime.MIN // 为优化显示，实际业务不需要（为不显示当前条目特别设置）
-                it.parentId = null
-                it.isCurrent = true
+                it.parentEventId = null
+
             }
         } else {
             currentEvent.value = incompleteMainEvent.copy(
                 endTime = LocalDateTime.MIN,
-                isCurrent = true
+
             )
         }
 
@@ -81,14 +79,13 @@ class CurrentItemViewModel @Inject constructor(
     suspend fun updateCurrentEventOnStop() {
         currentEvent.value?.let {
             // 如果是主事件，就计算从数据库中获取子事件列表，并计算其间隔总和
-            val subEventsDuration = if (it.parentId == null) {
+            val subEventsDuration = if (it.parentEventId == null) {
                 repository.calculateSubEventsDuration(it.id)
             } else Duration.ZERO
 
             // 这里就不赋给 currentEventState 的值了，减少不必要的重组
             it.endTime = LocalDateTime.now()
             it.duration = Duration.between(it.startTime, it.endTime).minus(subEventsDuration)
-            it.isCurrent = it.parentId != null
         }
     }
 
@@ -101,11 +98,11 @@ class CurrentItemViewModel @Inject constructor(
         }
     }
 
-    fun updateCurrentST(updatedEvent: Event) {
-        if (updatedEvent.isCurrent) { // 处理 currentItem
-            currentEvent.value?.startTime = updatedEvent.startTime
-        }
-    }
+//    fun updateCurrentST(updatedEvent: Event) {
+//        if (updatedEvent.isCurrent) { // 处理 currentItem
+//            currentEvent.value?.startTime = updatedEvent.startTime
+//        }
+//    }
 
     /**
      * 这个方法将未完成的主事件存入了数据库
@@ -129,21 +126,7 @@ class CurrentItemViewModel @Inject constructor(
     }
 
 
-    suspend fun createCurrentEvent(
-        startTime: LocalDateTime
-    ) = Event(
-            startTime = startTime,
-            eventDate = getEventDate(startTime),
-            parentId = fetchMainEventId(),
-            isCurrent = true
-        )
 
-
-    private suspend fun fetchMainEventId(): Long? {
-        return if (eventStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
-            repository.fetchMainEventId()
-        } else null
-    }
 
 
 

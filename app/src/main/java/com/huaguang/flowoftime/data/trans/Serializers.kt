@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.utils.trans
+package com.huaguang.flowoftime.data.trans
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -12,6 +12,10 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 
+/**
+ * 自定义的序列化器，序列化和反序列化 Event 对象所需。
+ * 这是因为需要将 Event 对象以 Json 的格式存入 SP，所以才需要下面这些代码。
+ */
 @OptIn(ExperimentalSerializationApi::class)
 @Serializer(forClass = LocalDateTime::class)
 object LocalDateTimeSerializer : KSerializer<LocalDateTime> {

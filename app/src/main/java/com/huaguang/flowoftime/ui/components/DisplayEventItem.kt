@@ -10,6 +10,9 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,23 +26,28 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.EventWithSubEvents
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
-import com.huaguang.flowoftime.pages.time_record.recording_event_item.EventType
-import com.huaguang.flowoftime.pages.time_record.recording_event_item.TailLayout
-import com.huaguang.flowoftime.utils.extensions.formatDurationInText
+import com.huaguang.flowoftime.pages.time_record.TailLayout
+import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.widget.CategoryLabel
 import com.huaguang.flowoftime.widget.LabelType
 import com.huaguang.flowoftime.widget.TagsRow
 import java.time.Duration
-import java.time.LocalDateTime
 
 @Composable
 fun DisplayEventItem(
-    eventDisplay: EventDisplay,
+    event: Event?,
     iconRepository: IconMappingRepository,
+    eventRepository: EventRepository,
     modifier: Modifier = Modifier
 ) {
+    if (event?.duration == null) return
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -55,10 +63,10 @@ fun DisplayEventItem(
             modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CategoryIconButton(eventDisplay.category, iconRepository)
+            CategoryIconButton(event.category, iconRepository)
 
-            TailLayout(name = eventDisplay.name, type = EventType.SUBJECT) {// 首个一定是主题事件
-                DurationText(duration = eventDisplay.duration!!, type = it)
+            TailLayout(name = event.name, type = EventType.SUBJECT) {// 首个一定是主题事件
+                DurationText(duration = event.duration!!, type = it)
             }
 
         }
@@ -66,9 +74,12 @@ fun DisplayEventItem(
         Column(
             modifier = Modifier.padding(start = 45.dp, end = 10.dp)
         ) {
-            ContentRowList(eventDisplay = eventDisplay)
+            ContentRowList(
+                eventId = event.id,
+                eventRepository = eventRepository,
+            )
 
-            eventDisplay.category?.let {
+            event.category?.let {
                 CategoryLabel(
                     text = "@$it",
                     labelType = LabelType.CATEGORY,
@@ -78,7 +89,7 @@ fun DisplayEventItem(
                 }
             }
 
-            eventDisplay.tags?.let {
+            event.tags?.let {
                 TagsRow(
                     tags = it,
                     modifier = Modifier.padding(bottom = 10.dp)
@@ -91,7 +102,10 @@ fun DisplayEventItem(
 }
 
 @Composable
-fun CategoryIconButton(category: String?, iconRepository: IconMappingRepository) {
+fun CategoryIconButton(
+    category: String?,
+    iconRepository: IconMappingRepository
+) {
 
     IconButton(
         onClick = { /*TODO*/ },
@@ -121,23 +135,37 @@ fun CategoryIconButton(category: String?, iconRepository: IconMappingRepository)
  */
 @Composable
 fun ContentRowList(
-    eventDisplay: EventDisplay,
+    eventId: Long,
+    eventRepository: EventRepository,
     indent: Dp = 0.dp,
 ) {
-    eventDisplay.contentEvents?.forEach { son -> // 在 Column 的作用域内
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = indent)
-        ) {
-            PrefixText(type = son.type)
+    val eventWithSubEventsState = remember { mutableStateOf<EventWithSubEvents?>(null) }
 
-            TailLayout(name = son.name, type = son.type) {
-                DurationText(duration = son.duration!!, type = it)
+    LaunchedEffect(eventId) {
+        val result = eventRepository.getEventWithSubEvents(eventId)
+        eventWithSubEventsState.value = result
+    }
+
+    eventWithSubEventsState.value?.let { eventWithSubEvents ->
+        eventWithSubEvents.subEvents.forEach { son ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(start = indent)
+            ) {
+                PrefixText(type = son.type)
+
+                TailLayout(name = son.name, type = son.type) {
+                    DurationText(duration = son.duration!!, type = it)
+                }
             }
+
+            // 递归调用 ContentRowList
+            ContentRowList(
+                eventId = son.id,
+                eventRepository = eventRepository,
+                indent = 24.dp
+            )
         }
-
-        ContentRowList(eventDisplay = son, indent = 24.dp)
-
     }
 }
 
@@ -169,16 +197,6 @@ fun DurationText(duration: Duration, type: EventType) {
     )
 }
 
-data class EventDisplay(
-    var name: String,
-    var startTime: LocalDateTime,
-    var endTime: LocalDateTime? = null,
-    val duration: Duration? = null,
-    val type: EventType,
-    var category: String? = null, // 除主题事件外无类属
-    val tags: List<String>? = null, // 除主题事件外无标签
-    val contentEvents: List<EventDisplay>? = null, // 除主题事件外无内容事件
-)
 
 
 

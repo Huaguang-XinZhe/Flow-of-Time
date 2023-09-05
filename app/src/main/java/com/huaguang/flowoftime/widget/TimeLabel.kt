@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
-import com.huaguang.flowoftime.utils.extensions.formatLocalDateTime
+import com.huaguang.flowoftime.utils.formatLocalDateTime
 import java.time.LocalDateTime
 
 @Composable

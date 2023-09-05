@@ -9,9 +9,11 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
+import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtonsViewModel
-import com.huaguang.flowoftime.pages.time_record.recording_event_item.RecordingEventItemViewModel
 import com.huaguang.flowoftime.pages.time_record.time_regulator.TimeRegulatorViewModel
+import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.utils.DNDManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -22,23 +24,28 @@ class TimeRecordFragment : Fragment() {
     lateinit var eventRepository: EventRepository
     @Inject
     lateinit var iconRepository: IconMappingRepository
+    @Inject
+    lateinit var spHelper: SPHelper
+    @Inject
+    lateinit var sharedState: SharedState
+    lateinit var dndManager: DNDManager
 
     // 注入各大组件的 ViewModel
     private val eventButtonsViewModel: EventButtonsViewModel by viewModels()
     private val timeRegulatorViewModel: TimeRegulatorViewModel by viewModels()
-    private val recordingEventItemViewModel: RecordingEventItemViewModel by viewModels()
 
     private lateinit var pageViewModel: TimeRecordPageViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        dndManager = DNDManager(requireContext())
         pageViewModel = TimeRecordPageViewModel(
             eventButtonsViewModel,
             timeRegulatorViewModel,
-            recordingEventItemViewModel,
             eventRepository,
             iconRepository,
+            spHelper, sharedState, dndManager
         )
     }
 
@@ -59,7 +66,7 @@ class TimeRecordFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         eventButtonsViewModel.eventLiveData.observe(viewLifecycleOwner) { event ->
-            pageViewModel.currentEvent = event // 一但撤销，就赋新值
+            pageViewModel.currentEventState.value = event // 一但撤销，就赋新值
         }
 
     }

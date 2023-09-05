@@ -31,10 +31,16 @@ class SPHelper private constructor(context: Context) {
         sp.edit().putInt("pause_interval", accValue).apply()
     }
 
+    /**
+     * 结束的时候需要获取，然后存入数据库
+     */
     fun getPauseInterval(): Int {
         return sp.getInt("pause_interval", 0)
     }
 
+    /**
+     * 结束当前事件的时候重置
+     */
     fun resetPauseInterval() {
         sp.edit().putInt("pause_interval", 0).apply()
     }

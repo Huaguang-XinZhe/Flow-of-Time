@@ -62,43 +62,53 @@ interface EventDao {
         return getEventsWithCustomQuery(SimpleSQLiteQuery(queryString))
     }
 
-    @Query("SELECT COUNT(*) FROM events WHERE parentId = :parentId")
-    suspend fun countSubEvents(parentId: Long): Int
+    @Query("SELECT COUNT(*) FROM events WHERE parentEventId = :parentEventId")
+    suspend fun countSubEvents(parentEventId: Long): Int
 
 
-    @Query("SELECT * FROM events WHERE parentId IS NULL ORDER BY id DESC LIMIT 1")
+
+
+    @Query("SELECT * FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun getLastMainEvent(): Event?
 
     @Query("SELECT * FROM events WHERE endTime IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun getLastIncompleteEvent(): Event
 
 
-    @Query("SELECT MAX(id) FROM events WHERE parentId IS NULL")
+    @Query("SELECT MAX(id) FROM events WHERE parentEventId IS NULL")
     suspend fun getLastMainEventId(): Long
 
     @Query("SELECT * FROM events ORDER BY id DESC LIMIT 1")
     suspend fun getLastEvent(): Event
 
+    @Query("SELECT MAX(id) FROM events")
+    suspend fun getMaxId(): Long? // 当数据库中没有任何数据时，应该返回 null，否则计数会报错
+
+
     @Transaction
-    @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate = :eventDate")
+    @Query("SELECT * FROM events WHERE parentEventId IS NULL AND eventDate = :eventDate")
     fun getEventsWithSubEvents(eventDate: LocalDate = LocalDate.now()): Flow<List<EventWithSubEvents>>
 
     @Transaction
-    @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate BETWEEN :startDate AND :endDate")
+    @Query("SELECT * FROM events WHERE parentEventId IS NULL AND eventDate BETWEEN :startDate AND :endDate")
     fun getEventsWithSubEvents(startDate: LocalDate, endDate: LocalDate): Flow<List<EventWithSubEvents>>
 
 
     @Transaction
-    @Query("SELECT * FROM events WHERE parentId IS NULL")
+    @Query("SELECT * FROM events WHERE parentEventId IS NULL")
     suspend fun getEventsWithSubEventsImmediate(): List<EventWithSubEvents>
 
     @Transaction
-    @Query("SELECT * FROM events WHERE parentId IS NULL AND eventDate = :yesterday")
+    @Query("SELECT * FROM events WHERE parentEventId = :parentEventId")
+    suspend fun getEventsWithSubEvents(parentEventId: Long): EventWithSubEvents
+
+    @Transaction
+    @Query("SELECT * FROM events WHERE parentEventId IS NULL AND eventDate = :yesterday")
     suspend fun getYesterdayEventsWithSubEventsImmediate(yesterday: LocalDate): List<EventWithSubEvents>
 
 
-    @Query("SELECT * FROM events WHERE parentId = :mainEventId")
-    suspend fun getSubEventsForMainEvent(mainEventId: Long): List<Event>
+    @Query("SELECT * FROM events WHERE parentEventId = :eventId")
+    suspend fun getContentEventsForEvent(eventId: Long): List<Event>
 
     @Transaction
     suspend fun insertEventWithSubEvents(eventWithSubEvents: EventWithSubEvents) {
@@ -109,11 +119,11 @@ interface EventDao {
     @Query("""
         SELECT startTime, endTime
         FROM events 
-        WHERE parentId = :parentId 
+        WHERE parentEventId = :parentEventId 
           AND (startTime BETWEEN :startCursor AND :now OR endTime BETWEEN :startCursor AND :now)
     """)
     suspend fun getSubEventTimesWithinRange(
-        parentId: Long,
+        parentEventId: Long,
         startCursor: LocalDateTime?,
         now: LocalDateTime = LocalDateTime.now()
     ): List<EventTimes>

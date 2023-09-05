@@ -29,15 +29,7 @@ val FOCUS_EVENT_DURATION_THRESHOLD: Duration = Duration.ofHours(8)
 // 这是为了减少设置闹钟的频率，因为大多数事务的持续时间都不会超过此阈值。
 val ALARM_SETTING_THRESHOLD: Duration = Duration.ofHours(5)
 
-enum class EventStatus(val value: Int) {
-    NO_EVENT_IN_PROGRESS(0),
-    ONLY_MAIN_EVENT_IN_PROGRESS(1),
-    MAIN_AND_SUB_EVENT_IN_PROGRESS(2);
 
-    companion object {
-        fun fromInt(value: Int) = values().first { it.value == value }
-    }
-}
 
 
 

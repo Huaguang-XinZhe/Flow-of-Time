@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.data.repositories
 
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
 import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.data.dao.DateDurationDao
@@ -9,8 +10,8 @@ import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.utils.EventSerializer
-import com.huaguang.flowoftime.utils.extensions.formatDurationInText
-import com.huaguang.flowoftime.utils.extensions.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.formatDurationInText
+import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -62,7 +63,7 @@ class EventRepository(
 
     suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {
         val subEvents = withContext(Dispatchers.IO) {
-            eventDao.getSubEventsForMainEvent(mainEventId)
+            eventDao.getContentEventsForEvent(mainEventId)
         }
         return subEvents.fold(Duration.ZERO) { total, event -> total.plus(event.duration) }
     }
@@ -109,6 +110,7 @@ class EventRepository(
 
     suspend fun updateEvent(event: Event) {
         withContext(Dispatchers.IO) {
+            RDALogger.info("updateEvent 被调用！")
             eventDao.updateEvent(event)
         }
     }
@@ -155,6 +157,7 @@ class EventRepository(
         }
     }
 
+
     suspend fun getLastMainEvent() =
         withContext(Dispatchers.IO) {
             eventDao.getLastMainEvent()
@@ -164,5 +167,21 @@ class EventRepository(
         withContext(Dispatchers.IO) {
             eventDao.getLastEvent()
         }
+
+    suspend fun getEventWithSubEvents(eventId: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getEventsWithSubEvents(eventId)
+        }
+
+    suspend fun getLastEvent(eventId: Long?): Event {
+        val maxId = withContext(Dispatchers.IO) {
+            eventDao.getMaxId() ?: 0L
+        }
+        val lastId = if (eventId == null) maxId else maxId - 1
+
+        return withContext(Dispatchers.IO) {
+            eventDao.getEvent(lastId)
+        }
+    }
 
 }

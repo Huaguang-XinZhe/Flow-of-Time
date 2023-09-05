@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.pages.time_record.recording_event_item
+package com.huaguang.flowoftime.pages.time_record
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -11,7 +11,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,59 +25,79 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.ui.components.EventDisplay
+import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.EventWithSubEvents
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.widget.TimeLabel
 
 @Composable
 fun RecordingEventItem(
-    eventDisplay: EventDisplay,
-    viewModel: RecordingEventItemViewModel,
+    event: Event,
+    repository: EventRepository,
     modifier: Modifier = Modifier
 ) {
-    val type = eventDisplay.type
-    val expandState = viewModel.getExpandStateFor(eventDisplay)
+    // TODO: 隐隐的感觉这里一定会出问题。
+    val expandStates = remember { mutableStateMapOf<Long, MutableState<Boolean>>() }
+
+    val eventWithSubEventsState = remember { mutableStateOf<EventWithSubEvents?>(null) }
+    val expandState = remember { mutableStateOf(false) }
+    val type = event.type
+
+    LaunchedEffect(event.id) {
+        val eventWithSubEvents = repository.getEventWithSubEvents(event.id)
+        eventWithSubEventsState.value = eventWithSubEvents
+
+        val isExpanded = expandStates.getOrPut(event.id) { mutableStateOf(false) }.value
+        expandState.value = isExpanded
+    }
 
     Column(
         modifier = modifier
     ) {
-
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(vertical = 5.dp)
         ) {
 
-            if (type.isExpandable() && eventDisplay.contentEvents != null) {
+            if (type.isExpandable() && event.parentEventId != null) {
                 ExpandIcon(expandState) // 直接传递MutableState<Boolean>给ExpandIcon
             } else {
                 Spacer(modifier = Modifier.size(24.dp)) // 占位用的
             }
 
             TimeLabel(
-                time = eventDisplay.startTime,
+                time = event.startTime,
                 modifier = Modifier.padding(end = 5.dp)
             )
 
             FlagText(type = type)
 
-            TailLayout(eventDisplay.name, type, false) {
-                if (eventDisplay.endTime == null) {
+            TailLayout(event.name, type, false) {
+                if (event.endTime == null) {
                     Text(text = "……")
                 } else {
-                    TimeLabel(time = eventDisplay.endTime!!)
+                    TimeLabel(time = event.endTime!!)
                 }
             }
 
         }
 
-        if (expandState.value && eventDisplay.contentEvents != null) {
+        if (expandState.value && event.parentEventId != null) {
             val indentModifier = Modifier.padding(start = 30.dp) // 添加缩进
 
             Column(modifier = indentModifier) {
-                eventDisplay.contentEvents.forEach { childEvent ->
-                    RecordingEventItem(childEvent, viewModel) // 递归调用以显示子事件
+                eventWithSubEventsState.value?.let { eventWithSubEvents ->
+                    eventWithSubEvents.subEvents.forEach { childEvent ->
+                        RecordingEventItem( // 递归调用以显示子事件
+                            childEvent,
+                            repository = repository,
+                        )
+                    }
                 }
             }
+
         }
     }
 }
@@ -173,12 +197,3 @@ fun ExpandIcon(expandState: MutableState<Boolean>) {
     }
 }
 
-
-enum class EventType {
-    SUBJECT,
-    STEP,
-    FOLLOW,
-    INSERT;
-
-    fun isExpandable() = this == SUBJECT || this == STEP
-}

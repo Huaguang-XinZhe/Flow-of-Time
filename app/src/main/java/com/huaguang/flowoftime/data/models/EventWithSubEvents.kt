@@ -7,7 +7,7 @@ data class EventWithSubEvents(
     @Embedded val event: Event,
     @Relation(
         parentColumn = "id",
-        entityColumn = "parentId"
+        entityColumn = "parentEventId"
     )
     val subEvents: List<Event>
 )
