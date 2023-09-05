@@ -21,10 +21,9 @@ import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
 import java.time.LocalDateTime
 
-//@Preview(showBackground = true)
 @Composable
 fun TimeRegulator(
-    time: MutableState<LocalDateTime>,
+    dynamicTime: MutableState<LocalDateTime?>,
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -38,12 +37,12 @@ fun TimeRegulator(
     ) {
         TextButton(onClick = {
             // LocalDateTime 减 5 分钟不会改变 time 自身的引用，必须重新赋值才能引起 time 的变化
-            time.value = time.value.minusMinutes(5)
+            dynamicTime.value = dynamicTime.value?.minusMinutes(5)
         }) {
             Text("-5m")
         }
         
-        IconButton(onClick = { time.value = time.value.minusMinutes(1) }) {
+        IconButton(onClick = { dynamicTime.value = dynamicTime.value?.minusMinutes(1) }) {
             Icon(
                 painter = painterResource(id = R.drawable.minus),
                 contentDescription = null,
@@ -69,7 +68,7 @@ fun TimeRegulator(
             )
         }
 
-        IconButton(onClick = { time.value = time.value.plusMinutes(1) }) {
+        IconButton(onClick = { dynamicTime.value = dynamicTime.value?.plusMinutes(1) }) {
             Icon(
                 painter = painterResource(id = R.drawable.add),
                 contentDescription = null,
@@ -78,7 +77,7 @@ fun TimeRegulator(
             )
         }
 
-        TextButton(onClick = { time.value = time.value.plusMinutes(5) }) {
+        TextButton(onClick = { dynamicTime.value = dynamicTime.value?.plusMinutes(5) }) {
             Text("+5m")
         }
         

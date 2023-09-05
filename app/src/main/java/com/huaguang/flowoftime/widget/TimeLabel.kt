@@ -4,10 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.ripple.rememberRipple
@@ -18,9 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.huaguang.flowoftime.pages.time_record.LocalDynamicTime
 import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 import java.time.LocalDateTime
@@ -30,10 +27,12 @@ fun TimeLabel(
     time: LocalDateTime,
     modifier: Modifier = Modifier,
 ) {
-    val selectedTime = LocalSelectedTime.current
-    val isSelected = selectedTime?.value == time
     val interactionSource = remember { MutableInteractionSource() }
     val shape = RoundedCornerShape(4.dp)
+
+    val dynamicTime = LocalDynamicTime.current
+    val selectedTime = LocalSelectedTime.current
+    val isSelected = selectedTime?.value == time  // 管理 TimeLabel 的选中态
 
     val borderColor = if (isSelected) {
         MaterialTheme.colorScheme.primary
@@ -55,6 +54,7 @@ fun TimeLabel(
                 interactionSource = interactionSource,
                 indication = rememberRipple(bounded = true), // 必须设为 true，为 false 的话水波纹的最大范围是一个以组件宽度为直径的圆形
                 onClick = {
+                    dynamicTime?.value = time // 获取动态时间的初始值
                     selectedTime?.value = time
                 }
             )
@@ -63,7 +63,7 @@ fun TimeLabel(
             .padding(horizontal = 3.dp) // 可以根据需要调整这个值
     ) {
         Text(
-            text = formatLocalDateTime(time),
+            text = formatLocalDateTime(dynamicTime?.value ?: time), // 显示动态时间，没有就显示初始值
             color = textColor,
             fontSize = 12.sp
         )
@@ -71,17 +71,3 @@ fun TimeLabel(
 
 }
 
-@Preview(showBackground = true)
-@Composable
-fun test() {
-    Row(
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(20.dp)
-    ) {
-
-        TimeLabel(LocalDateTime.now())
-
-    }
-}

@@ -22,7 +22,8 @@ fun TimeRecordPage(
     pageViewModel: TimeRecordPageViewModel,
 ) {
     val event by pageViewModel.currentEventState
-    val selectedTime = remember { mutableStateOf<LocalDateTime>(LocalDateTime.now()) }
+    val dynamicTime = remember { mutableStateOf<LocalDateTime?>(null) }
+    val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
     val lastEventState = remember {  mutableStateOf<Event?>(null) }
 
     LaunchedEffect(event?.id) {
@@ -54,6 +55,7 @@ fun TimeRecordPage(
         EventRecordingSection(
             pageViewModel = pageViewModel,
             event = event,
+            dynamicTime = dynamicTime,
             selectedTime = selectedTime,
             modifier = Modifier.constrainAs(recordingSection) {
                 val reference = if (lastEventState.value?.duration == null) topBar else displayItem
@@ -78,7 +80,7 @@ fun TimeRecordPage(
 
         // 需要和 RecordingEventItem 交互
         TimeRegulator(
-            time = selectedTime,
+            dynamicTime = dynamicTime,
             viewModel = pageViewModel.timeRegulatorViewModel,
             modifier = Modifier.constrainAs(timeRegulator) {
                 bottom.linkTo(eventButtons.top, 10.dp)
@@ -94,7 +96,8 @@ fun TimeRecordPage(
 fun EventRecordingSection(
     pageViewModel: TimeRecordPageViewModel,
     event: Event?,
-    selectedTime: MutableState<LocalDateTime>,
+    dynamicTime: MutableState<LocalDateTime?>,
+    selectedTime: MutableState<LocalDateTime?>,
     modifier: Modifier = Modifier
 ) {
     if (event == null) return
@@ -108,6 +111,7 @@ fun EventRecordingSection(
         )
     } else {
         CompositionLocalProvider(
+            LocalDynamicTime provides dynamicTime,
             LocalSelectedTime provides selectedTime
         ) {
             RecordingEventItem(

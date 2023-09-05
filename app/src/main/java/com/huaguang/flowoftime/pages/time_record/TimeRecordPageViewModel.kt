@@ -25,8 +25,8 @@ import java.time.Duration
 import java.time.LocalDateTime
 
 val LocalEventControl = compositionLocalOf<EventControl> { error("没有提供实现 EventControl 接口的对象！") }
-val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime>?> { null }
-
+val LocalDynamicTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
+val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
 /**
  * 页面 ViewModel，用于协调当前页面内各个组件的交互，并存储 TimeRecordPage UI 页面的数据，作为其唯一依赖
  */
