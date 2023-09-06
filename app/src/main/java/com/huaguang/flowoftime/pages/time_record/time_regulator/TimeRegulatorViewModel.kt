@@ -5,6 +5,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -31,17 +32,39 @@ class TimeRegulatorViewModel @Inject constructor(
     private lateinit var recordTime: LocalTime
     // 用于取消之前的协程
     private var updateJob: Job? = null
+    // 存储上次点击的时间戳
+    private var lastClickTime: Long = 0
+
+    override fun onCleared() {
+        super.onCleared()
+        updateJob?.cancel()
+    }
 
     fun calPauseInterval(checked: Boolean) { // checked 为 true 是继续（播放），表明当前事项正在计时……
         if (!checked) { // 暂停
             recordTime = LocalTime.now()
         } else { // 继续
-            val interval = LocalTime.now().minute - recordTime.minute
+            val interval = Duration.between(recordTime, LocalTime.now()).toMinutes().toInt()
             spHelper.savePauseInterval(interval)
         }
     }
 
-    fun adjustTimeAndHandleChange(
+    fun debouncedOnClick(
+        value: Long,
+        customTimeState: MutableState<CustomTime?>,
+        selectedTime: MutableState<LocalDateTime?>?
+    ) {
+        val currentTime = System.currentTimeMillis()
+        // 如果两次点击的时间差小于1000毫秒，则返回
+        if (currentTime - lastClickTime < 1000) {
+            return
+        }
+        // 更新上次点击的时间戳
+        lastClickTime = currentTime
+        adjustTimeAndHandleChange(value, customTimeState, selectedTime)
+    }
+
+    private fun adjustTimeAndHandleChange(
         minutes: Long,
         customTimeState: MutableState<CustomTime?>,
         selectedTime: MutableState<LocalDateTime?>?
@@ -81,6 +104,7 @@ class TimeRegulatorViewModel @Inject constructor(
     private suspend fun syncUpdateCurrentAndDB(newCustomTime: CustomTime) {
         updateCurrentTime(newCustomTime)
         val newDuration = calNewDuration()
+        RDALogger.info("newDuration = $newDuration")
         updateCurrentDuration(newDuration)
         eventRepository.updateDatabase(newCustomTime, newDuration) // 更新数据库的开始、结束时间，同时更新 duration
     }
@@ -107,6 +131,7 @@ class TimeRegulatorViewModel @Inject constructor(
 
         val startTime = currentEvent!!.startTime
         val endTime = currentEvent!!.endTime
+        RDALogger.info("endTime = $endTime")
 
         return endTime?.let { Duration.between(startTime, it) }
 

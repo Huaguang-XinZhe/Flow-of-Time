@@ -33,7 +33,7 @@ fun TimeRegulator(
     val iconSize = Modifier.size(24.dp)
 
     fun onClick(value: Long) {
-        viewModel.adjustTimeAndHandleChange(value, CustomTimeState, selectedTime)
+        viewModel.debouncedOnClick(value, CustomTimeState, selectedTime)
     }
 
     @Composable
