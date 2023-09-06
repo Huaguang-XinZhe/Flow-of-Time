@@ -12,6 +12,7 @@ import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
+import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -22,6 +23,20 @@ interface EventDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(events: List<Event>)
+
+    @Query("UPDATE events SET startTime = :newTime, duration = :newDuration WHERE startTime = :originalTime")
+    suspend fun updateEventByStartTime(
+        originalTime: LocalDateTime,
+        newTime: LocalDateTime,
+        newDuration: Duration?
+    )
+
+    @Query("UPDATE events SET endTime = :newTime, duration = :newDuration WHERE endTime = :originalTime")
+    suspend fun updateEventByEndTime(
+        originalTime: LocalDateTime,
+        newTime: LocalDateTime,
+        newDuration: Duration
+    )
 
     @Update
     suspend fun updateEvent(event: Event)
@@ -35,10 +50,11 @@ interface EventDao {
     @Query("DELETE FROM events WHERE eventDate < :today")
     suspend fun deleteEventsExceptToday(today: LocalDate)
 
-
-
     @Query("SELECT MAX(id) FROM events")
-    suspend fun getLastEventId(): Long
+    suspend fun getMaxEventId(): Long?
+
+    @Query("SELECT * FROM events WHERE id = (SELECT MAX(id) FROM events)")
+    fun getCurrentEvent(): Flow<Event?>
 
 //    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
 //            "AND duration IS NOT NULL")
@@ -64,8 +80,6 @@ interface EventDao {
 
     @Query("SELECT COUNT(*) FROM events WHERE parentEventId = :parentEventId")
     suspend fun countSubEvents(parentEventId: Long): Int
-
-
 
 
     @Query("SELECT * FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 1")

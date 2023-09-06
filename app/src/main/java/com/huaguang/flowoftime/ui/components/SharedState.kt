@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.EventStatus
+import com.huaguang.flowoftime.data.models.Event
 
 class SharedState(val application: Application) {
 
@@ -13,6 +14,7 @@ class SharedState(val application: Application) {
     var eventCount = 0
     val eventStatus = mutableStateOf(EventStatus.NO_EVENT_IN_PROGRESS)
     val toastMessage = MutableLiveData<String>()
+    var currentEvent: Event? = null
 
     fun updateStateOnStart() {
         isInputShow.value = true

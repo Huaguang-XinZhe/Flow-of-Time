@@ -1,11 +1,7 @@
 package com.huaguang.flowoftime.pages.time_record
 
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.compositionLocalOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
@@ -14,19 +10,17 @@ import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventControl
-
 import com.huaguang.flowoftime.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Duration
-
 import java.time.LocalDateTime
 
-val LocalEventControl = compositionLocalOf<EventControl> { error("没有提供实现 EventControl 接口的对象！") }
-val LocalDynamicTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
-val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
 /**
  * 页面 ViewModel，用于协调当前页面内各个组件的交互，并存储 TimeRecordPage UI 页面的数据，作为其唯一依赖
  */
@@ -36,7 +30,7 @@ class TimeRecordPageViewModel(
     val eventRepository: EventRepository,
     val iconRepository: IconMappingRepository,
     private val spHelper: SPHelper,
-    private val sharedState: SharedState,
+    val sharedState: SharedState,
     private val dndManager: DNDManager,
 ) : ViewModel() {
 
@@ -46,39 +40,50 @@ class TimeRecordPageViewModel(
             sharedState.eventStatus.value = value
         }
 
-    var currentEventState: MutableState<Event?> = mutableStateOf(null)
-    var eventStop = false
+    private val _currentEventFlow = MutableStateFlow<Event?>(null)
+    val currentEventFlow: Flow<Event?> = _currentEventFlow // 使用冷流收集，只有观察者需要的时候才会发射数据
+
+    private var currentEvent
+        get() = sharedState.currentEvent
+        set(value) {
+            sharedState.currentEvent = value
+        }
+
     var autoId = 0L
 
     val eventControl = object : EventControl {
         override fun startEvent(startTime: LocalDateTime, type: EventType) {
             viewModelScope.launch {
-                currentEventState.value = createCurrentEvent(startTime, type) // type 由用户与 UI 的交互自动决定
-                RDALogger.info("start = ${currentEventState.value}")
-                autoId = eventRepository.insertEvent(currentEventState.value!!) // 存入数据库
+                currentEvent = createCurrentEvent(startTime, type) // type 由用户与 UI 的交互自动决定
+//                RDALogger.info("start = $currentEvent")
+                autoId = eventRepository.insertEvent(currentEvent!!) // 存入数据库
 
-                // 关键状态
-                eventStop = false
             }
         }
 
         override fun stopEvent() {
             viewModelScope.launch {
-                currentEventState.value = updateCurrentEvent()
-                eventRepository.updateEvent(currentEventState.value!!) // 更新数据库
+                currentEvent = updateCurrentEvent()
+                eventRepository.updateEvent(currentEvent!!) // 更新数据库
                 spHelper.resetPauseInterval()
             }
             dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
+        }
+    }
 
-            // 关键状态
-            eventStop = true
+    init {
+        viewModelScope.launch {
+            eventRepository.getCurrentEventFlow().filterNotNull().collect { event ->
+//                RDALogger.info("收集到 event = $event")
+                _currentEventFlow.value = event
+            }
         }
     }
 
     private suspend fun updateCurrentEvent(): Event {
         var event: Event? = null
 
-        currentEventState.value?.let {
+        currentEvent?.let {
             val newEvent = it.copy() // 先复制原始对象
 
             // 如果是主事件，就从数据库中获取子事件列表，并计算其间隔总和

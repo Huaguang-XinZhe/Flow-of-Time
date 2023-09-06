@@ -2,9 +2,11 @@ package com.huaguang.flowoftime.data.repositories
 
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
+import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
+import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.DateDuration
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
@@ -181,6 +183,23 @@ class EventRepository(
 
         return withContext(Dispatchers.IO) {
             eventDao.getEvent(lastId)
+        }
+    }
+
+    fun getCurrentEventFlow() = eventDao.getCurrentEvent()
+
+    suspend fun updateDatabase(newCustomTime: CustomTime, newDuration: Duration?) {
+        val initialTime = newCustomTime.initialTime!!
+        val newTime = newCustomTime.timeState.value!!
+
+        withContext(Dispatchers.IO) {
+            if (newCustomTime.type == TimeType.START) {
+                RDALogger.info("更新开始时间！")
+                eventDao.updateEventByStartTime(initialTime, newTime, newDuration)
+            } else {
+                RDALogger.info("更新结束时间！")
+                eventDao.updateEventByEndTime(initialTime, newTime, newDuration!!) // 调整结束时间时的新 duration 绝不为 0！
+            }
         }
     }
 

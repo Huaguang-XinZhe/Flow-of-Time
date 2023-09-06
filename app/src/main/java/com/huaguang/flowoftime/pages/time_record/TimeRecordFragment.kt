@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -66,7 +67,11 @@ class TimeRecordFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         eventButtonsViewModel.eventLiveData.observe(viewLifecycleOwner) { event ->
-            pageViewModel.currentEventState.value = event // 一但撤销，就赋新值
+            sharedState.currentEvent = event // 一但撤销，就赋新值
+        }
+
+        sharedState.toastMessage.observe(viewLifecycleOwner) { toastMessage ->
+            Toast.makeText(requireContext(), toastMessage, Toast.LENGTH_SHORT).show()
         }
 
     }

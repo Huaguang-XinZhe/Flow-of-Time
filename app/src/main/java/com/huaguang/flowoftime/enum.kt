@@ -9,3 +9,17 @@ enum class EventStatus(val value: Int) {
         fun fromInt(value: Int) = values().first { it.value == value }
     }
 }
+
+enum class EventType {
+    SUBJECT,
+    STEP,
+    FOLLOW,
+    INSERT;
+
+    fun isExpandable() = this == SUBJECT || this == STEP
+}
+
+enum class TimeType {
+    START,
+    END
+}

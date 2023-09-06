@@ -27,22 +27,36 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.TimeType
+import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.data.repositories.EventRepository
-import com.huaguang.flowoftime.widget.TimeLabel
 
 @Composable
 fun RecordingEventItem(
     event: Event,
+    customTimeState: MutableState<CustomTime?>,
     repository: EventRepository,
     modifier: Modifier = Modifier
 ) {
     // TODO: 隐隐的感觉这里一定会出问题。
     val expandStates = remember { mutableStateMapOf<Long, MutableState<Boolean>>() }
-
     val eventWithSubEventsState = remember { mutableStateOf<EventWithSubEvents?>(null) }
     val expandState = remember { mutableStateOf(false) }
+    val startCustomTime =
+        CustomTime(
+            type = TimeType.START,
+            timeState = remember { mutableStateOf(null) }, // 把 remember 调整到这里是非常重要的一处改变，这使得 initialTime 的值是动态的！
+            initialTime = event.startTime
+        )
+
+    val endCustomTime =
+        CustomTime(
+            type = TimeType.END,
+            timeState = remember { mutableStateOf(null) }, // 重新组合的时候这个状态会被记住，但值会改变
+            initialTime = event.endTime // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
+        )
     val type = event.type
 
     LaunchedEffect(event.id) {
@@ -68,7 +82,8 @@ fun RecordingEventItem(
             }
 
             TimeLabel(
-                time = event.startTime,
+                customTime = startCustomTime,
+                customTimeState = customTimeState,
                 modifier = Modifier.padding(end = 5.dp)
             )
 
@@ -78,7 +93,10 @@ fun RecordingEventItem(
                 if (event.endTime == null) {
                     Text(text = "……")
                 } else {
-                    TimeLabel(time = event.endTime!!)
+                    TimeLabel(
+                        customTime = endCustomTime,
+                        customTimeState = customTimeState
+                    )
                 }
             }
 
@@ -92,6 +110,7 @@ fun RecordingEventItem(
                     eventWithSubEvents.subEvents.forEach { childEvent ->
                         RecordingEventItem( // 递归调用以显示子事件
                             childEvent,
+                            customTimeState = customTimeState,
                             repository = repository,
                         )
                     }

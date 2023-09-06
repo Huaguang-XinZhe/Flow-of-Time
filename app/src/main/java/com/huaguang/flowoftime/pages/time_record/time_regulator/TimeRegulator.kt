@@ -19,30 +19,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
-import java.time.LocalDateTime
+import com.huaguang.flowoftime.data.models.CustomTime
+import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
 
 @Composable
 fun TimeRegulator(
-    dynamicTime: MutableState<LocalDateTime?>,
+    CustomTimeState: MutableState<CustomTime?>,
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
 
     val toggleState = remember { mutableStateOf(true) }
+    val selectedTime = LocalSelectedTime.current
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = {
-            // LocalDateTime 减 5 分钟不会改变 time 自身的引用，必须重新赋值才能引起 time 的变化
-            dynamicTime.value = dynamicTime.value?.minusMinutes(5)
-        }) {
+        TextButton(onClick = { viewModel.adjustTimeAndHandleChange(-5, CustomTimeState, selectedTime) }) {
             Text("-5m")
         }
         
-        IconButton(onClick = { dynamicTime.value = dynamicTime.value?.minusMinutes(1) }) {
+        IconButton(onClick = { viewModel.adjustTimeAndHandleChange(-1, CustomTimeState, selectedTime) }) {
             Icon(
                 painter = painterResource(id = R.drawable.minus),
                 contentDescription = null,
@@ -68,7 +67,7 @@ fun TimeRegulator(
             )
         }
 
-        IconButton(onClick = { dynamicTime.value = dynamicTime.value?.plusMinutes(1) }) {
+        IconButton(onClick = { viewModel.adjustTimeAndHandleChange(1, CustomTimeState, selectedTime) }) {
             Icon(
                 painter = painterResource(id = R.drawable.add),
                 contentDescription = null,
@@ -77,7 +76,7 @@ fun TimeRegulator(
             )
         }
 
-        TextButton(onClick = { dynamicTime.value = dynamicTime.value?.plusMinutes(5) }) {
+        TextButton(onClick = { viewModel.adjustTimeAndHandleChange(5, CustomTimeState, selectedTime) }) {
             Text("+5m")
         }
         
