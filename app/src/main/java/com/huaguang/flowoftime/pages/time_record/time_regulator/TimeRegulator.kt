@@ -28,27 +28,41 @@ fun TimeRegulator(
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
-
     val toggleState = remember { mutableStateOf(true) }
     val selectedTime = LocalSelectedTime.current
+    val iconSize = Modifier.size(24.dp)
+
+    fun onClick(value: Long) {
+        viewModel.adjustTimeAndHandleChange(value, CustomTimeState, selectedTime)
+    }
+
+    @Composable
+    fun TimeAdjustButton(value: Long, label: String) {
+        TextButton(onClick = { onClick(value) }) {
+            Text(label)
+        }
+    }
+
+    @Composable
+    fun TimeAdjustIconButton(value: Long, iconRes: Int) {
+        IconButton(onClick = { onClick(value) }) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = null,
+                modifier = iconSize,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
 
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = { viewModel.adjustTimeAndHandleChange(-5, CustomTimeState, selectedTime) }) {
-            Text("-5m")
-        }
-        
-        IconButton(onClick = { viewModel.adjustTimeAndHandleChange(-1, CustomTimeState, selectedTime) }) {
-            Icon(
-                painter = painterResource(id = R.drawable.minus),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        TimeAdjustButton(-5, "-5m")
+
+        TimeAdjustIconButton(-1, R.drawable.minus)
 
         FilledIconToggleButton(
             checked = toggleState.value,
@@ -59,26 +73,18 @@ fun TimeRegulator(
             modifier = Modifier.size(36.dp)
         ) {
             val iconRes = if (toggleState.value) R.drawable.continute else R.drawable.pause
-
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp)
+                modifier = iconSize
             )
         }
 
-        IconButton(onClick = { viewModel.adjustTimeAndHandleChange(1, CustomTimeState, selectedTime) }) {
-            Icon(
-                painter = painterResource(id = R.drawable.add),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        TimeAdjustIconButton(1, R.drawable.add)
 
-        TextButton(onClick = { viewModel.adjustTimeAndHandleChange(5, CustomTimeState, selectedTime) }) {
-            Text("+5m")
-        }
-        
+        TimeAdjustButton(5, "+5m")
     }
 }
+
+
+
