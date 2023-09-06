@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.pages.time_record.event_buttons
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -69,7 +70,9 @@ class EventButtonsViewModel @Inject constructor(
         subButtonShow.value = false
     }
 
-    fun onMainButtonClick(eventControl: EventControl) {
+    fun onMainButtonClick(eventControl: EventControl, selectedTime: MutableState<LocalDateTime?>?) {
+        selectedTime?.value = null // 取消选中状态
+
         when (mainButtonText.value) {
             "开始" -> {
                 toggleStateOnMainStart()
@@ -103,7 +106,9 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    fun onSubButtonClick(eventControl: EventControl) {
+    fun onSubButtonClick(eventControl: EventControl, selectedTime: MutableState<LocalDateTime?>?) {
+        selectedTime?.value = null // 取消选中状态
+
         when (subButtonText.value) {
             "插入" -> {
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题

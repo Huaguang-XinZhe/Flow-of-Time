@@ -18,7 +18,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.utils.formatLocalDateTime
 
@@ -33,13 +32,10 @@ fun TimeLabel(
 
     val selectedTime = LocalSelectedTime.current
     val dbTime = customTime.initialTime!! // 这个值来自数据库，其实也是变化的。
-    RDALogger.info("customTime = $customTime")
+
     if (customTime.timeState.value == null) {
         customTime.timeState.value = dbTime
     }
-
-    RDALogger.info("dbTime = $dbTime")
-    RDALogger.info("selectedTime?.value = ${selectedTime?.value}")
 
     val isSelected = selectedTime?.value == dbTime  // 管理 TimeLabel 的选中态
     // 选中的 Label 才动态变化，不是 Label 有点击（任何一个）就可以

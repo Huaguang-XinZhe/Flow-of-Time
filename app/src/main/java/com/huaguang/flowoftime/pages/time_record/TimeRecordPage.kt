@@ -81,7 +81,8 @@ fun TimeRecordPage(
 
         // 需要和 RecordingEventItem 交互
         CompositionLocalProvider(
-            LocalEventControl provides pageViewModel.eventControl
+            LocalEventControl provides pageViewModel.eventControl,
+            LocalSelectedTime provides selectedTime
         ) {
             EventButtons(
                 viewModel = pageViewModel.eventButtonsViewModel,

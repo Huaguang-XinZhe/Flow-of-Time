@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
@@ -15,8 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.pages.time_record.LocalEventControl
+import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
 import com.huaguang.flowoftime.widget.LongPressButton
 import com.huaguang.flowoftime.widget.LongPressTextButton
+import java.time.LocalDateTime
 
 @Composable
 fun EventButtons(
@@ -25,6 +28,7 @@ fun EventButtons(
 ) {
 
     val eventControl = LocalEventControl.current
+    val selectedTime = LocalSelectedTime.current
 
     ConstraintLayout (
         modifier = modifier
@@ -46,6 +50,7 @@ fun EventButtons(
         StartOrInsertButtonRow(
             viewModel = viewModel,
             eventControl = eventControl,
+            selectedTime = selectedTime,
             modifier = Modifier.constrainAs(buttonRowRef) {
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
@@ -61,7 +66,6 @@ fun EventButtons(
 @Composable
 fun UnDoButton(
     viewModel: EventButtonsViewModel,
-
     modifier: Modifier = Modifier
 ) {
     val undoFilledIconShow by viewModel.undoFilledIconShow
@@ -84,6 +88,7 @@ fun UnDoButton(
 fun StartOrInsertButtonRow(
     viewModel: EventButtonsViewModel,
     eventControl: EventControl,
+    selectedTime: MutableState<LocalDateTime?>?,
     modifier: Modifier = Modifier
 ) {
     val mainEventButtonText by viewModel.mainButtonText
@@ -96,7 +101,7 @@ fun StartOrInsertButtonRow(
     ) {
         if (mainButtonShow == true) {
             LongPressButton(
-                onClick = { viewModel.onMainButtonClick(eventControl) },
+                onClick = { viewModel.onMainButtonClick(eventControl, selectedTime) },
                 onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
                 text = mainEventButtonText
             )
@@ -105,7 +110,7 @@ fun StartOrInsertButtonRow(
         if (subButtonShow == true) {
             LongPressTextButton(
                 text = subEventButtonText,
-                onClick = { viewModel.onSubButtonClick(eventControl) },
+                onClick = { viewModel.onSubButtonClick(eventControl, selectedTime) },
                 onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
                 modifier = Modifier.padding(start = 5.dp)
             )
