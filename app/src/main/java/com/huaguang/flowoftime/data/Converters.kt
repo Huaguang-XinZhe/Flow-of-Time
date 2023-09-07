@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data.trans
+package com.huaguang.flowoftime.data
 
 import androidx.room.TypeConverter
 import com.huaguang.flowoftime.EventType

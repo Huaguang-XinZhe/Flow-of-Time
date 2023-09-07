@@ -193,6 +193,7 @@ class EventRepository(
         val newTime = newCustomTime.timeState.value!!
 
         withContext(Dispatchers.IO) {
+            // TODO: 这里根据开始或结束时间来更新事件可能会出现问题
             if (newCustomTime.type == TimeType.START) {
                 RDALogger.info("更新开始时间！")
                 eventDao.updateEventByStartTime(initialTime, newTime, newDuration)

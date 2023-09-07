@@ -13,6 +13,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtons
@@ -31,7 +32,7 @@ fun TimeRecordPage(
 ) {
     // 已经过滤空值，event 接受到 Flow 的值后将始终为非空。尽管如此，初始值还是空的，这意味着最初的显示 event 为 null。
     val event by pageViewModel.currentEventFlow.collectAsState(initial = null)
-//    RDALogger.info("TimeRecordPage: event = $event")
+    RDALogger.info("TimeRecordPage: event = $event")
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
     val lastEventState = remember {  mutableStateOf<Event?>(null) }

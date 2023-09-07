@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.pages.time_record
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
@@ -14,8 +15,9 @@ import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -41,15 +43,26 @@ class TimeRecordPageViewModel(
         }
 
     private val _currentEventFlow = MutableStateFlow<Event?>(null)
-    val currentEventFlow: Flow<Event?> = _currentEventFlow // 使用冷流收集，只有观察者需要的时候才会发射数据
+    val currentEventFlow: StateFlow<Event?> = _currentEventFlow.asStateFlow()
 
-    private var currentEvent
+    var currentEvent
         get() = sharedState.currentEvent
         set(value) {
             sharedState.currentEvent = value
         }
 
     var autoId = 0L
+
+    init {
+        viewModelScope.launch {
+            repository.getCurrentEventFlow().filterNotNull().collect { event ->
+                RDALogger.info("收集到 event = $event")
+                if (currentEvent == null) currentEvent = event // 给内存中的 currentEvent（实现数据库和内存当前项的同步更新）
+//                RDALogger.info("收集块：currentEvent = $currentEvent")
+                _currentEventFlow.value = event // 传给 UI
+            }
+        }
+    }
 
     val eventControl = object : EventControl {
         override fun startEvent(startTime: LocalDateTime, type: EventType) {
@@ -68,15 +81,6 @@ class TimeRecordPageViewModel(
                 spHelper.resetPauseInterval()
             }
             dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
-        }
-    }
-
-    init {
-        viewModelScope.launch {
-            repository.getCurrentEventFlow().filterNotNull().collect { event ->
-//                RDALogger.info("收集到 event = $event")
-                _currentEventFlow.value = event
-            }
         }
     }
 

@@ -65,10 +65,7 @@ class TimeRegulatorViewModel @Inject constructor(
 
     }
 
-    private fun debouncedOnClick(
-        onClick: () -> Unit
-//        selectedTime: MutableState<LocalDateTime?>?
-    ) {
+    private fun debouncedOnClick(onClick: () -> Unit) {
         val currentTime = System.currentTimeMillis()
         // 如果两次点击的时间差小于1000毫秒，则返回
         if (currentTime - lastClickTime < 1000) {
@@ -82,7 +79,6 @@ class TimeRegulatorViewModel @Inject constructor(
     private fun adjustTimeAndHandleChange(
         minutes: Long,
         customTimeState: MutableState<CustomTime?>,
-//        selectedTime: MutableState<LocalDateTime?>?
     ) = handleTimeChange {
         val newCustomTime = customTimeState.value!!.copy().apply {
             timeState.value = timeState.value?.plusMinutes(minutes)
@@ -93,7 +89,6 @@ class TimeRegulatorViewModel @Inject constructor(
     }
 
     private fun handleTimeChange(
-//        selectedTime: MutableState<LocalDateTime?>?,
         action: () -> MutableState<CustomTime?>
     ) {
         val customTimeState = action()
@@ -112,17 +107,16 @@ class TimeRegulatorViewModel @Inject constructor(
     private suspend fun syncUpdateCurrentAndDB(newCustomTime: CustomTime) {
         updateCurrentTime(newCustomTime)
         val newDuration = calNewDuration()
-        RDALogger.info("newDuration = $newDuration")
-        updateCurrentDuration(newDuration)
         eventRepository.updateDatabase(newCustomTime, newDuration) // 更新数据库的开始、结束时间，同时更新 duration
     }
 
     /**
-     * 更新当前项的开始时间和结束时间，以保持内存当前项和数据库当前项同步
+     * 更新当前项的开始时间和结束时间
      */
     private fun updateCurrentTime(newCustomTime: CustomTime) {
         val newTime = newCustomTime.timeState.value!!
 
+        RDALogger.info("currentEvent = $currentEvent")
         if (newCustomTime.type == TimeType.START) {
             currentEvent?.startTime = newTime
         } else {
@@ -135,18 +129,13 @@ class TimeRegulatorViewModel @Inject constructor(
      * start 反，end 正（变化量和最终 duration 的变化关系）
      */
     private fun calNewDuration(): Duration? {
-        if (currentEvent == null) return null
+        return currentEvent?.let {
+            val startTime = currentEvent!!.startTime
+            val endTime = currentEvent!!.endTime
 
-        val startTime = currentEvent!!.startTime
-        val endTime = currentEvent!!.endTime
-        RDALogger.info("endTime = $endTime")
+            RDALogger.info("endTime = $endTime")
 
-        return endTime?.let { Duration.between(startTime, it) }
-
+            endTime?.let { Duration.between(startTime, it) }
+        }
     }
-
-    private fun updateCurrentDuration(newDuration: Duration?) {
-        currentEvent?.duration = newDuration
-    }
-
 }

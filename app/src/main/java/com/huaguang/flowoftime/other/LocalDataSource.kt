@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.wait
+package com.huaguang.flowoftime.other
 
 //class LocalDataSource(private val database: EventDatabase) : DataSource {
 //    override suspend fun getEvents(): Result<List<Event>> {

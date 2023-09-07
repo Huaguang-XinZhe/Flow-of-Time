@@ -73,8 +73,8 @@ class SPHelper private constructor(context: Context) {
             putInt("event_status_value", eventStatus.value)
 
             if (currentEvent != null) {
-                val eventJson = Json.encodeToString(Event.serializer(), currentEvent)
-                putString("currentEvent", eventJson)
+//                val eventJson = Json.encodeToString(Event.serializer(), currentEvent)
+//                putString("currentEvent", eventJson)
             }
 
             apply()
