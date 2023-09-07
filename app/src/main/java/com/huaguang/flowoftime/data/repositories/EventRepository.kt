@@ -119,7 +119,7 @@ class EventRepository(
 
     suspend fun fetchMainEventId() =
         withContext(Dispatchers.IO) {
-            eventDao.getLastMainEventId() // 在插入子事件之前一定存在主事件，不会有问题
+            eventDao.getLatestMainEventId()
         }
 
     suspend fun insertEvent(event: Event) =

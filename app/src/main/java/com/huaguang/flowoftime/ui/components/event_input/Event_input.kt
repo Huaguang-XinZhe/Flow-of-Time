@@ -33,7 +33,7 @@ fun EventInputField(
     viewModel: EventInputViewModel,
     modifier: Modifier = Modifier,
 ) {
-    if (!viewModel.isInputShow.value) return // 为 false 不显示
+    if (!viewModel.inputState.show.value) return // 为 false 不显示
 
     val focusRequester = remember { FocusRequester() }
 
@@ -58,7 +58,7 @@ fun InputRow(
     viewModel: EventInputViewModel,
     focusRequester: FocusRequester
 ) {
-    val newEventName by viewModel.newEventName
+    val newEventName by viewModel.inputState.newName
     var textFieldState by remember {
         mutableStateOf(TextFieldValue(text = newEventName))
     }
@@ -70,7 +70,7 @@ fun InputRow(
             value = textFieldState,
             onValueChange = {
                 textFieldState = it
-                viewModel.newEventName.value = it.text
+                viewModel.inputState.newName.value = it.text
             },
             label = { Text("事件名称") },
             modifier = Modifier

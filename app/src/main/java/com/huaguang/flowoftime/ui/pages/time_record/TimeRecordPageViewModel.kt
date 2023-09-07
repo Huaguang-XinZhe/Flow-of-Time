@@ -3,8 +3,9 @@ package com.huaguang.flowoftime.ui.pages.time_record
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.InputIntent
+import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -36,20 +37,14 @@ class TimeRecordPageViewModel(
     private val dndManager: DNDManager,
 ) : ViewModel() {
 
-    private var eventStatus
-        get() = sharedState.eventStatus.value
-        set(value) {
-            sharedState.eventStatus.value = value
-        }
-
-    private val _currentEventFlow = MutableStateFlow<Event?>(null)
-    val currentEventFlow: StateFlow<Event?> = _currentEventFlow.asStateFlow()
-
-    var currentEvent
+    private var currentEvent
         get() = sharedState.currentEvent
         set(value) {
             sharedState.currentEvent = value
         }
+
+    private val _currentEventFlow = MutableStateFlow<Event?>(null)
+    val currentEventFlow: StateFlow<Event?> = _currentEventFlow.asStateFlow()
 
     var autoId = 0L
 
@@ -70,13 +65,13 @@ class TimeRecordPageViewModel(
     }
 
     val eventControl = object : EventControl {
-        override fun startEvent(startTime: LocalDateTime, type: EventType) {
+        override fun startEvent(startTime: LocalDateTime, eventType: EventType) {
             viewModelScope.launch {
-                currentEvent = createCurrentEvent(startTime, type) // type 由用户与 UI 的交互自动决定
-//                RDALogger.info("start = $currentEvent")
+                currentEvent = createCurrentEvent(startTime, eventType) // type 由用户与 UI 的交互自动决定
                 autoId = repository.insertEvent(currentEvent!!) // 存入数据库
-
+                updateInputState(autoId)
             }
+
         }
 
         override fun stopEvent() {
@@ -85,11 +80,21 @@ class TimeRecordPageViewModel(
                 repository.updateEvent(currentEvent!!) // 更新数据库
                 spHelper.resetPauseInterval()
             }
-            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
+//            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
     }
 
     suspend fun getLastEvent(id: Long?) = repository.getLastEvent(id)
+
+    private fun updateInputState(id: Long) {
+        eventInputViewModel.inputState.apply {
+            eventId.value = id
+            show.value = true
+            newName.value = ""
+            intent.value = InputIntent.RECORD
+            type.value = ItemType.RECORD
+        }
+    }
 
     private suspend fun updateCurrentEvent(): Event {
         var event: Event? = null
@@ -120,17 +125,13 @@ class TimeRecordPageViewModel(
     ) = Event(
         startTime = startTime,
         eventDate = getEventDate(startTime),
-        parentEventId = fetchMainEventId(),
+        parentEventId = fetchMainEventId(type),
         type = type,
-        // TODO: 随便拟一些数据，测试，之后要删掉 
-        name = "时光流开发完善", 
-        category = "开发", 
-        tags = listOf("时光流", "个人管理", "现实应用", "时间")
     )
 
 
-    private suspend fun fetchMainEventId(): Long? {
-        return if (eventStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+    private suspend fun fetchMainEventId(type: EventType): Long? {
+        return if (type == EventType.INSERT || type == EventType.FOLLOW) {
             repository.fetchMainEventId()
         } else null
     }

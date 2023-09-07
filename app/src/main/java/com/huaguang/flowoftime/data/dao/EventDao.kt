@@ -93,7 +93,7 @@ interface EventDao {
 
 
     @Query("SELECT MAX(id) FROM events WHERE parentEventId IS NULL")
-    suspend fun getLastMainEventId(): Long
+    suspend fun getLatestMainEventId(): Long // 只有创建的时候才会调用，所以直接取 max 没问题。
 
     @Query("SELECT * FROM events ORDER BY id DESC LIMIT 1")
     suspend fun getLastEvent(): Event

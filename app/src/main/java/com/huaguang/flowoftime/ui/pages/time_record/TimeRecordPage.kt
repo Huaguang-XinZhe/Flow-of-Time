@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
+
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -145,7 +146,7 @@ fun CoreFloatingButton(
     viewModel: EventInputViewModel,
     modifier: Modifier = Modifier
 ) {
-    if (!viewModel.isInputShow.value) {
+    if (!viewModel.inputState.show.value) {
         FloatingActionButton(
             onClick = { viewModel.onCoreFloatingButtonClick() },
             shape = CircleShape,

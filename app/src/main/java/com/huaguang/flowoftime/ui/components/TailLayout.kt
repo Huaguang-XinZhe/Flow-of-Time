@@ -49,7 +49,7 @@ fun TailLayout(
                 fontWeight = fontWeight,
                 modifier = Modifier.clickable {
                     if (!isDisplay) selectedTime?.value = null // 如果是记录 Item ，点击名称后便取消时间标签的选中状态
-                    viewModel.onNameClick(event, isDisplay)
+                    viewModel.onNameClick(event)
                 }
             )
 

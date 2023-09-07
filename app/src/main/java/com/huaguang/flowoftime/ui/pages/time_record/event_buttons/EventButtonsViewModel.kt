@@ -76,7 +76,7 @@ class EventButtonsViewModel @Inject constructor(
         when (mainButtonText.value) {
             "开始" -> {
                 toggleStateOnMainStart()
-                eventControl.startEvent()
+                eventControl.startEvent(eventType = EventType.SUBJECT)
             }
             "结束" -> {
                 viewModelScope.launch {
@@ -99,7 +99,7 @@ class EventButtonsViewModel @Inject constructor(
                 return@launch
             }
 
-            eventControl.startEvent(startTime = startTime)
+            eventControl.startEvent(startTime, EventType.SUBJECT)
             toggleStateOnMainStart()
 
             sharedState.toastMessage.value = "开始补计……"
@@ -112,7 +112,7 @@ class EventButtonsViewModel @Inject constructor(
         when (subButtonText.value) {
             "插入" -> {
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
-                eventControl.startEvent()
+                eventControl.startEvent(eventType = EventType.INSERT)
             }
             "插入结束" -> {
                 viewModelScope.launch {
@@ -195,7 +195,7 @@ class EventButtonsViewModel @Inject constructor(
 interface EventControl {
     fun startEvent(
         startTime: LocalDateTime = LocalDateTime.now(),
-        type: EventType = EventType.SUBJECT
+        eventType: EventType = EventType.SUBJECT
     )
 
     fun stopEvent()
