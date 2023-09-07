@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
-import com.huaguang.flowoftime.pages.time_record.TimeRecordFragment
+import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordFragment
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

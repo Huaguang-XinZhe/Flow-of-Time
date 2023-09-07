@@ -14,8 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 
 /**
  * 使用 Layout 来自定义文本和时间标签的布局

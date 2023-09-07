@@ -31,7 +31,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".other.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.FlowOfTime">
 <!--            <intent-filter>-->
@@ -41,7 +41,7 @@
 <!--            </intent-filter>-->
         </activity>
 
-        <receiver android:name=".MyAlarmReceiver" />
+        <receiver android:name=".other.MyAlarmReceiver" />
     </application>
 
 </manifest>

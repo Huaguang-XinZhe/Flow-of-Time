@@ -33,9 +33,6 @@ import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.utils.formatDurationInText
-import com.huaguang.flowoftime.widget.CategoryLabel
-import com.huaguang.flowoftime.widget.LabelType
-import com.huaguang.flowoftime.widget.TagsRow
 import java.time.Duration
 
 @Composable
