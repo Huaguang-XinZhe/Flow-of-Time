@@ -54,13 +54,18 @@ class TimeRecordPageViewModel(
     var autoId = 0L
 
     init {
+        RDALogger.info("init 块执行！")
         viewModelScope.launch {
             repository.getCurrentEventFlow().filterNotNull().collect { event ->
                 RDALogger.info("收集到 event = $event")
-                if (currentEvent == null) currentEvent = event // 给内存中的 currentEvent（实现数据库和内存当前项的同步更新）
-//                RDALogger.info("收集块：currentEvent = $currentEvent")
                 _currentEventFlow.value = event // 传给 UI
             }
+        }
+
+        // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
+        viewModelScope.launch {
+            if (currentEvent == null) currentEvent = repository.getCurrentEvent()
+            RDALogger.info("currentEvent = $currentEvent")
         }
     }
 
@@ -83,6 +88,8 @@ class TimeRecordPageViewModel(
             dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
     }
+
+    suspend fun getLastEvent(id: Long?) = repository.getLastEvent(id)
 
     private suspend fun updateCurrentEvent(): Event {
         var event: Event? = null

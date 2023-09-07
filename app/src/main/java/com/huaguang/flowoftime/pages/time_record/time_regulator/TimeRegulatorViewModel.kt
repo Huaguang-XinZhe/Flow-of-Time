@@ -116,7 +116,6 @@ class TimeRegulatorViewModel @Inject constructor(
     private fun updateCurrentTime(newCustomTime: CustomTime) {
         val newTime = newCustomTime.timeState.value!!
 
-        RDALogger.info("currentEvent = $currentEvent")
         if (newCustomTime.type == TimeType.START) {
             currentEvent?.startTime = newTime
         } else {

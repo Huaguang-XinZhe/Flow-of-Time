@@ -8,6 +8,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -36,9 +37,10 @@ fun TimeRecordPage(
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
     val lastEventState = remember {  mutableStateOf<Event?>(null) }
+    val isDisplayNameChanged by pageViewModel.eventInputViewModel.lastNameChangeLiveData.observeAsState(false)
 
-    LaunchedEffect(event?.id) {
-        lastEventState.value = pageViewModel.repository.getLastEvent(event?.id)
+    LaunchedEffect(event?.id, isDisplayNameChanged) {
+        lastEventState.value = pageViewModel.getLastEvent(event?.id)
     }
 
     ConstraintLayout(

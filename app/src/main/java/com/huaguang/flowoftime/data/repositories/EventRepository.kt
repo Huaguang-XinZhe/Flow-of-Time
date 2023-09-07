@@ -186,7 +186,9 @@ class EventRepository(
         }
     }
 
-    fun getCurrentEventFlow() = eventDao.getCurrentEvent()
+    fun getCurrentEventFlow() = eventDao.getCurrentEventFlow()
+
+    suspend fun getCurrentEvent() = eventDao.getCurrentEvent()
 
     suspend fun updateDatabase(newCustomTime: CustomTime, newDuration: Duration?) {
         val initialTime = newCustomTime.initialTime!!

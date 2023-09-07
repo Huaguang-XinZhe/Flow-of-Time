@@ -1,9 +1,10 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
@@ -25,14 +26,17 @@ class EventInputViewModel @Inject constructor(
     private var eventId = 0L // 用于从数据库找到相应的数据条目
     private var initialName = ""
     private var isRecordingItem = true
+    private val _lastNameChangeLiveData = MutableLiveData(false)
+    val lastNameChangeLiveData: LiveData<Boolean> get() = _lastNameChangeLiveData
 
     fun onConfirmButtonClick() {
         isInputShow.value = false
         if (newEventName.value == initialName) return // 有差异才更新
 
+        setDiffValueForLiveData()
+
         viewModelScope.launch {
             // 更新当前项的 name 值，要不然结束的时候又给改回去了
-            RDALogger.info("isRecordingItem = $isRecordingItem")
             if (isRecordingItem) sharedState.currentEvent?.name = newEventName.value
             repository.updateEventName(eventId, newEventName.value)
         }
@@ -49,6 +53,13 @@ class EventInputViewModel @Inject constructor(
 
     fun undoButtonClick() {
         TODO("Not yet implemented")
+    }
+
+    private fun setDiffValueForLiveData() {
+        if (!isRecordingItem) { // 修改来自展示 Item
+            // 总是设置一个相反的值，以触发展示 Item 从数据库获取新 Event
+            _lastNameChangeLiveData.value = !_lastNameChangeLiveData.value!!
+        }
     }
 
 }

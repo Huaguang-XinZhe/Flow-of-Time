@@ -54,7 +54,10 @@ interface EventDao {
     suspend fun getMaxEventId(): Long?
 
     @Query("SELECT * FROM events WHERE id = (SELECT MAX(id) FROM events)")
-    fun getCurrentEvent(): Flow<Event?>
+    fun getCurrentEventFlow(): Flow<Event?>
+
+    @Query("SELECT * FROM events WHERE id = (SELECT MAX(id) FROM events)")
+    suspend fun getCurrentEvent(): Event?
 
 //    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
 //            "AND duration IS NOT NULL")
