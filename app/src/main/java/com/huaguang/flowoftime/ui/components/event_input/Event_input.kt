@@ -8,6 +8,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -85,6 +86,18 @@ fun InputRow(
                 }
         )
 
+        IconButton(
+            onClick = { viewModel.onStepButtonClick() },
+            modifier = Modifier.padding(horizontal = 5.dp).size(36.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.step),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(18.dp)
+            )
+        }
+
         Button(onClick = { viewModel.onConfirmButtonClick() }) {
             Text("确认")
         }
@@ -103,6 +116,7 @@ fun UndoIconButton(viewModel: EventInputViewModel) {
     ) {
         Icon(
             painter = painterResource(id = R.drawable.undo),
+            tint = MaterialTheme.colorScheme.primary,
             contentDescription = null
         )
     }

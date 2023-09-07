@@ -51,9 +51,21 @@ class EventInputViewModel @Inject constructor(
         isRecordingItem = !isDisplay // 传出，用于判断是否需要更新当前项的 name 值
     }
 
+
+
+    fun onStepButtonClick() {
+        TODO("Not yet implemented")
+    }
+
+    fun onCoreFloatingButtonClick() {
+        TODO("Not yet implemented")
+    }
+
     fun undoButtonClick() {
         TODO("Not yet implemented")
     }
+
+
 
     private fun setDiffValueForLiveData() {
         if (!isRecordingItem) { // 修改来自展示 Item
@@ -61,5 +73,6 @@ class EventInputViewModel @Inject constructor(
             _lastNameChangeLiveData.value = !_lastNameChangeLiveData.value!!
         }
     }
+
 
 }
