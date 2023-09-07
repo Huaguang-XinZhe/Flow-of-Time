@@ -19,6 +19,7 @@ import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtons
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventControl
 import com.huaguang.flowoftime.pages.time_record.time_regulator.TimeRegulator
 import com.huaguang.flowoftime.ui.components.DisplayEventItem
+import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import java.time.LocalDateTime
 
 val LocalEventControl = compositionLocalOf<EventControl> { error("没有提供实现 EventControl 接口的对象！") }
@@ -36,14 +37,14 @@ fun TimeRecordPage(
     val lastEventState = remember {  mutableStateOf<Event?>(null) }
 
     LaunchedEffect(event?.id) {
-        lastEventState.value = pageViewModel.eventRepository.getLastEvent(event?.id)
+        lastEventState.value = pageViewModel.repository.getLastEvent(event?.id)
     }
 
     ConstraintLayout(
         modifier = Modifier.padding(vertical = 10.dp)
     ) {
 
-        val (topBar, displayItem, recordingSection, timeRegulator, eventButtons) = createRefs()
+        val (topBar, displayItem, recordingSection, timeRegulator, eventButtons, eventInput) = createRefs()
 
         RecordPageTopBar(modifier = Modifier.constrainAs(topBar) {
             top.linkTo(parent.top)
@@ -53,8 +54,7 @@ fun TimeRecordPage(
         // 和数据源交互即可
         DisplayEventItem(
             event = lastEventState.value,
-            iconRepository = pageViewModel.iconRepository,
-            eventRepository = pageViewModel.eventRepository,
+            viewModel = pageViewModel.eventInputViewModel,
             modifier = Modifier.constrainAs(displayItem) {
                 top.linkTo(topBar.bottom)
                 start.linkTo(parent.start)
@@ -68,7 +68,7 @@ fun TimeRecordPage(
                 RecordingEventItem(
                     event = event!!,
                     customTimeState = customTimeState,
-                    repository = pageViewModel.eventRepository,
+                    viewModel = pageViewModel.eventInputViewModel,
                     modifier = Modifier.constrainAs(recordingSection) {
                         val reference = if (lastEventState.value?.duration == null) topBar else displayItem
 
@@ -98,7 +98,7 @@ fun TimeRecordPage(
             LocalSelectedTime provides selectedTime
         ) {
             TimeRegulator(
-                CustomTimeState = customTimeState,
+                customTimeState = customTimeState,
                 viewModel = pageViewModel.timeRegulatorViewModel,
                 modifier = Modifier.constrainAs(timeRegulator) {
                     bottom.linkTo(eventButtons.top, 10.dp)
@@ -106,6 +106,14 @@ fun TimeRecordPage(
                 }
             )
         }
+
+        EventInputField(
+            viewModel = pageViewModel.eventInputViewModel,
+            modifier = Modifier.constrainAs(eventInput) {
+                bottom.linkTo(timeRegulator.top, 100.dp)
+                start.linkTo(parent.start)
+            }
+        )
 
     }
 

@@ -24,16 +24,17 @@ import com.huaguang.flowoftime.pages.time_record.LocalSelectedTime
 
 @Composable
 fun TimeRegulator(
-    CustomTimeState: MutableState<CustomTime?>,
+    customTimeState: MutableState<CustomTime?>,
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
     val toggleState = remember { mutableStateOf(true) }
     val selectedTime = LocalSelectedTime.current
+    viewModel.selectedTime = selectedTime
     val iconSize = Modifier.size(24.dp)
 
     fun onClick(value: Long) {
-        viewModel.debouncedOnClick(value, CustomTimeState, selectedTime)
+        viewModel.onClick(value, customTimeState)
     }
 
     @Composable

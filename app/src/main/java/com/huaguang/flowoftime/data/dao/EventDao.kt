@@ -142,6 +142,9 @@ interface EventDao {
         now: LocalDateTime = LocalDateTime.now()
     ): List<EventTimes>
 
+    @Query("UPDATE events SET name = :newName WHERE id = :id")
+    suspend fun updateEventName(id: Long, newName: String)
+
 
 //    @Transaction
 //    @Query("SELECT * FROM events")

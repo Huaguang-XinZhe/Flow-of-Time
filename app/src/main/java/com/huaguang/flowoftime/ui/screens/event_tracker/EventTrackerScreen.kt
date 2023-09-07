@@ -14,7 +14,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.huaguang.flowoftime.ui.components.EventInputField
 import com.huaguang.flowoftime.ui.components.EventList
 import com.huaguang.flowoftime.ui.components.EventTrackerMediator
 import com.huaguang.flowoftime.ui.components.SharedState
@@ -25,7 +24,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun EventTrackerScreen(mediator: EventTrackerMediator) {
     val listState = rememberLazyListState()
-    val isInputShow by mediator.sharedState.isInputShow
+//    val isInputShow by mediator.sharedState.isInputShow
 
     HandleScrollEffect(mediator.sharedState, listState)
 
@@ -40,13 +39,13 @@ fun EventTrackerScreen(mediator: EventTrackerMediator) {
 
         EventList(mediator, listState, Modifier.weight(1f))
 
-        if (isInputShow) {
-            EventInputField(mediator)
-        }
-
-        if (!isInputShow) {
-//            EventButtons(mediator)
-        }
+//        if (isInputShow) {
+////            EventInputField(mediator)
+//        }
+//
+//        if (!isInputShow) {
+////            EventButtons(mediator)
+//        }
     }
 }
 

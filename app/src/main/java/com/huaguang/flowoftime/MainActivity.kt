@@ -76,11 +76,11 @@ class MainActivity : ComponentActivity() {
         RDALogger.info("MainActivity 的 onResume() 执行了！")
 
         // 再次检查 “通知策略访问” 权限
-        if (dndManager.hasNotificationPolicyAccess() && sharedState.newEventName.value == "睡") {
-            dndManager.openDND()
-            // 必须重新置空。如果已授予权限，且当前名称缓存为 “睡”，那只要一打开应用就会进入勿扰模式，这会影响到忘却进行新的记录的情况。
-            sharedState.newEventName.value = ""
-        }
+//        if (dndManager.hasNotificationPolicyAccess() && sharedState.newEventName.value == "睡") {
+//            dndManager.openDND()
+//            // 必须重新置空。如果已授予权限，且当前名称缓存为 “睡”，那只要一打开应用就会进入勿扰模式，这会影响到忘却进行新的记录的情况。
+//            sharedState.newEventName.value = ""
+//        }
 
         mediator.increaseCDonResume()
     }

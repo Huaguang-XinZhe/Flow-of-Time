@@ -203,4 +203,10 @@ class EventRepository(
         }
     }
 
+    suspend fun updateEventName(id: Long, newName: String) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateEventName(id, newName)
+        }
+    }
+
 }

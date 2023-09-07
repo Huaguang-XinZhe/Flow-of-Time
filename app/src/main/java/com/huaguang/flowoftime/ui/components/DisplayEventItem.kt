@@ -30,9 +30,8 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventWithSubEvents
-import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
-import com.huaguang.flowoftime.pages.time_record.TailLayout
+import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.widget.CategoryLabel
 import com.huaguang.flowoftime.widget.LabelType
@@ -42,8 +41,7 @@ import java.time.Duration
 @Composable
 fun DisplayEventItem(
     event: Event?,
-    iconRepository: IconMappingRepository,
-    eventRepository: EventRepository,
+    viewModel: EventInputViewModel,
     modifier: Modifier = Modifier
 ) {
     if (event?.duration == null) return
@@ -63,9 +61,13 @@ fun DisplayEventItem(
             modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CategoryIconButton(event.category, iconRepository)
+            CategoryIconButton(event.category, viewModel.iconRepository)
 
-            TailLayout(name = event.name, type = EventType.SUBJECT) {// 首个一定是主题事件
+            TailLayout(
+                event = event,
+                isDisplay = true,
+                viewModel = viewModel,
+            ) {// 首个一定是主题事件
                 DurationText(duration = event.duration!!, type = it)
             }
 
@@ -76,7 +78,7 @@ fun DisplayEventItem(
         ) {
             ContentRowList(
                 eventId = event.id,
-                eventRepository = eventRepository,
+                inputViewModel = viewModel,
             )
 
             event.category?.let {
@@ -136,13 +138,14 @@ fun CategoryIconButton(
 @Composable
 fun ContentRowList(
     eventId: Long,
-    eventRepository: EventRepository,
+    inputViewModel: EventInputViewModel,
     indent: Dp = 0.dp,
 ) {
     val eventWithSubEventsState = remember { mutableStateOf<EventWithSubEvents?>(null) }
 
     LaunchedEffect(eventId) {
-        val result = eventRepository.getEventWithSubEvents(eventId)
+        // TODO: 这里或许能移到 ViewModel 中
+        val result = inputViewModel.repository.getEventWithSubEvents(eventId)
         eventWithSubEventsState.value = result
     }
 
@@ -154,7 +157,11 @@ fun ContentRowList(
             ) {
                 PrefixText(type = son.type)
 
-                TailLayout(name = son.name, type = son.type) {
+                TailLayout(
+                    event = son,
+                    isDisplay = true,
+                    viewModel = inputViewModel,
+                ) {
                     DurationText(duration = son.duration!!, type = it)
                 }
             }
@@ -162,7 +169,7 @@ fun ContentRowList(
             // 递归调用 ContentRowList
             ContentRowList(
                 eventId = son.id,
-                eventRepository = eventRepository,
+                inputViewModel = inputViewModel,
                 indent = 24.dp
             )
         }

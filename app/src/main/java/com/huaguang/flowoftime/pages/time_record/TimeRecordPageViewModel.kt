@@ -6,12 +6,12 @@ import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
-import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventControl
 import com.huaguang.flowoftime.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
 import kotlinx.coroutines.flow.Flow
@@ -27,8 +27,8 @@ import java.time.LocalDateTime
 class TimeRecordPageViewModel(
     val eventButtonsViewModel: EventButtonsViewModel,
     val timeRegulatorViewModel: TimeRegulatorViewModel,
-    val eventRepository: EventRepository,
-    val iconRepository: IconMappingRepository,
+    val eventInputViewModel: EventInputViewModel,
+    val repository: EventRepository,
     private val spHelper: SPHelper,
     val sharedState: SharedState,
     private val dndManager: DNDManager,
@@ -56,7 +56,7 @@ class TimeRecordPageViewModel(
             viewModelScope.launch {
                 currentEvent = createCurrentEvent(startTime, type) // type 由用户与 UI 的交互自动决定
 //                RDALogger.info("start = $currentEvent")
-                autoId = eventRepository.insertEvent(currentEvent!!) // 存入数据库
+                autoId = repository.insertEvent(currentEvent!!) // 存入数据库
 
             }
         }
@@ -64,7 +64,7 @@ class TimeRecordPageViewModel(
         override fun stopEvent() {
             viewModelScope.launch {
                 currentEvent = updateCurrentEvent()
-                eventRepository.updateEvent(currentEvent!!) // 更新数据库
+                repository.updateEvent(currentEvent!!) // 更新数据库
                 spHelper.resetPauseInterval()
             }
             dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
@@ -73,7 +73,7 @@ class TimeRecordPageViewModel(
 
     init {
         viewModelScope.launch {
-            eventRepository.getCurrentEventFlow().filterNotNull().collect { event ->
+            repository.getCurrentEventFlow().filterNotNull().collect { event ->
 //                RDALogger.info("收集到 event = $event")
                 _currentEventFlow.value = event
             }
@@ -88,7 +88,7 @@ class TimeRecordPageViewModel(
 
             // 如果是主事件，就从数据库中获取子事件列表，并计算其间隔总和
             val subEventsDuration = if (newEvent.parentEventId == null) {
-                eventRepository.calculateSubEventsDuration(newEvent.id)
+                repository.calculateSubEventsDuration(newEvent.id)
             } else Duration.ZERO
 
             newEvent.id = autoId // 必须指定这一条，否则数据库不会更新
@@ -120,7 +120,7 @@ class TimeRecordPageViewModel(
 
     private suspend fun fetchMainEventId(): Long? {
         return if (eventStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
-            eventRepository.fetchMainEventId()
+            repository.fetchMainEventId()
         } else null
     }
 

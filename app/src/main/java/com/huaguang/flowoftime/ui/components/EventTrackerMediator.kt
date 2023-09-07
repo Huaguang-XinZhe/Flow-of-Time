@@ -313,7 +313,7 @@ class EventTrackerMediator(
      */
     fun resetState(isCoreEvent: Boolean = false) {
         // 输入状态
-        sharedState.resetInputState()
+//        sharedState.resetInputState()
 
         if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
             // 撤销或删除主事项

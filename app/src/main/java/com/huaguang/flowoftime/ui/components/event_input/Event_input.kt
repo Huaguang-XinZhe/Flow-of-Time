@@ -1,10 +1,7 @@
-package com.huaguang.flowoftime.ui.components
+package com.huaguang.flowoftime.ui.components.event_input
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
@@ -31,15 +28,21 @@ import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
 
 @Composable
-fun EventInputField(mediator: EventTrackerMediator) {
+fun EventInputField(
+    viewModel: EventInputViewModel,
+    modifier: Modifier = Modifier,
+) {
+    if (!viewModel.isInputShow.value) return // 为 false 不显示
+
     val focusRequester = remember { FocusRequester() }
 
-    Column {
-        UndoIconButton(mediator = mediator)
+    Column(
+        modifier = modifier
+    ) {
+        UndoIconButton(viewModel)
 
-        InputRow(mediator = mediator, focusRequester = focusRequester)
+        InputRow(viewModel = viewModel, focusRequester = focusRequester)
 
-        Spacer(modifier = Modifier.fillMaxWidth().height(280.dp))
     }
 
     LaunchedEffect(Unit) {
@@ -50,8 +53,11 @@ fun EventInputField(mediator: EventTrackerMediator) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun InputRow(mediator: EventTrackerMediator, focusRequester: FocusRequester) {
-    val newEventName by mediator.sharedState.newEventName
+fun InputRow(
+    viewModel: EventInputViewModel,
+    focusRequester: FocusRequester
+) {
+    val newEventName by viewModel.newEventName
     var textFieldState by remember {
         mutableStateOf(TextFieldValue(text = newEventName))
     }
@@ -63,7 +69,7 @@ fun InputRow(mediator: EventTrackerMediator, focusRequester: FocusRequester) {
             value = textFieldState,
             onValueChange = {
                 textFieldState = it
-                mediator.sharedState.newEventName.value = it.text
+                viewModel.newEventName.value = it.text
             },
             label = { Text("事件名称") },
             modifier = Modifier
@@ -79,29 +85,25 @@ fun InputRow(mediator: EventTrackerMediator, focusRequester: FocusRequester) {
                 }
         )
 
-        Button(onClick = { mediator.onConfirmed() }) {
+        Button(onClick = { viewModel.onConfirmButtonClick() }) {
             Text("确认")
         }
     }
 }
 
 @Composable
-fun UndoIconButton(mediator: EventTrackerMediator) {
-    val beModifiedItemNameClicked by mediator.eventNameViewModel.beModifiedItemNameClicked
-
-    if (!beModifiedItemNameClicked) {
-        IconButton(
-            onClick = {
-                mediator.resetState()
-            },
-            modifier = Modifier
-                .size(36.dp)
-                .padding(start = 10.dp, bottom = 5.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.undo),
-                contentDescription = null
-            )
-        }
+fun UndoIconButton(viewModel: EventInputViewModel) {
+    IconButton(
+        onClick = {
+            viewModel.undoButtonClick()
+        },
+        modifier = Modifier
+            .size(36.dp)
+            .padding(start = 10.dp, bottom = 5.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.undo),
+            contentDescription = null
+        )
     }
 }

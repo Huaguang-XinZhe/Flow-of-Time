@@ -14,6 +14,7 @@ import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -34,6 +35,7 @@ class TimeRecordFragment : Fragment() {
     // 注入各大组件的 ViewModel
     private val eventButtonsViewModel: EventButtonsViewModel by viewModels()
     private val timeRegulatorViewModel: TimeRegulatorViewModel by viewModels()
+    private val eventInputViewModel: EventInputViewModel by viewModels()
 
     private lateinit var pageViewModel: TimeRecordPageViewModel
 
@@ -44,9 +46,10 @@ class TimeRecordFragment : Fragment() {
         pageViewModel = TimeRecordPageViewModel(
             eventButtonsViewModel,
             timeRegulatorViewModel,
+            eventInputViewModel,
             eventRepository,
-            iconRepository,
-            spHelper, sharedState, dndManager
+            spHelper,
+            sharedState, dndManager
         )
     }
 

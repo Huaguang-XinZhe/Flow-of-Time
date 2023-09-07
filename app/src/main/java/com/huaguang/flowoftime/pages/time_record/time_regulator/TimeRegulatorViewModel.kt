@@ -27,6 +27,7 @@ class TimeRegulatorViewModel @Inject constructor(
     private val sharedState: SharedState,
 ) : ViewModel() {
 
+    var selectedTime: MutableState<LocalDateTime?>? = null
     private val currentEvent get() = sharedState.currentEvent
 
     private lateinit var recordTime: LocalTime
@@ -49,10 +50,24 @@ class TimeRegulatorViewModel @Inject constructor(
         }
     }
 
-    fun debouncedOnClick(
+    fun onClick(
         value: Long,
         customTimeState: MutableState<CustomTime?>,
-        selectedTime: MutableState<LocalDateTime?>?
+    ) {
+        if (customTimeState.value == null) { // 非选中态
+            debouncedOnClick {
+                sharedState.toastMessage.value = "请选中时间标签后再调整"
+            }
+            return
+        }
+
+        adjustTimeAndHandleChange(value, customTimeState) //选中态直接调整
+
+    }
+
+    private fun debouncedOnClick(
+        onClick: () -> Unit
+//        selectedTime: MutableState<LocalDateTime?>?
     ) {
         val currentTime = System.currentTimeMillis()
         // 如果两次点击的时间差小于1000毫秒，则返回
@@ -61,31 +76,24 @@ class TimeRegulatorViewModel @Inject constructor(
         }
         // 更新上次点击的时间戳
         lastClickTime = currentTime
-        adjustTimeAndHandleChange(value, customTimeState, selectedTime)
+        onClick() // 执行点击逻辑
     }
 
     private fun adjustTimeAndHandleChange(
         minutes: Long,
         customTimeState: MutableState<CustomTime?>,
-        selectedTime: MutableState<LocalDateTime?>?
-    ) {
-        if (customTimeState.value == null) {
-            sharedState.toastMessage.value = "请选中时间标签后再调整"
-            return
+//        selectedTime: MutableState<LocalDateTime?>?
+    ) = handleTimeChange {
+        val newCustomTime = customTimeState.value!!.copy().apply {
+            timeState.value = timeState.value?.plusMinutes(minutes)
         }
-
-        handleTimeChange(selectedTime) {
-            val newCustomTime = customTimeState.value!!.copy().apply {
-                timeState.value = timeState.value?.plusMinutes(minutes)
-            }
-            customTimeState.value = newCustomTime // 触发状态更改
-            if (newCustomTime.timeState.value != newCustomTime.initialTime!!) customTimeState
-            else mutableStateOf(null)
-        }
+        customTimeState.value = newCustomTime // 触发状态更改
+        if (newCustomTime.timeState.value != newCustomTime.initialTime!!) customTimeState
+        else mutableStateOf(null)
     }
 
     private fun handleTimeChange(
-        selectedTime: MutableState<LocalDateTime?>?,
+//        selectedTime: MutableState<LocalDateTime?>?,
         action: () -> MutableState<CustomTime?>
     ) {
         val customTimeState = action()
