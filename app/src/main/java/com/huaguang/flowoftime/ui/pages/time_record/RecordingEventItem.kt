@@ -23,23 +23,23 @@ import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.TimeType
+import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
-import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.EventWithSubEvents
 import com.huaguang.flowoftime.ui.components.TailLayout
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 
 @Composable
 fun RecordingEventItem(
-    event: Event,
+    combinedEvent: CombinedEvent?,
     customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
     modifier: Modifier = Modifier
 ) {
+    val event = combinedEvent?.event ?: return
+
     // TODO: 隐隐的感觉这里一定会出问题。
     val expandStates = remember { mutableStateMapOf<Long, MutableState<Boolean>>() }
-    val eventWithSubEventsState = remember { mutableStateOf<EventWithSubEvents?>(null) }
-    val expandState = remember { mutableStateOf(false) }
+    val expandState = remember { mutableStateOf(true) }
     val startCustomTime =
         CustomTime(
             type = TimeType.START,
@@ -56,11 +56,7 @@ fun RecordingEventItem(
     val type = event.type
 
     LaunchedEffect(event.id) {
-        // TODO: 这里的逻辑或许也可以移到 ViewModel 中
-        val eventWithSubEvents = viewModel.repository.getEventWithSubEvents(event.id)
-        eventWithSubEventsState.value = eventWithSubEvents
-
-        val isExpanded = expandStates.getOrPut(event.id) { mutableStateOf(false) }.value
+        val isExpanded = expandStates.getOrPut(event.id) { mutableStateOf(true) }.value
         expandState.value = isExpanded
     }
 
@@ -72,7 +68,7 @@ fun RecordingEventItem(
             modifier = Modifier.padding(vertical = 5.dp)
         ) {
 
-            if (type.isExpandable() && event.parentEventId != null) {
+            if (type.isExpandable()) {
                 ExpandIcon(expandState) // 直接传递MutableState<Boolean>给ExpandIcon
             } else {
                 Spacer(modifier = Modifier.size(24.dp)) // 占位用的
@@ -103,18 +99,16 @@ fun RecordingEventItem(
 
         }
 
-        if (expandState.value && event.parentEventId != null) {
+        if (expandState.value) {
             val indentModifier = Modifier.padding(start = 30.dp) // 添加缩进
 
             Column(modifier = indentModifier) {
-                eventWithSubEventsState.value?.let { eventWithSubEvents ->
-                    eventWithSubEvents.subEvents.forEach { childEvent ->
-                        RecordingEventItem( // 递归调用以显示子事件
-                            event = childEvent,
-                            customTimeState = customTimeState,
-                            viewModel = viewModel,
-                        )
-                    }
+                combinedEvent.contentEvents.forEach { childCombinedEvent ->
+                    RecordingEventItem( // 递归调用以显示子事件
+                        combinedEvent = childCombinedEvent,
+                        customTimeState = customTimeState,
+                        viewModel = viewModel,
+                    )
                 }
             }
 

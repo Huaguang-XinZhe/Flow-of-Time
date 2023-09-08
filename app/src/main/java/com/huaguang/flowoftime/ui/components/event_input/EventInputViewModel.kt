@@ -1,7 +1,5 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.InputIntent
@@ -25,8 +23,6 @@ class EventInputViewModel @Inject constructor(
     val inputState = InputState.initialValue()
 
     private var initialName = ""
-    private val _lastNameChangeLiveData = MutableLiveData(false)
-    val lastNameChangeLiveData: LiveData<Boolean> get() = _lastNameChangeLiveData
 
     fun onConfirmButtonClick() {
         inputState.apply {
@@ -89,17 +85,12 @@ class EventInputViewModel @Inject constructor(
     private fun handleModifyIntent() {
         inputState.apply {
             if (newName.value == initialName) return // 有差异才更新
-            setDiffValueForLiveData()
+            // TODO:
         }
     }
 
 
-    private fun setDiffValueForLiveData() {
-        if (inputState.type.value == ItemType.DISPLAY) { // 修改来自展示 Item
-            // 总是设置一个相反的值，以触发展示 Item 从数据库获取新 Event
-            _lastNameChangeLiveData.value = !_lastNameChangeLiveData.value!!
-        }
-    }
+
 
 
 }

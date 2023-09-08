@@ -6,6 +6,7 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -43,17 +44,28 @@ class TimeRecordPageViewModel(
             sharedState.currentEvent = value
         }
 
-    private val _currentEventFlow = MutableStateFlow<Event?>(null)
-    val currentEventFlow: StateFlow<Event?> = _currentEventFlow.asStateFlow()
+    private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
+    val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
+    private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
+    val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
 
     var autoId = 0L
+    var subjectId = 0L
 
     init {
         RDALogger.info("init 块执行！")
+
         viewModelScope.launch {
-            repository.getCurrentEventFlow().filterNotNull().collect { event ->
-                RDALogger.info("收集到 event = $event")
-                _currentEventFlow.value = event // 传给 UI
+            repository.getCurrentCombinedEventFlow().filterNotNull().collect { combinedEvent ->
+                RDALogger.info("收集到当前项：combinedEvent = $combinedEvent")
+                _currentCombinedEventFlow.value = combinedEvent // 传给 UI
+            }
+        }
+
+        viewModelScope.launch {
+            repository.getSecondLatestCombinedEventFlow().filterNotNull().collect { combinedEvent ->
+                RDALogger.info("收集到上一个：combinedEvent = $combinedEvent")
+                _secondLatestCombinedEventFlow.value = combinedEvent // 传给 UI
             }
         }
 
@@ -69,22 +81,35 @@ class TimeRecordPageViewModel(
             viewModelScope.launch {
                 currentEvent = createCurrentEvent(startTime, eventType) // type 由用户与 UI 的交互自动决定
                 autoId = repository.insertEvent(currentEvent!!) // 存入数据库
+                if (eventType == EventType.SUBJECT) subjectId = autoId // 存储当前项的主题事件的 id
                 updateInputState(autoId)
             }
 
         }
 
-        override fun stopEvent() {
+        override fun stopEvent(eventType: EventType) {
             viewModelScope.launch {
-                currentEvent = updateCurrentEvent()
-                repository.updateEvent(currentEvent!!) // 更新数据库
+                if (notCurrentSubjectEvent(eventType)) {
+                    endFinalSubject()
+                } else {
+                    currentEvent = updateCurrentEvent()
+                    repository.updateEvent(currentEvent!!) // 更新数据库
+                }
                 spHelper.resetPauseInterval()
             }
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
     }
 
-    suspend fun getLastEvent(id: Long?) = repository.getLastEvent(id)
+    /**
+     * 不是当前项的主题事项
+     */
+    private fun notCurrentSubjectEvent(eventType: EventType) = eventType == EventType.SUBJECT && autoId != subjectId
+
+    private suspend fun endFinalSubject() {
+        // TODO: 有待细化完善
+        repository.updateEventEndTimeById(subjectId)
+    }
 
     private fun updateInputState(id: Long) {
         eventInputViewModel.inputState.apply {
@@ -96,21 +121,15 @@ class TimeRecordPageViewModel(
         }
     }
 
-    private suspend fun updateCurrentEvent(): Event {
+    private fun updateCurrentEvent(): Event {
         var event: Event? = null
 
         currentEvent?.let {
             val newEvent = it.copy() // 先复制原始对象
 
-            // 如果是主事件，就从数据库中获取子事件列表，并计算其间隔总和
-            val subEventsDuration = if (newEvent.parentEventId == null) {
-                repository.calculateSubEventsDuration(newEvent.id)
-            } else Duration.ZERO
-
             newEvent.id = autoId // 必须指定这一条，否则数据库不会更新
             newEvent.endTime = LocalDateTime.now()
-            newEvent.duration =
-                Duration.between(newEvent.startTime, newEvent.endTime).minus(subEventsDuration)
+            newEvent.duration = Duration.between(newEvent.startTime, newEvent.endTime)
             newEvent.pauseInterval = spHelper.getPauseInterval()
 
             event = newEvent

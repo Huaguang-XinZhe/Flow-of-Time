@@ -10,9 +10,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,8 +25,7 @@ import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.EventWithSubEvents
+import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.utils.formatDurationInText
@@ -37,11 +33,12 @@ import java.time.Duration
 
 @Composable
 fun DisplayEventItem(
-    event: Event?,
+    combinedEvent: CombinedEvent?,
     viewModel: EventInputViewModel,
     modifier: Modifier = Modifier
 ) {
-    if (event?.duration == null) return
+    val event = combinedEvent?.event ?: return
+    if (event.duration == null) return // 不显示没有间隔的事件
 
     Card(
         modifier = modifier
@@ -74,7 +71,7 @@ fun DisplayEventItem(
             modifier = Modifier.padding(start = 45.dp, end = 10.dp)
         ) {
             ContentRowList(
-                eventId = event.id,
+                combinedEvent = combinedEvent,
                 inputViewModel = viewModel,
             )
 
@@ -134,43 +131,37 @@ fun CategoryIconButton(
  */
 @Composable
 fun ContentRowList(
-    eventId: Long,
+    combinedEvent: CombinedEvent,
     inputViewModel: EventInputViewModel,
     indent: Dp = 0.dp,
 ) {
-    val eventWithSubEventsState = remember { mutableStateOf<EventWithSubEvents?>(null) }
 
-    LaunchedEffect(eventId) {
-        // TODO: 这里或许能移到 ViewModel 中
-        val result = inputViewModel.repository.getEventWithSubEvents(eventId)
-        eventWithSubEventsState.value = result
-    }
+    combinedEvent.contentEvents.forEach { childCombinedEvent ->
+        val son = childCombinedEvent.event
 
-    eventWithSubEventsState.value?.let { eventWithSubEvents ->
-        eventWithSubEvents.subEvents.forEach { son ->
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = indent)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = indent)
+        ) {
+            PrefixText(type = son.type)
+
+            TailLayout(
+                event = son,
+                isDisplay = true,
+                viewModel = inputViewModel,
             ) {
-                PrefixText(type = son.type)
-
-                TailLayout(
-                    event = son,
-                    isDisplay = true,
-                    viewModel = inputViewModel,
-                ) {
-                    DurationText(duration = son.duration!!, type = it)
-                }
+                DurationText(duration = son.duration!!, type = it)
             }
-
-            // 递归调用 ContentRowList
-            ContentRowList(
-                eventId = son.id,
-                inputViewModel = inputViewModel,
-                indent = 24.dp
-            )
         }
+
+        // 递归调用 ContentRowList
+        ContentRowList(
+            combinedEvent = childCombinedEvent,
+            inputViewModel = inputViewModel,
+            indent = 24.dp
+        )
     }
+
 }
 
 @Composable

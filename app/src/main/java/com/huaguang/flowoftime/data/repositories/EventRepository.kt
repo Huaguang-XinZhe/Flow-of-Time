@@ -6,16 +6,18 @@ import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
+import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.DateDuration
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
-import com.huaguang.flowoftime.data.models.EventWithSubEvents
+import com.huaguang.flowoftime.other.EventWithSubEvents
 import com.huaguang.flowoftime.utils.EventSerializer
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDate
@@ -74,6 +76,11 @@ class EventRepository(
      * @param tag 根据标签选择是导出昨天的数据还是全部的数据。
      */
     suspend fun exportEvents(tag: String): String {
+
+        fun convertToPair(eventWithSubEvents: EventWithSubEvents): Pair<Event, List<Event>> {
+            return Pair(eventWithSubEvents.event, eventWithSubEvents.subEvents)
+        }
+
         val eventsWithSubEvents = if (tag == "昨日") {
             val customYesterday = getAdjustedEventDate().minusDays(1)
             eventDao.getYesterdayEventsWithSubEventsImmediate(customYesterday)
@@ -83,10 +90,6 @@ class EventRepository(
 
         val eventsWithSubEventsAsPairs = eventsWithSubEvents.map { convertToPair(it) }
         return EventSerializer.exportEvents(eventsWithSubEventsAsPairs)
-    }
-
-    private fun convertToPair(eventWithSubEvents: EventWithSubEvents): Pair<Event, List<Event>> {
-        return Pair(eventWithSubEvents.event, eventWithSubEvents.subEvents)
     }
 
     suspend fun saveCoreDurationForDate(date: LocalDate, duration: Duration) {
@@ -175,20 +178,8 @@ class EventRepository(
             eventDao.getEventsWithSubEvents(eventId)
         }
 
-    suspend fun getLastEvent(eventId: Long?): Event {
-        val maxId = withContext(Dispatchers.IO) {
-            eventDao.getMaxId() ?: 0L
-        }
-        val lastId = if (eventId == null) maxId else maxId - 1
-
-        return withContext(Dispatchers.IO) {
-            eventDao.getEvent(lastId)
-        }
-    }
-
-    fun getCurrentEventFlow() = eventDao.getCurrentEventFlow()
-
     suspend fun getCurrentEvent() = eventDao.getCurrentEvent()
+
 
     suspend fun updateDatabase(newCustomTime: CustomTime, newDuration: Duration?) {
         val initialTime = newCustomTime.initialTime!!
@@ -211,5 +202,63 @@ class EventRepository(
             eventDao.updateEventName(id, newName)
         }
     }
+
+    suspend fun getCombinedEvents(): List<CombinedEvent> {
+        val allEventsMap = eventDao.getAllEvents().associateBy { it.id }
+        return buildCombinedEvents(allEventsMap, null)
+    }
+
+    fun getCurrentCombinedEventFlow(): Flow<CombinedEvent> {
+        return eventDao.getLatestRootEventAndChildren().map { allEvents ->
+            buildCombinedEventFromEvents(allEvents)
+        }
+    }
+
+    fun getSecondLatestCombinedEventFlow(): Flow<CombinedEvent> {
+        return eventDao.getSecondLatestRootEventAndChildren().map { allEvents ->
+            buildCombinedEventFromEvents(allEvents)
+        }
+    }
+
+    private fun buildCombinedEventFromEvents(allEvents: List<Event>): CombinedEvent {
+        val latestRootEvent = allEvents[0]
+
+        return if (allEvents.size == 1) {
+            // 如果没有找到子事件，只创建一个包含根事件的 CombinedEvent
+            CombinedEvent(
+                event = latestRootEvent,
+                contentEvents = listOf()
+            )
+        } else {
+            // 如果找到了子事件，创建一个包含根事件和所有子事件的 CombinedEvent
+            val allEventsMap = allEvents.associateBy { it.id }
+            buildCombinedEvent(allEventsMap, latestRootEvent)
+        }
+    }
+
+
+
+    private fun buildCombinedEvent(allEventsMap: Map<Long, Event>, rootEvent: Event): CombinedEvent {
+        return CombinedEvent(
+            event = rootEvent,
+            contentEvents = buildCombinedEvents(allEventsMap, rootEvent.id)
+        )
+    }
+
+    private fun buildCombinedEvents(allEventsMap: Map<Long, Event>, parentId: Long?): List<CombinedEvent> {
+        return allEventsMap.values.filter { it.parentEventId == parentId }.map { event ->
+            CombinedEvent(
+                event = event,
+                contentEvents = buildCombinedEvents(allEventsMap, event.id)
+            )
+        }
+    }
+
+    suspend fun updateEventEndTimeById(subjectId: Long) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateEventEndTimeById(subjectId, LocalDateTime.now())
+        }
+    }
+
 
 }

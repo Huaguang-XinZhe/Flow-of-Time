@@ -116,7 +116,7 @@ class EventButtonsViewModel @Inject constructor(
             }
             "插入结束" -> {
                 viewModelScope.launch {
-                    eventControl.stopEvent()
+                    eventControl.stopEvent(eventType = EventType.INSERT)
                     toggleStateOnSubStop()
                 }
             }
@@ -128,7 +128,7 @@ class EventButtonsViewModel @Inject constructor(
 
         viewModelScope.launch {
             // 结束子事件————————————————
-            eventControl.stopEvent()
+            eventControl.stopEvent(eventType = EventType.INSERT)
             toggleStateOnSubStop()
 
             // 结束主事件————————————————
@@ -198,6 +198,6 @@ interface EventControl {
         eventType: EventType = EventType.SUBJECT
     )
 
-    fun stopEvent()
+    fun stopEvent(eventType: EventType = EventType.SUBJECT)
 
 }

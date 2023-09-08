@@ -10,7 +10,7 @@ import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
-import com.huaguang.flowoftime.data.models.EventWithSubEvents
+import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
 import java.time.Duration
 import java.time.LocalDate
@@ -18,6 +18,27 @@ import java.time.LocalDateTime
 
 @Dao
 interface EventDao {
+
+    @Query("SELECT * FROM events")
+    suspend fun getAllEvents(): List<Event>
+
+    @Query("""
+    SELECT * FROM events 
+    WHERE id >= (SELECT MAX(id) FROM events WHERE parentEventId IS NULL)
+""")
+    fun getLatestRootEventAndChildren(): Flow<List<Event>>
+
+    @Query("""
+    WITH RECURSIVE LatestRoots AS (
+        SELECT id FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 2
+    )
+    SELECT * FROM events 
+    WHERE id >= (SELECT MIN(id) FROM LatestRoots)
+    AND id < (SELECT MAX(id) FROM LatestRoots)
+""")
+    fun getSecondLatestRootEventAndChildren(): Flow<List<Event>>
+
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: Event): Long
 
@@ -55,6 +76,7 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE id = (SELECT MAX(id) FROM events)")
     fun getCurrentEventFlow(): Flow<Event?>
+
 
     @Query("SELECT * FROM events WHERE id = (SELECT MAX(id) FROM events)")
     suspend fun getCurrentEvent(): Event?
@@ -147,6 +169,9 @@ interface EventDao {
 
     @Query("UPDATE events SET name = :newName WHERE id = :id")
     suspend fun updateEventName(id: Long, newName: String)
+
+    @Query("UPDATE events SET endTime = :endTime WHERE id = :id")
+    suspend fun updateEventEndTimeById(id: Long, endTime: LocalDateTime)
 
 
 //    @Transaction
