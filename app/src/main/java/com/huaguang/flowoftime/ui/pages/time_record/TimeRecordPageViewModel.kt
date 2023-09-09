@@ -164,7 +164,7 @@ class TimeRecordPageViewModel(
         startTime = startTime,
         name = name,
         eventDate = getEventDate(startTime),
-        parentEventId = fetchMainEventId(type),
+        parentEventId = getParentEventId(type),
         type = type,
         // TODO: 默认创建一些数据，以后要删除
         category = "阅读",
@@ -172,10 +172,15 @@ class TimeRecordPageViewModel(
     )
 
 
-    private suspend fun fetchMainEventId(type: EventType): Long? {
-        return if (type == EventType.INSERT || type == EventType.FOLLOW) {
-            repository.fetchMainEventId()
-        } else null
+    private suspend fun getParentEventId(type: EventType): Long? {
+        return when(type) {
+            EventType.SUBJECT -> null
+            EventType.STEP, EventType.FOLLOW -> subjectId // TODO: 这个值和 autoId 是关键，onStop 的时候要存起来
+            EventType.INSERT -> {
+                val lastEventType = repository.getLastEventType(autoId)
+                if (lastEventType == EventType.STEP) autoId - 1 else subjectId
+            }
+        }
     }
 
 

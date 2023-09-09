@@ -1,10 +1,12 @@
 package com.huaguang.flowoftime.custom_interface
 
+import com.huaguang.flowoftime.EventType
+
 interface ButtonsStateControl {
 
-    fun toggleSubjectEnd()
+    fun toggleMainEnd()
 
-    fun toggleFollowEnd()
+    fun toggleSubEnd(type: EventType)
 
     fun hasSubjectExist(): Boolean
 }

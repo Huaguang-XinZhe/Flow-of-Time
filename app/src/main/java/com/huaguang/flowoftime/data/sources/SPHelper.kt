@@ -80,7 +80,7 @@ class SPHelper private constructor(context: Context) {
             putString("sub_button_text", subButtonText)
             putInt("scroll_index", scrollIndex)
             putLong("core_duration", coreDuration.toMillis())
-            putInt("event_status_value", eventStatus.value)
+//            putInt("event_status_value", eventStatus.value)
 
             if (currentEvent != null) {
 //                val eventJson = Json.encodeToString(Event.serializer(), currentEvent)
@@ -98,9 +98,9 @@ class SPHelper private constructor(context: Context) {
         val subButtonText = getSubButtonText()
         val coreDuration = getCoreDuration()
 
-        val eventStatus = getEventStatus()
-        val isTracking = eventStatus.value != 0
-        val currentEvent = if (isTracking) getCurrentEvent() else null
+//        val eventStatus = getEventStatus()
+//        val isTracking = eventStatus.value != 0
+//        val currentEvent = if (isTracking) getCurrentEvent() else null
 
         val scrollIndex = getScrollIndex()
 
@@ -111,16 +111,16 @@ class SPHelper private constructor(context: Context) {
             buttonText,
             subButtonText,
             coreDuration,
-            eventStatus,
-            currentEvent,
+//            eventStatus,
+//            currentEvent,
             scrollIndex,
         )
     }
 
-    private fun getEventStatus(): EventStatus {
-        val eventStatusValue = sp.getInt("event_status_value", 0)
-        return EventStatus.fromInt(eventStatusValue)
-    }
+//    private fun getEventStatus(): EventStatus {
+//        val eventStatusValue = sp.getInt("event_status_value", 0)
+//        return EventStatus.fromInt(eventStatusValue)
+//    }
 
     private fun getCurrentEvent(): Event? {
         val eventJson = sp.getString("currentEvent", null)
@@ -163,7 +163,7 @@ data class SPData(
     val buttonText: String,
     val subButtonText: String,
     val coreDuration: Duration,
-    val eventStatus: EventStatus,
-    val currentEvent: Event?,
+//    val eventStatus: EventStatus,
+//    val currentEvent: Event?,
     val scrollIndex: Int,
 )

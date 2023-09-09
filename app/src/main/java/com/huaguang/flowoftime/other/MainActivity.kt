@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
 //            sharedState.newEventName.value = ""
 //        }
 
-        mediator.increaseCDonResume()
+//        mediator.increaseCDonResume()
     }
 
     override fun onStop() {

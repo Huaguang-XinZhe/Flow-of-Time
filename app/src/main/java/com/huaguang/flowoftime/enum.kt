@@ -1,20 +1,16 @@
 package com.huaguang.flowoftime
 
-enum class EventStatus(val value: Int) {
-    NO_EVENT_IN_PROGRESS(0),
-    ONLY_MAIN_EVENT_IN_PROGRESS(1),
-    MAIN_AND_SUB_EVENT_IN_PROGRESS(2);
-
-    companion object {
-        fun fromInt(value: Int) = values().first { it.value == value }
-    }
+enum class EventStatus {
+    NO_EVENT,
+    SUBJECT_ONLY,
+    SUB_TIMING,
 }
 
 enum class EventType {
     SUBJECT, // 可以有子事件：步骤、插入、伴随
-    STEP, // 也可以有子事件：插入
-    FOLLOW, // 不能有子事件
-    INSERT; // 不能有子事件
+    STEP, // 也可以有子事件：插入（只能在主题事件之下）
+    FOLLOW, // 不能有子事件（一般在主题事件之下）
+    INSERT; // 不能有子事件（可以在步骤和主题之下）
 
     fun isExpandable() = this == SUBJECT || this == STEP
 }

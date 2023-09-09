@@ -76,8 +76,12 @@ class EventInputViewModel @Inject constructor(
 
 
 
-    fun onStepButtonClick() {
-        TODO("Not yet implemented")
+    fun onStepButtonClick(
+        eventControl: EventControl,
+        buttonsStateControl: ButtonsStateControl,
+    ) {
+        eventControl.startEvent(eventType = EventType.STEP)
+        buttonsStateControl.toggleSubEnd(EventType.STEP)
     }
 
     fun onCoreFloatingButtonClick(
@@ -104,9 +108,9 @@ class EventInputViewModel @Inject constructor(
         )
 
         if (buttonsStateControl.hasSubjectExist()) {
-            buttonsStateControl.toggleFollowEnd() // 切换到 ”伴随结束“ 的按钮状态
+            buttonsStateControl.toggleSubEnd(type) // 切换到 ”伴随结束“ 的按钮状态
         } else {
-            buttonsStateControl.toggleSubjectEnd() // 切换到 “主题结束” 的按钮状态
+            buttonsStateControl.toggleMainEnd() // 切换到 “主题结束” 的按钮状态
         }
     }
 
@@ -136,6 +140,7 @@ class EventInputViewModel @Inject constructor(
 
         if (confirmThenStart) { // 最开始的时候，设置完就开启新事件
             onCoreFloatingButtonClick(eventControl, buttonsStateControl)
+            confirmThenStart = false // 重置，以防止在本次应用周期内的下次修改再次开启
         }
     }
 

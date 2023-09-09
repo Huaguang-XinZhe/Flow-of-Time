@@ -63,7 +63,9 @@ fun TimeRecordPage(
         )
 
         CompositionLocalProvider(
-            LocalSelectedTime provides selectedTime
+            LocalSelectedTime provides selectedTime,
+            LocalEventControl provides pageViewModel.eventControl,
+            LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl
         ) {
             RecordingEventItem(
                 combinedEvent = combinedEvent,

@@ -83,18 +83,6 @@ fun InputRow(
                 }
         )
 
-        IconButton(
-            onClick = { viewModel.onStepButtonClick() },
-            modifier = Modifier.padding(horizontal = 5.dp).size(36.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.step),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-
         Button(onClick = { viewModel.onConfirmButtonClick(textFieldState.text) }) {
             Text("确认")
         }

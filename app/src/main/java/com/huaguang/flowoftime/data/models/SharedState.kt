@@ -14,7 +14,7 @@ class SharedState(val application: Application) {
     var eventCount = 0
 
     var currentEvent: Event? = null
-    val eventStatus = mutableStateOf(EventStatus.NO_EVENT_IN_PROGRESS)
+    val eventStatus = mutableStateOf(EventStatus.NO_EVENT)
     val toastMessage = MutableLiveData<String>()
     val dialogShow = mutableStateOf(false)
     var autoId = 0L

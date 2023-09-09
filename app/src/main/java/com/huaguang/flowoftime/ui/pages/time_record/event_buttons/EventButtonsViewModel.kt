@@ -41,29 +41,33 @@ class EventButtonsViewModel @Inject constructor(
     val undoFilledIconShow = mutableStateOf(false)
 
     val buttonsStateControl = object : ButtonsStateControl {
-        override fun toggleSubjectEnd() {
+        override fun toggleMainEnd() {
             toggleStateOnMainStart()
         }
 
-        override fun toggleFollowEnd() {
-            currentStatus = EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS
-            subButtonText.value = "伴随结束"
+        override fun toggleSubEnd(type: EventType) {
+            currentStatus = EventStatus.SUB_TIMING
+            subButtonText.value = when(type) {
+                EventType.FOLLOW -> "伴随结束"
+                EventType.STEP -> "步骤结束"
+                else -> "插入结束"
+            }
             mainButtonShow.value = false
             undoFilledIconShow.value = false
         }
 
-        override fun hasSubjectExist() = currentStatus != EventStatus.NO_EVENT_IN_PROGRESS
+        override fun hasSubjectExist() = currentStatus != EventStatus.NO_EVENT
     }
 
     fun toggleStateOnMainStop() {
-        currentStatus = EventStatus.NO_EVENT_IN_PROGRESS
+        currentStatus = EventStatus.NO_EVENT
         mainButtonText.value = "开始"
         subButtonShow.value = false
         undoFilledIconShow.value = true
     }
 
-    fun toggleStateOnSubStop() {
-        currentStatus = EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS
+    private fun toggleStateOnSubStop() {
+        currentStatus = EventStatus.SUBJECT_ONLY
         subButtonText.value = "插入"
         mainButtonShow.value = true
         undoFilledIconShow.value = true
@@ -131,7 +135,7 @@ class EventButtonsViewModel @Inject constructor(
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
                 eventControl.startEvent(eventType = EventType.INSERT)
             }
-            "插入结束", "伴随结束" -> {
+            "插入结束", "伴随结束", "步骤结束" -> {
                 viewModelScope.launch {
                     eventControl.stopEvent(eventType = EventType.INSERT)
                     toggleStateOnSubStop()
@@ -193,14 +197,14 @@ class EventButtonsViewModel @Inject constructor(
     }
 
     private fun toggleStateOnMainStart() {
-        currentStatus = EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS
+        currentStatus = EventStatus.SUBJECT_ONLY
         mainButtonText.value = "结束"
         subButtonShow.value = true
         undoFilledIconShow.value = false
     }
 
     private fun toggleStateOnSubInsert() {
-        currentStatus = EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS
+        currentStatus = EventStatus.SUB_TIMING
         subButtonText.value = "插入结束"
         mainButtonShow.value = false
         undoFilledIconShow.value = false

@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -28,7 +27,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
-import java.time.LocalDateTime
 import java.time.LocalTime
 
 class EventTrackerMediator(
@@ -89,24 +87,24 @@ class EventTrackerMediator(
 
     }
 
-    fun increaseCDonResume() {
-        viewModelScope.launch {
-            durationSliderViewModel.apply {
-                if (currentStatus == EventStatus.fromInt(1)) {
-                    // 仅有主事务正在进行
-                    RDALogger.info("resume: 仅有主事务正在进行！")
-                    updateCoreDuration(currentEvent!!.id)
-                } else if (currentStatus == EventStatus.fromInt(2)) {
-                    // 同时有子事务正在计时
-                    RDALogger.info("resume: 同时有子事务正在进行！")
-                    val mainEventId = currentEvent!!.parentEventId!!
-                    val currentST = currentEvent!!.startTime
-
-                    updateCoreDuration(mainEventId, currentSubEventST = currentST)
-                }
-            }
-        }
-    }
+//    fun increaseCDonResume() {
+//        viewModelScope.launch {
+//            durationSliderViewModel.apply {
+//                if (currentStatus == EventStatus.fromInt(1)) {
+//                    // 仅有主事务正在进行
+//                    RDALogger.info("resume: 仅有主事务正在进行！")
+//                    updateCoreDuration(currentEvent!!.id)
+//                } else if (currentStatus == EventStatus.fromInt(2)) {
+//                    // 同时有子事务正在计时
+//                    RDALogger.info("resume: 同时有子事务正在进行！")
+//                    val mainEventId = currentEvent!!.parentEventId!!
+//                    val currentST = currentEvent!!.startTime
+//
+//                    updateCoreDuration(mainEventId, currentSubEventST = currentST)
+//                }
+//            }
+//        }
+//    }
 
     fun deleteItem(event: Event, subEvents: List<Event> = listOf()) {
         if (dismissedItems.contains(event.id)) return
@@ -190,14 +188,14 @@ class EventTrackerMediator(
                 generalHandleFromNameClicked()
             } else { // 来自一般流程，事件名称没有得到点击（此时事项一定正在进行中）
                 currentEvent?.let {
-                    subProhibitCore() // 禁止子事项输入核心事务
+//                    subProhibitCore() // 禁止子事项输入核心事务
 
-                    durationSliderViewModel.otherHandle(it) {newCurrent ->
-                        stopEventOnConfirmed(newCurrent)
-                    } ?: run {
-                        // newCurrent 为 null，即末尾没有两位分钟数时才会执行这一段代码
-                        currentEvent = it.copy(name = newEventName)
-                    }
+//                    durationSliderViewModel.otherHandle(it) {newCurrent ->
+//                        stopEventOnConfirmed(newCurrent)
+//                    } ?: run {
+//                        // newCurrent 为 null，即末尾没有两位分钟数时才会执行这一段代码
+//                        currentEvent = it.copy(name = newEventName)
+//                    }
                 }
             }
         }
@@ -216,16 +214,16 @@ class EventTrackerMediator(
     /**
      * 插入的子事项输入名称后点击确认，会执行此方法进行验证，以确保子事项不进行当下核心事务（包括名称修改）
      */
-    private suspend fun subProhibitCore() {
-        if (isCoreEvent(newEventName) &&
-            currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
-            sharedState.toastMessage.value = "禁止在子事务中执行核心事务！"
-
-            eventButtonsViewModel.toggleStateOnSubStop()
-
-            currentItemViewModel.restoreOnMainEvent()
-        }
-    }
+//    private suspend fun subProhibitCore() {
+//        if (isCoreEvent(newEventName) &&
+//            currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+//            sharedState.toastMessage.value = "禁止在子事务中执行核心事务！"
+//
+//            eventButtonsViewModel.toggleStateOnSubStop()
+//
+//            currentItemViewModel.restoreOnMainEvent()
+//        }
+//    }
 
     fun updateOnDragStopped(updatedEvent: Event, originalDuration: Duration?) {
         updateJob?.cancel()
@@ -264,76 +262,76 @@ class EventTrackerMediator(
         }
     }
 
-    private fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now()) {
-        viewModelScope.launch {
-            currentItemViewModel.apply {
-                // 通用状态更新
-                sharedState.updateStateOnStart()
+//    private fun startNewEvent(startTime: LocalDateTime = LocalDateTime.now()) {
+//        viewModelScope.launch {
+//            currentItemViewModel.apply {
+//                // 通用状态更新
+//                sharedState.updateStateOnStart()
+//
+//                if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
+//                    // 开始主事项
+//                    clearSubEventCount()
+//                } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+//                    // 开始子事项
+//                    increaseSubEventCount() // 放在这里好些，虽然不是在点击的源头
+//                    saveInCompleteMainEvent() // 首次插入时保存
+//                }
+//
+//                // 通用创建，但必须放在后边，尤其是对于子事项（需要先保存当前主事件，然后再创建新事件）
+////                currentEvent.value = createCurrentEvent(startTime)
+//            }
+//        }
+//
+//    }
 
-                if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
-                    // 开始主事项
-                    clearSubEventCount()
-                } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
-                    // 开始子事项
-                    increaseSubEventCount() // 放在这里好些，虽然不是在点击的源头
-                    saveInCompleteMainEvent() // 首次插入时保存
-                }
-
-                // 通用创建，但必须放在后边，尤其是对于子事项（需要先保存当前主事件，然后再创建新事件）
-//                currentEvent.value = createCurrentEvent(startTime)
-            }
-        }
-
-    }
-
-    private suspend fun stopCurrentEvent() {
-        currentItemViewModel.apply {
-            // 通用逻辑
-            updateCurrentEventOnStop()
-            saveCurrentEvent() // 插入或更新到数据库
-
-            if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
-                // 停止主事项——————————————————————————————————————————————————
-                // 先把 currentEvent 记录下来，隐藏后再更新 CoreDuration，要不然可能出现异常！！！
-                val currentRecord = currentEvent.value?.copy()
-                hideCurrentItem()
-                // 使用 let 块更安全，这里有必要，为避免各种意外的崩溃情况！！！
-                currentRecord?.let { durationSliderViewModel.updateCDonCurrentStop(it) }
-                dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
-            } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
-                // 停止子事项————————————————————————————————————————————————
-                restoreOnMainEvent()
-            }
-        }
-
-    }
+//    private suspend fun stopCurrentEvent() {
+//        currentItemViewModel.apply {
+//            // 通用逻辑
+//            updateCurrentEventOnStop()
+//            saveCurrentEvent() // 插入或更新到数据库
+//
+//            if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
+//                // 停止主事项——————————————————————————————————————————————————
+//                // 先把 currentEvent 记录下来，隐藏后再更新 CoreDuration，要不然可能出现异常！！！
+//                val currentRecord = currentEvent.value?.copy()
+//                hideCurrentItem()
+//                // 使用 let 块更安全，这里有必要，为避免各种意外的崩溃情况！！！
+//                currentRecord?.let { durationSliderViewModel.updateCDonCurrentStop(it) }
+//                dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
+//            } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+//                // 停止子事项————————————————————————————————————————————————
+//                restoreOnMainEvent()
+//            }
+//        }
+//
+//    }
 
     /**
      * 撤销或删除时执行的方法，回到它处理后该有的状态。
      */
-    fun resetState(isCoreEvent: Boolean = false) {
-        // 输入状态
-//        sharedState.resetInputState()
-
-        if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
-            // 撤销或删除主事项
-            eventButtonsViewModel.toggleStateOnMainStop() // 按钮状态
-            currentItemViewModel.hideCurrentItem() // CurrentItem 状态
-
-            // 更新 CoreDuration
-            durationSliderViewModel.reduceCDonCurrentCancel(
-                currentEvent!!.startTime,
-                isCoreEvent
-            )
-        } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
-            // 撤销或删除子事项
-            eventButtonsViewModel.toggleStateOnSubStop()
-            viewModelScope.launch {
-                currentItemViewModel.restoreOnMainEvent()
-            }
-        }
-
-    }
+//    fun resetState(isCoreEvent: Boolean = false) {
+//        // 输入状态
+////        sharedState.resetInputState()
+//
+//        if (currentStatus == EventStatus.ONLY_MAIN_EVENT_IN_PROGRESS) {
+//            // 撤销或删除主事项
+//            eventButtonsViewModel.toggleStateOnMainStop() // 按钮状态
+//            currentItemViewModel.hideCurrentItem() // CurrentItem 状态
+//
+//            // 更新 CoreDuration
+//            durationSliderViewModel.reduceCDonCurrentCancel(
+//                currentEvent!!.startTime,
+//                isCoreEvent
+//            )
+//        } else if (currentStatus == EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS) {
+//            // 撤销或删除子事项
+//            eventButtonsViewModel.toggleStateOnSubStop()
+//            viewModelScope.launch {
+//                currentItemViewModel.restoreOnMainEvent()
+//            }
+//        }
+//
+//    }
 
     private suspend fun retrieveStateFromSP() {
         val data = withContext(Dispatchers.IO) {
@@ -343,7 +341,7 @@ class EventTrackerMediator(
         // 在主线程中使用取出的数据更新状态
         sharedState.apply { // 共享状态
             isInputShow.value = data.isInputShow
-            eventStatus.value = data.eventStatus
+//            eventStatus.value = data.eventStatus
 
             if (data.scrollIndex != -1) {
                 scrollIndex.value = data.scrollIndex
@@ -362,7 +360,7 @@ class EventTrackerMediator(
 
         durationSliderViewModel.coreDuration.value = data.coreDuration
 
-        currentEvent = data.currentEvent
+//        currentEvent = data.currentEvent
 
         eventButtonsViewModel.apply {
             mainButtonText.value = data.buttonText

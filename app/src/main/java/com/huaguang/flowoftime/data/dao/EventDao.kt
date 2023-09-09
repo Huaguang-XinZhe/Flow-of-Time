@@ -184,6 +184,9 @@ interface EventDao {
         duration: Duration
     )
 
+    @Query("SELECT type FROM events WHERE id = :id")
+    suspend fun getEventTypeById(id: Long): EventType
+
 
 //    @Transaction
 //    @Query("SELECT * FROM events")

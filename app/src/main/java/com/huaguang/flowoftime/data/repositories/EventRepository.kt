@@ -279,4 +279,8 @@ class EventRepository(
             eventDao.getEventById(id)
         }
 
+    suspend fun getLastEventType(currentId: Long): EventType {
+        return eventDao.getEventTypeById(currentId - 1)
+    }
+
 }
