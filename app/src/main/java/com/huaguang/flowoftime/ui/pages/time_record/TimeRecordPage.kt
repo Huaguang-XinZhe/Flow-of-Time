@@ -1,11 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
@@ -15,22 +10,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
+import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.ui.components.DisplayEventItem
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtons
-import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventControl
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulator
 import java.time.LocalDateTime
 
 val LocalEventControl = compositionLocalOf<EventControl> { error("没有提供实现 EventControl 接口的对象！") }
+val LocalButtonsStateControl = compositionLocalOf<ButtonsStateControl> {
+    error("没有提供实现 ButtonsStateControl 接口的对象！")
+}
 val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
 
 @Composable
@@ -119,37 +114,23 @@ fun TimeRecordPage(
             }
         )
 
-        CoreFloatingButton(
-            viewModel = pageViewModel.eventInputViewModel,
-            modifier = Modifier.constrainAs(floatingButton) {
-                bottom.linkTo(timeRegulator.top, 20.dp)
-                end.linkTo(parent.end, 16.dp)
-            }
-        )
-
-    }
-
-}
-
-@Composable
-fun CoreFloatingButton(
-    viewModel: EventInputViewModel,
-    modifier: Modifier = Modifier
-) {
-    if (!viewModel.inputState.show.value) {
-        FloatingActionButton(
-            onClick = { viewModel.onCoreFloatingButtonClick() },
-            shape = CircleShape,
-            containerColor = Color.White,
-            contentColor = MaterialTheme.colorScheme.primary,
-            modifier = modifier.size(48.dp)
+        CompositionLocalProvider(
+            LocalEventControl provides pageViewModel.eventControl,
+            LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.current_core),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
+            CoreFloatingButton(
+                viewModel = pageViewModel.eventInputViewModel,
+                modifier = Modifier.constrainAs(floatingButton) {
+                    bottom.linkTo(timeRegulator.top, 20.dp)
+                    end.linkTo(parent.end, 16.dp)
+                }
             )
+
+            InputAlertDialog(viewModel = pageViewModel.eventInputViewModel)
         }
+
     }
+
 }
+
 

@@ -9,9 +9,11 @@ import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
+import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
-import com.huaguang.flowoftime.ui.components.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -37,6 +39,21 @@ class EventButtonsViewModel @Inject constructor(
     val mainButtonShow = MutableLiveData(true)
     val subButtonShow = MutableLiveData(false)
     val undoFilledIconShow = mutableStateOf(false)
+
+    val buttonsStateControl = object : ButtonsStateControl {
+        override fun toggleSubjectEnd() {
+            toggleStateOnMainStart()
+        }
+
+        override fun toggleFollowEnd() {
+            currentStatus = EventStatus.MAIN_AND_SUB_EVENT_IN_PROGRESS
+            subButtonText.value = "伴随结束"
+            mainButtonShow.value = false
+            undoFilledIconShow.value = false
+        }
+
+        override fun hasSubjectExist() = currentStatus != EventStatus.NO_EVENT_IN_PROGRESS
+    }
 
     fun toggleStateOnMainStop() {
         currentStatus = EventStatus.NO_EVENT_IN_PROGRESS
@@ -99,7 +116,7 @@ class EventButtonsViewModel @Inject constructor(
                 return@launch
             }
 
-            eventControl.startEvent(startTime, EventType.SUBJECT)
+            eventControl.startEvent(startTime = startTime, eventType = EventType.SUBJECT)
             toggleStateOnMainStart()
 
             sharedState.toastMessage.value = "开始补计……"
@@ -114,7 +131,7 @@ class EventButtonsViewModel @Inject constructor(
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
                 eventControl.startEvent(eventType = EventType.INSERT)
             }
-            "插入结束" -> {
+            "插入结束", "伴随结束" -> {
                 viewModelScope.launch {
                     eventControl.stopEvent(eventType = EventType.INSERT)
                     toggleStateOnSubStop()
@@ -188,16 +205,5 @@ class EventButtonsViewModel @Inject constructor(
         mainButtonShow.value = false
         undoFilledIconShow.value = false
     }
-
-
-}
-
-interface EventControl {
-    fun startEvent(
-        startTime: LocalDateTime = LocalDateTime.now(),
-        eventType: EventType = EventType.SUBJECT
-    )
-
-    fun stopEvent(eventType: EventType = EventType.SUBJECT)
 
 }

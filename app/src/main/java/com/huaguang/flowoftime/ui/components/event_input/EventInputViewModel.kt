@@ -2,13 +2,17 @@ package com.huaguang.flowoftime.ui.components.event_input
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
+import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.InputState
+import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
-import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.data.sources.SPHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -18,16 +22,21 @@ import javax.inject.Inject
 class EventInputViewModel @Inject constructor(
     val repository: EventRepository,
     val iconRepository: IconMappingRepository,
-    private val sharedState: SharedState,
+    private val spHelper: SPHelper,
+    val sharedState: SharedState,
     val inputState: InputState,
 ) : ViewModel() {
 
     private var initialName = ""
     private var endTime: LocalDateTime? = null
+    var coreName = ""
+    var confirmThenStart = false
 
-    fun onConfirmButtonClick() {
+    fun onConfirmButtonClick(text: String) {
         inputState.apply {
-            if (newName.value == "") {
+            newName.value = text // 把输入完成的值赋给 newName
+
+            if (text == "") {
                 sharedState.toastMessage.value = "名称不能为空哦……"
                 return
             }
@@ -41,11 +50,11 @@ class EventInputViewModel @Inject constructor(
             }
 
             if (isCurrentRecording()) { // 更新正在进行的当前项的 name 值，不然结束的时候又给改回去了
-                sharedState.currentEvent?.name = inputState.newName.value
+                sharedState.currentEvent?.name = text
             }
 
             viewModelScope.launch {
-                repository.updateEventName(eventId.value, newName.value)
+                repository.updateEventName(eventId.value, text)
             }
         }
     }
@@ -71,12 +80,63 @@ class EventInputViewModel @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    fun onCoreFloatingButtonClick() {
-        TODO("Not yet implemented")
+    fun onCoreFloatingButtonClick(
+        eventControl: EventControl,
+        buttonsStateControl: ButtonsStateControl,
+    ) {
+        coreName = spHelper.getCurrentCoreEventName(coreName)
+
+        if (coreName.isEmpty()) { // 在最开始的时候，SP 中没有值，coreName 仍有可能为空，这是就弹窗请用户设置，然后再开始事件
+            sharedState.apply {
+                dialogShow.value = true
+                toastMessage.value = "请预先设置当前核心（名称）"
+            }
+            confirmThenStart = true // 设置好点击确认就马上开启一个新事件
+
+            return
+        }
+
+        val type = if (buttonsStateControl.hasSubjectExist()) EventType.FOLLOW else EventType.SUBJECT
+
+        eventControl.startEvent(
+            name = coreName,
+            eventType = type
+        )
+
+        if (buttonsStateControl.hasSubjectExist()) {
+            buttonsStateControl.toggleFollowEnd() // 切换到 ”伴随结束“ 的按钮状态
+        } else {
+            buttonsStateControl.toggleSubjectEnd() // 切换到 “主题结束” 的按钮状态
+        }
+    }
+
+    fun onCoreFloatingButtonLongClick() {
+        coreName = spHelper.getCurrentCoreEventName(coreName)
+        sharedState.dialogShow.value = true // 显示名称输入 Dialog
     }
 
     fun undoButtonClick() {
         TODO("Not yet implemented")
+    }
+
+    fun onDialogDismiss() {
+        sharedState.dialogShow.value = false
+    }
+
+    fun onDialogConfirm(
+        newText: String,
+        eventControl: EventControl,
+        buttonsStateControl: ButtonsStateControl
+    ) {
+        onDialogDismiss()
+        if (newText.isEmpty() && newText == coreName) return
+
+        coreName = newText // 必须同时更新内存中的 coreName
+        spHelper.saveCurrentCoreEventName(newText)
+
+        if (confirmThenStart) { // 最开始的时候，设置完就开启新事件
+            onCoreFloatingButtonClick(eventControl, buttonsStateControl)
+        }
     }
 
     private fun handleRecordIntent() {
@@ -109,3 +169,4 @@ class EventInputViewModel @Inject constructor(
     }
 
 }
+

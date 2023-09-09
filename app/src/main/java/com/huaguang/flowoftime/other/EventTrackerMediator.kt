@@ -7,13 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.other.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.other.duration_slider.DurationSliderViewModel
 import com.huaguang.flowoftime.other.event_name.EventNameViewModel
 import com.huaguang.flowoftime.other.header.HeaderViewModel
-import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.isCoreEvent

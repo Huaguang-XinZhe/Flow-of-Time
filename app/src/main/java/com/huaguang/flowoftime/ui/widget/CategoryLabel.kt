@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components
+package com.huaguang.flowoftime.ui.widget
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

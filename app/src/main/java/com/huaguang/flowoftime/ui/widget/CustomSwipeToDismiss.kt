@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.other.widget
+package com.huaguang.flowoftime.ui.widget
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -31,7 +31,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.ui.components.SharedState
+import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.ui.theme.LightRed6
 
 @OptIn(ExperimentalMaterialApi::class)

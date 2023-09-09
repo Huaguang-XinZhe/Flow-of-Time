@@ -6,14 +6,14 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
-import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventControl
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
@@ -81,16 +81,16 @@ class TimeRecordPageViewModel(
     }
 
     val eventControl = object : EventControl {
-        override fun startEvent(startTime: LocalDateTime, eventType: EventType) {
+        override fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
             viewModelScope.launch {
-                currentEvent = createCurrentEvent(startTime, eventType) // type 由用户与 UI 的交互自动决定
+                currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
                 autoId = repository.insertEvent(currentEvent!!) // 存入数据库
 
                 if (eventType == EventType.SUBJECT) {
                     subjectId = autoId
                 }
 
-                updateInputState(autoId)
+                updateInputState(autoId, name)
             }
 
         }
@@ -129,10 +129,10 @@ class TimeRecordPageViewModel(
         return standardDuration.minus(totalInsertDuration).minus(pauseIntervalDuration)
     }
 
-    private fun updateInputState(id: Long) {
+    private fun updateInputState(id: Long, name: String) {
         eventInputViewModel.inputState.apply {
             eventId.value = id
-            show.value = true
+            show.value = name.isEmpty() // 不传 name，或 name 值为空字符串，就不弹输入框
             newName.value = ""
             intent.value = InputIntent.RECORD
             type.value = ItemType.RECORD
@@ -158,9 +158,11 @@ class TimeRecordPageViewModel(
 
     private suspend fun createCurrentEvent(
         startTime: LocalDateTime,
+        name: String,
         type: EventType,
     ) = Event(
         startTime = startTime,
+        name = name,
         eventDate = getEventDate(startTime),
         parentEventId = fetchMainEventId(type),
         type = type,

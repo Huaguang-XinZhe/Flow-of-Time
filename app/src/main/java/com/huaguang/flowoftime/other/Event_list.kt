@@ -11,7 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.huaguang.flowoftime.other.current_item.CurrentItem
-import com.huaguang.flowoftime.other.widget.CustomSwipeToDismiss
+import com.huaguang.flowoftime.ui.widget.CustomSwipeToDismiss
 
 @Composable
 fun EventList(

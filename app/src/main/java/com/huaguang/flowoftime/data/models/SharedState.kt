@@ -1,10 +1,9 @@
-package com.huaguang.flowoftime.ui.components
+package com.huaguang.flowoftime.data.models
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.data.models.Event
 
 class SharedState(val application: Application) {
     // TODO: 这两个状态已经没用了
@@ -17,6 +16,7 @@ class SharedState(val application: Application) {
     var currentEvent: Event? = null
     val eventStatus = mutableStateOf(EventStatus.NO_EVENT_IN_PROGRESS)
     val toastMessage = MutableLiveData<String>()
+    val dialogShow = mutableStateOf(false)
     var autoId = 0L
 
     fun updateStateOnStart() {

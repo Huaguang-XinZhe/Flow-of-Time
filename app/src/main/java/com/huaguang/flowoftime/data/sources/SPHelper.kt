@@ -53,6 +53,16 @@ class SPHelper private constructor(context: Context) {
         return sp.getInt("ring_volume", 0)
     }
 
+    fun getCurrentCoreEventName(coreName: String): String {
+        return coreName.ifEmpty { // 如果为空就执行下面的语句，不为空就返回 coreName
+            sp.getString("current_core_event_name", "") ?: ""
+        }
+    }
+
+    fun saveCurrentCoreEventName(value: String) {
+        sp.edit().putString("current_core_event_name", value).apply()
+    }
+
     fun saveState(
         isOneDayButtonClicked: Boolean,
         isInputShow: Boolean,

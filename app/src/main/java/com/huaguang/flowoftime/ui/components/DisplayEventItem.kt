@@ -28,6 +28,9 @@ import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.widget.CategoryLabel
+import com.huaguang.flowoftime.ui.widget.LabelType
+import com.huaguang.flowoftime.ui.widget.TagsRow
 import com.huaguang.flowoftime.utils.formatDurationInText
 import java.time.Duration
 

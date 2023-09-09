@@ -68,10 +68,7 @@ fun InputRow(
     ) {
         TextField(
             value = textFieldState,
-            onValueChange = {
-                textFieldState = it
-                viewModel.inputState.newName.value = it.text
-            },
+            onValueChange = { textFieldState = it },
             label = { Text("事件名称") },
             modifier = Modifier
                 .weight(1f)
@@ -98,7 +95,7 @@ fun InputRow(
             )
         }
 
-        Button(onClick = { viewModel.onConfirmButtonClick() }) {
+        Button(onClick = { viewModel.onConfirmButtonClick(textFieldState.text) }) {
             Text("确认")
         }
     }

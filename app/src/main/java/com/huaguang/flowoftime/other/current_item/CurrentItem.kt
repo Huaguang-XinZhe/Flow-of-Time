@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import com.huaguang.flowoftime.other.EventItem
 import com.huaguang.flowoftime.other.EventTrackerMediator
-import com.huaguang.flowoftime.other.widget.CustomSwipeToDismiss
+import com.huaguang.flowoftime.ui.widget.CustomSwipeToDismiss
 import java.time.LocalDateTime
 
 @Composable

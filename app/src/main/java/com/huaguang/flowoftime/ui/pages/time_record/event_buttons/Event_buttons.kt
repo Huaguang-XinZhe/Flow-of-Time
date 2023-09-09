@@ -15,10 +15,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
-import com.huaguang.flowoftime.ui.pages.time_record.LongPressButton
-import com.huaguang.flowoftime.ui.pages.time_record.LongPressTextButton
+import com.huaguang.flowoftime.ui.widget.LongPressButton
+import com.huaguang.flowoftime.ui.widget.LongPressTextButton
 import java.time.LocalDateTime
 
 @Composable

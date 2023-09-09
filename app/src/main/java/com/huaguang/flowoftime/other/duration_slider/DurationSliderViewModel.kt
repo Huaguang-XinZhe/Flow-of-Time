@@ -9,10 +9,10 @@ import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.FOCUS_EVENT_DURATION_THRESHOLD
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
+import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.sleepNames
-import com.huaguang.flowoftime.ui.components.SharedState
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import com.huaguang.flowoftime.utils.isCoreEvent
