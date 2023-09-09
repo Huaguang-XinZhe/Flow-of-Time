@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.data.repositories
 
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.coreEventKeyWords
 import com.huaguang.flowoftime.data.dao.DateDurationDao
@@ -208,19 +209,21 @@ class EventRepository(
         return buildCombinedEvents(allEventsMap, null)
     }
 
-    fun getCurrentCombinedEventFlow(): Flow<CombinedEvent> {
+    fun getCurrentCombinedEventFlow(): Flow<CombinedEvent?> {
         return eventDao.getLatestRootEventAndChildren().map { allEvents ->
             buildCombinedEventFromEvents(allEvents)
         }
     }
 
-    fun getSecondLatestCombinedEventFlow(): Flow<CombinedEvent> {
+    fun getSecondLatestCombinedEventFlow(): Flow<CombinedEvent?> {
         return eventDao.getSecondLatestRootEventAndChildren().map { allEvents ->
             buildCombinedEventFromEvents(allEvents)
         }
     }
 
-    private fun buildCombinedEventFromEvents(allEvents: List<Event>): CombinedEvent {
+    private fun buildCombinedEventFromEvents(allEvents: List<Event>): CombinedEvent? {
+        if (allEvents.isEmpty()) return null
+
         val latestRootEvent = allEvents[0]
 
         return if (allEvents.size == 1) {
@@ -254,11 +257,26 @@ class EventRepository(
         }
     }
 
-    suspend fun updateEventEndTimeById(subjectId: Long) {
+    suspend fun updateEndTimeAndDuration(subjectId: Long, subjectDuration: Duration) {
         withContext(Dispatchers.IO) {
-            eventDao.updateEventEndTimeById(subjectId, LocalDateTime.now())
+            eventDao.updateEndTimeAndDurationById(subjectId, LocalDateTime.now(), subjectDuration)
         }
     }
 
+
+    suspend fun calTotalInsertDuration(
+        subjectId: Long,
+        eventType: EventType = EventType.INSERT
+    ): Duration {
+        val insertDurationList = eventDao.getInsertDurationList(subjectId, eventType)
+        return insertDurationList.fold(Duration.ZERO) { total, duration ->
+            total.plus(duration)
+        }
+    }
+
+    suspend fun getEventById(id: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getEventById(id)
+        }
 
 }

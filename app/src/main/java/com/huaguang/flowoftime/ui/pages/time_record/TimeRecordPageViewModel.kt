@@ -85,7 +85,11 @@ class TimeRecordPageViewModel(
             viewModelScope.launch {
                 currentEvent = createCurrentEvent(startTime, eventType) // type 由用户与 UI 的交互自动决定
                 autoId = repository.insertEvent(currentEvent!!) // 存入数据库
-                if (eventType == EventType.SUBJECT) subjectId = autoId // 存储当前项的主题事件的 id
+
+                if (eventType == EventType.SUBJECT) {
+                    subjectId = autoId
+                }
+
                 updateInputState(autoId)
             }
 
@@ -94,7 +98,8 @@ class TimeRecordPageViewModel(
         override fun stopEvent(eventType: EventType) {
             viewModelScope.launch {
                 if (notCurrentSubjectEvent(eventType)) {
-                    endFinalSubject()
+                    val subjectDuration = calSubjectEventDuration()
+                    repository.updateEndTimeAndDuration(subjectId, subjectDuration)
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
@@ -105,14 +110,23 @@ class TimeRecordPageViewModel(
         }
     }
 
+
     /**
      * 不是当前项的主题事项
      */
-    private fun notCurrentSubjectEvent(eventType: EventType) = eventType == EventType.SUBJECT && autoId != subjectId
+    private fun notCurrentSubjectEvent(eventType: EventType) =
+        eventType == EventType.SUBJECT && autoId != subjectId
 
-    private suspend fun endFinalSubject() {
-        // TODO: 有待细化完善
-        repository.updateEventEndTimeById(subjectId)
+    /**
+     * 间隔计算：减去 Item 中所有插入事件的间隔之和，再减去所有暂停间隔之和
+     */
+    private suspend fun calSubjectEventDuration(): Duration {
+        val subjectEvent = repository.getEventById(subjectId)
+        val pauseIntervalDuration = Duration.ofMinutes(subjectEvent.pauseInterval?.toLong() ?: 0L)
+        val totalInsertDuration = repository.calTotalInsertDuration(subjectId)
+        val standardDuration = Duration.between(subjectEvent.startTime, LocalDateTime.now())
+
+        return standardDuration.minus(totalInsertDuration).minus(pauseIntervalDuration)
     }
 
     private fun updateInputState(id: Long) {

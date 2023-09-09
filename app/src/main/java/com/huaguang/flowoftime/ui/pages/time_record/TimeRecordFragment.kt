@@ -49,7 +49,8 @@ class TimeRecordFragment : Fragment() {
             eventInputViewModel,
             eventRepository,
             spHelper,
-            sharedState, dndManager
+            sharedState,
+            dndManager
         )
     }
 

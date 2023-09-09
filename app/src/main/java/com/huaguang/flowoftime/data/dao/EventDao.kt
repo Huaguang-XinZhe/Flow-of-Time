@@ -8,6 +8,7 @@ import androidx.room.RawQuery
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.other.EventWithSubEvents
@@ -38,6 +39,12 @@ interface EventDao {
 """)
     fun getSecondLatestRootEventAndChildren(): Flow<List<Event>>
 
+    @Query("SELECT pauseInterval FROM events WHERE id = :subjectId")
+    suspend fun getPauseIntervalById(subjectId: Long): Int?
+
+    @Query("SELECT duration FROM events WHERE id > :subjectId AND type = :eventType")
+    suspend fun getInsertDurationList(subjectId: Long, eventType: EventType): List<Duration>
+
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: Event): Long
@@ -63,7 +70,7 @@ interface EventDao {
     suspend fun updateEvent(event: Event)
 
     @Query("SELECT * FROM events WHERE id = :eventId")
-    suspend fun getEvent(eventId: Long): Event
+    suspend fun getEventById(eventId: Long): Event
 
     @Query("DELETE FROM events WHERE id = :eventId")
     suspend fun deleteEvent(eventId: Long)
@@ -170,8 +177,12 @@ interface EventDao {
     @Query("UPDATE events SET name = :newName WHERE id = :id")
     suspend fun updateEventName(id: Long, newName: String)
 
-    @Query("UPDATE events SET endTime = :endTime WHERE id = :id")
-    suspend fun updateEventEndTimeById(id: Long, endTime: LocalDateTime)
+    @Query("UPDATE events SET endTime = :endTime, duration = :duration WHERE id = :id")
+    suspend fun updateEndTimeAndDurationById(
+        id: Long,
+        endTime: LocalDateTime,
+        duration: Duration
+    )
 
 
 //    @Transaction

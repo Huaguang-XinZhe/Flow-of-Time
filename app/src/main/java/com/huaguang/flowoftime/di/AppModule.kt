@@ -6,6 +6,7 @@ import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.dao.IconMappingDao
+import com.huaguang.flowoftime.data.models.InputState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
@@ -109,6 +110,11 @@ object AppModule {
     }
 
 
+    @Singleton
+    @Provides
+    fun provideInputState(): InputState {
+        return InputState.initialValue()
+    }
 
     // 其他的依赖
 }

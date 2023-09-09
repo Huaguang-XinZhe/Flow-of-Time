@@ -19,9 +19,8 @@ class EventInputViewModel @Inject constructor(
     val repository: EventRepository,
     val iconRepository: IconMappingRepository,
     private val sharedState: SharedState,
+    val inputState: InputState,
 ) : ViewModel() {
-
-    val inputState = InputState.initialValue()
 
     private var initialName = ""
     private var endTime: LocalDateTime? = null
