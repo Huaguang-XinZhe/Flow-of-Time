@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -84,8 +85,8 @@ fun RecordingEventItem(
 
             TailLayout(
                 event = event,
-                isDisplay = false,
                 viewModel = viewModel,
+                itemType = ItemType.RECORD,
             ) {
                 if (event.endTime == null) {
                     Text(text = "……")

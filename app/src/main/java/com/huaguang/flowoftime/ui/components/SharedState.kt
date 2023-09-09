@@ -7,16 +7,17 @@ import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
 
 class SharedState(val application: Application) {
-    var currentEvent: Event? = null
-
+    // TODO: 这两个状态已经没用了
     val newEventName = mutableStateOf("")
     val isInputShow = mutableStateOf(false)
 
     val scrollIndex = mutableStateOf(0)
     var eventCount = 0
+
+    var currentEvent: Event? = null
     val eventStatus = mutableStateOf(EventStatus.NO_EVENT_IN_PROGRESS)
     val toastMessage = MutableLiveData<String>()
-
+    var autoId = 0L
 
     fun updateStateOnStart() {
 //        isInputShow.value = true

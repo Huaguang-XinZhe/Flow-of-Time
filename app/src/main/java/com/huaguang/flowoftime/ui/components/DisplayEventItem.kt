@@ -59,7 +59,6 @@ fun DisplayEventItem(
 
             TailLayout(
                 event = event,
-                isDisplay = true,
                 viewModel = viewModel,
             ) {// 首个一定是主题事件
                 DurationText(duration = event.duration!!, type = it)
@@ -147,7 +146,6 @@ fun ContentRowList(
 
             TailLayout(
                 event = son,
-                isDisplay = true,
                 viewModel = inputViewModel,
             ) {
                 DurationText(duration = son.duration!!, type = it)

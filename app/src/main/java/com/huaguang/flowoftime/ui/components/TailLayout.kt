@@ -13,6 +13,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
@@ -23,18 +24,18 @@ import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 @Composable
 fun TailLayout(
     event: Event,
-    isDisplay: Boolean = true,
     viewModel: EventInputViewModel,
+    itemType: ItemType = ItemType.DISPLAY,
     content: @Composable (type: EventType) -> Unit
 ) {
     val selectedTime = LocalSelectedTime.current
 
     val fontSize = if (event.type == EventType.SUBJECT) 20.sp else {
-        if (isDisplay) 14.sp else 16.sp
+        if (itemType == ItemType.DISPLAY) 14.sp else 16.sp
     }
 
     val fontWeight = if (event.type == EventType.SUBJECT) FontWeight.Bold else {
-        if (isDisplay) FontWeight.Light else FontWeight.Normal
+        if (itemType == ItemType.DISPLAY) FontWeight.Light else FontWeight.Normal
     }
 
     Layout(
@@ -48,8 +49,8 @@ fun TailLayout(
                 fontSize = fontSize,
                 fontWeight = fontWeight,
                 modifier = Modifier.clickable {
-                    if (!isDisplay) selectedTime?.value = null // 如果是记录 Item ，点击名称后便取消时间标签的选中状态
-                    viewModel.onNameClick(event)
+                    if (itemType == ItemType.RECORD) selectedTime?.value = null // 如果是记录 Item ，点击名称后便取消时间标签的选中状态
+                    viewModel.onNameClick(event, itemType)
                 }
             )
 

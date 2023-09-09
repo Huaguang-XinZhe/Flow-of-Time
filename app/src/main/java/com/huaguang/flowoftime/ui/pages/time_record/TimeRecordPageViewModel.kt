@@ -43,13 +43,17 @@ class TimeRecordPageViewModel(
         set(value) {
             sharedState.currentEvent = value
         }
+    private var autoId
+        get() = sharedState.autoId
+        set(value) {
+            sharedState.autoId = value
+        }
 
     private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
     val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
     private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
     val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
 
-    var autoId = 0L
     var subjectId = 0L
 
     init {
@@ -146,6 +150,9 @@ class TimeRecordPageViewModel(
         eventDate = getEventDate(startTime),
         parentEventId = fetchMainEventId(type),
         type = type,
+        // TODO: 默认创建一些数据，以后要删除
+        category = "阅读",
+        tags = listOf("休闲", "精进", "应用")
     )
 
 
