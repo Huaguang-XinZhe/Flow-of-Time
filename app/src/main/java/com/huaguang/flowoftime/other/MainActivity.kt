@@ -14,8 +14,8 @@ import com.huaguang.flowoftime.other.duration_slider.DurationSliderViewModel
 import com.huaguang.flowoftime.other.event_name.EventNameViewModel
 import com.huaguang.flowoftime.other.event_tracker.EventTrackerScreen
 import com.huaguang.flowoftime.other.header.HeaderViewModel
-import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
+import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

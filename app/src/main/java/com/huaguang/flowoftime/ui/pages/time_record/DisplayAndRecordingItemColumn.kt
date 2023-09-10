@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.pages
+package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,11 +14,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.ui.components.DisplayEventItem
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.RecordingEventItem
 import kotlinx.coroutines.delay
 
 @Composable
@@ -35,7 +33,7 @@ fun DisplayAndRecordingItemColumn(
     
     LaunchedEffect(viewModel.scrollTrigger.value) {
         val offset = viewModel.scrollOffset.value
-        RDALogger.info("offset = $offset")
+//        RDALogger.info("offset = $offset")
         if (offset == 0f) return@LaunchedEffect // 初始化的时候不需要滑动
 
         delay(100) // 先等软键盘弹上来

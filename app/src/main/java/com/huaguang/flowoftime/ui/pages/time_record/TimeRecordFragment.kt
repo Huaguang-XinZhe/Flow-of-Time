@@ -12,11 +12,11 @@ import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
-import com.huaguang.flowoftime.state.IdState
-import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
+import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject

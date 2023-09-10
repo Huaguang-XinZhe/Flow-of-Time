@@ -10,7 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.other.SelectionTracker
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch

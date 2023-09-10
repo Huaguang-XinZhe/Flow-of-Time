@@ -5,7 +5,14 @@ import com.huaguang.flowoftime.TimeType
 import java.time.LocalDateTime
 
 data class CustomTime(
+    val eventInfo: EventInfo,
     val type: TimeType,
-    var timeState: MutableState<LocalDateTime?>,
-    var initialTime: LocalDateTime? = null
+    val initialTime: LocalDateTime? = null,
+    val timeState: MutableState<LocalDateTime?>
+)
+
+data class EventInfo(
+    val id: Long,
+    val isTiming: Boolean,
+    val withContent: Boolean,
 )

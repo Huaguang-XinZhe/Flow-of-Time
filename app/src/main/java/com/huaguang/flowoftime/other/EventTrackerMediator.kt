@@ -12,8 +12,8 @@ import com.huaguang.flowoftime.other.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.other.duration_slider.DurationSliderViewModel
 import com.huaguang.flowoftime.other.event_name.EventNameViewModel
 import com.huaguang.flowoftime.other.header.HeaderViewModel
-import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
+import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.isCoreEvent
 import com.huaguang.flowoftime.utils.isGetUpTime

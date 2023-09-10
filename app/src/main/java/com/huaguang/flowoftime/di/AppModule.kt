@@ -14,10 +14,10 @@ import com.huaguang.flowoftime.data.sources.IconDatabase
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.other.AlarmHelper
 import com.huaguang.flowoftime.other.LocalDateTimeSerializer
-import com.huaguang.flowoftime.state.ButtonsState
-import com.huaguang.flowoftime.state.IdState
-import com.huaguang.flowoftime.state.InputState
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.ButtonsState
+import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.state
+package com.huaguang.flowoftime.ui.state
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf

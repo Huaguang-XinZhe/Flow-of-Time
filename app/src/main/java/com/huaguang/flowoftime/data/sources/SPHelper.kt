@@ -5,8 +5,8 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.state.ButtonsState
-import com.huaguang.flowoftime.state.IdState
+import com.huaguang.flowoftime.ui.state.ButtonsState
+import com.huaguang.flowoftime.ui.state.IdState
 import kotlinx.serialization.json.Json
 import java.time.Duration
 

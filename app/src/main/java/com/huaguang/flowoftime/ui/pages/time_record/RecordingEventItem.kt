@@ -26,6 +26,7 @@ import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
+import com.huaguang.flowoftime.data.models.EventInfo
 import com.huaguang.flowoftime.ui.components.TailLayout
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 
@@ -43,18 +44,27 @@ fun RecordingEventItem(
     val expandState = remember { mutableStateOf(true) }
     val startCustomTime =
         CustomTime(
+            eventInfo = EventInfo(
+               id = event.id,
+               isTiming = event.endTime == null,
+               withContent = event.withContent // start 用不着这个
+            ),
             type = TimeType.START,
-            timeState = remember { mutableStateOf(null) }, // 把 remember 调整到这里是非常重要的一处改变，这使得 initialTime 的值是动态的！
-            initialTime = event.startTime
+            initialTime = event.startTime, // 把 remember 调整到这里是非常重要的一处改变，这使得 initialTime 的值是动态的！
+            timeState = remember { mutableStateOf(null) }
         )
 
     val endCustomTime =
         CustomTime(
+            eventInfo = EventInfo(
+                id = event.id,
+                isTiming = false,
+                withContent = event.withContent
+            ),
             type = TimeType.END,
-            timeState = remember { mutableStateOf(null) }, // 重新组合的时候这个状态会被记住，但值会改变
-            initialTime = event.endTime // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
+            initialTime = event.endTime, // 重新组合的时候这个状态会被记住，但值会改变
+            timeState = remember { mutableStateOf(null) } // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
         )
-    val type = event.type
 
     LaunchedEffect(event.id) {
         val isExpanded = expandStates.getOrPut(event.id) { mutableStateOf(true) }.value
@@ -69,7 +79,7 @@ fun RecordingEventItem(
             modifier = Modifier.padding(vertical = 5.dp)
         ) {
 
-            if (type.isExpandable()) {
+            if (event.type.isExpandable()) {
                 ExpandIcon(expandState) // 直接传递MutableState<Boolean>给ExpandIcon
             } else {
                 Spacer(modifier = Modifier.size(24.dp)) // 占位用的
@@ -81,7 +91,7 @@ fun RecordingEventItem(
                 modifier = Modifier.padding(end = 5.dp)
             )
 
-            FlagText(type = type)
+            FlagText(type = event.type)
 
             TailLayout(
                 event = event,

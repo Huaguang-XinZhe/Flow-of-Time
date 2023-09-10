@@ -10,7 +10,7 @@ import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.isCoreEvent
 import com.huaguang.flowoftime.utils.isGetUpTime
 import dagger.hilt.android.lifecycle.HiltViewModel

@@ -10,11 +10,11 @@ import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
-import com.huaguang.flowoftime.state.IdState
-import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
+import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
 import kotlinx.coroutines.launch
@@ -68,10 +68,11 @@ class TimeRecordPageViewModel(
         override fun stopEvent(eventType: EventType) {
             viewModelScope.launch {
                 if (withContent(eventType)) {
+                    RDALogger.info("进入 withContent 块结束事件")
                     val eventId = if (eventType == EventType.SUBJECT) idState.subject.value
                         else idState.step.value // else 只可能是步骤事项了
-                    val duration = calEventDuration(eventId)
-                    repository.updateEndTimeAndDuration(eventId, duration)
+
+                    timeRegulatorViewModel.calParentEventDurationAndUpdateDB(eventId)
 
                     if (eventType == EventType.STEP) stepOver = true // 为了在插入事件时获取正确的 parentId
                 } else {
@@ -83,6 +84,8 @@ class TimeRecordPageViewModel(
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
     }
+
+
 
     private fun updateIdState(autoId: Long, eventType: EventType) {
         idState.apply {
@@ -106,18 +109,6 @@ class TimeRecordPageViewModel(
     }
 
 
-    /**
-     * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
-     */
-    private suspend fun calEventDuration(eventId: Long): Duration {
-        val stopRequired = repository.getStopRequired(eventId)
-        val pauseIntervalDuration = Duration.ofMinutes(stopRequired.pauseInterval.toLong())
-        val totalDurationOfSubInsert = repository.calTotalInsertDuration(eventId)
-        val standardDuration = Duration.between(stopRequired.startTime, LocalDateTime.now())
-
-        return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
-    }
-
     private fun updateInputState(id: Long, name: String) {
         eventInputViewModel.inputState.apply {
             eventId.value = id
@@ -135,22 +126,21 @@ class TimeRecordPageViewModel(
         var event: Event? = null
 
         currentEvent?.let {
-            val newEvent = it.copy() // 先复制原始对象
             val autoId = idState.current.value
             // 插入事项不允许有暂停间隔
-            val pauseInterval = if (newEvent.type == EventType.INSERT) 0 else {
+            val pauseInterval = if (it.type == EventType.INSERT) 0 else {
                 repository.getPauseIntervalById(autoId)
             }
             val endTime = LocalDateTime.now()
-            val duration = Duration.between(newEvent.startTime, endTime)
+            val duration = Duration.between(it.startTime, endTime)
                 .minus(Duration.ofMinutes(pauseInterval.toLong()))
 
-            newEvent.id = autoId // 必须指定这一条，否则数据库不会更新
-            newEvent.endTime = endTime
-            newEvent.pauseInterval = pauseInterval
-            newEvent.duration = duration
+            it.id = autoId // 必须指定这一条，否则数据库不会更新
+            it.endTime = endTime
+            it.pauseInterval = pauseInterval
+            it.duration = duration
 
-            event = newEvent
+            event = it
         }
 
         return event!!

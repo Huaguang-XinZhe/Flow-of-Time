@@ -3,7 +3,6 @@ package com.huaguang.flowoftime.ui.components.event_input
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
@@ -14,9 +13,9 @@ import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
-import com.huaguang.flowoftime.state.IdState
-import com.huaguang.flowoftime.state.InputState
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,14 +50,12 @@ class EventInputViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             repository.getCurrentCombinedEventFlow().filterNotNull().collect { combinedEvent ->
-                RDALogger.info("收集到当前项：combinedEvent = $combinedEvent")
                 _currentCombinedEventFlow.value = combinedEvent // 传给 UI
             }
         }
 
         viewModelScope.launch {
             repository.getSecondLatestCombinedEventFlow().filterNotNull().collect { combinedEvent ->
-                RDALogger.info("收集到上一个：combinedEvent = $combinedEvent")
                 _secondLatestCombinedEventFlow.value = combinedEvent // 传给 UI
             }
         }
@@ -106,8 +103,6 @@ class EventInputViewModel @Inject constructor(
         endTime = event.endTime // 传出，用于判断事件是否正在进行
 
         val diff = event.id - idState.subject.value
-        RDALogger.info("subjectId = ${idState.subject.value}")
-        RDALogger.info("diff = $diff")
         if (itemType == ItemType.RECORD && diff > 0) { // 触发滚动
             scrollTrigger.value = !scrollTrigger.value
             scrollOffset.value = diff * 25f

@@ -25,26 +25,26 @@ interface EventDao {
     suspend fun getAllEvents(): List<Event>
 
     @Query("""
-    SELECT * FROM events 
-    WHERE id >= (SELECT MAX(id) FROM events WHERE parentEventId IS NULL)
-""")
+        SELECT * FROM events 
+        WHERE id >= (SELECT MAX(id) FROM events WHERE parentEventId IS NULL)
+    """)
     fun getLatestRootEventAndChildren(): Flow<List<Event>>
 
     @Query("""
-    WITH RECURSIVE LatestRoots AS (
-        SELECT id FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 2
-    )
-    SELECT * FROM events 
-    WHERE id >= (SELECT MIN(id) FROM LatestRoots)
-    AND id < (SELECT MAX(id) FROM LatestRoots)
-""")
+        WITH RECURSIVE LatestRoots AS (
+            SELECT id FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 2
+        )
+        SELECT * FROM events 
+        WHERE id >= (SELECT MIN(id) FROM LatestRoots)
+        AND id < (SELECT MAX(id) FROM LatestRoots)
+    """)
     fun getSecondLatestRootEventAndChildren(): Flow<List<Event>>
 
     @Query("SELECT startTime, pauseInterval FROM events WHERE id = :id")
     suspend fun getStopRequired(id: Long): StopRequired
 
-    @Query("SELECT duration FROM events WHERE id > :id AND type = :eventType")
-    suspend fun getInsertDurationList(id: Long, eventType: EventType): List<Duration>
+    @Query("SELECT duration FROM events WHERE parentEventId = :id AND type = :eventType")
+    suspend fun getSubInsertDurationList(id: Long, eventType: EventType): List<Duration>
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -53,19 +53,32 @@ interface EventDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(events: List<Event>)
 
-    @Query("UPDATE events SET startTime = :newTime, duration = :newDuration WHERE startTime = :originalTime")
-    suspend fun updateEventByStartTime(
-        originalTime: LocalDateTime,
+    @Query("UPDATE events SET startTime = :newTime, duration = :newDuration WHERE id = :id")
+    suspend fun updateStartTimeAndDurationById(
+        id: Long,
         newTime: LocalDateTime,
         newDuration: Duration?
     )
 
-    @Query("UPDATE events SET endTime = :newTime, duration = :newDuration WHERE endTime = :originalTime")
-    suspend fun updateEventByEndTime(
-        originalTime: LocalDateTime,
-        newTime: LocalDateTime,
-        newDuration: Duration
+    @Query("UPDATE events SET endTime = :endTime, duration = :duration WHERE id = :id")
+    suspend fun updateEndTimeAndDurationById(
+        id: Long,
+        endTime: LocalDateTime,
+        duration: Duration
     )
+
+    @Query("""
+        UPDATE events 
+        SET endTime = :endTime, duration = :duration, withContent = :withContent
+        WHERE id = :id
+    """)
+    suspend fun updateDB(
+        id: Long,
+        endTime: LocalDateTime,
+        duration: Duration,
+        withContent: Boolean,
+    )
+
 
     @Update
     suspend fun updateEvent(event: Event)
@@ -178,18 +191,14 @@ interface EventDao {
     @Query("UPDATE events SET name = :newName WHERE id = :id")
     suspend fun updateEventName(id: Long, newName: String)
 
-    @Query("UPDATE events SET endTime = :endTime, duration = :duration WHERE id = :id")
-    suspend fun updateEndTimeAndDurationById(
-        id: Long,
-        endTime: LocalDateTime,
-        duration: Duration
-    )
-
     @Query("SELECT type FROM events WHERE id = :id")
     suspend fun getEventTypeById(id: Long): EventType
 
     @Query("SELECT pauseInterval FROM events WHERE id = :id")
     suspend fun getPauseIntervalById(id: Long): Int
+
+    @Query("SELECT duration FROM events WHERE id = :eventId")
+    suspend fun getDurationById(eventId: Long): Duration
 
 
 //    @Transaction

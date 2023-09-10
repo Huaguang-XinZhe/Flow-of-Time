@@ -18,7 +18,7 @@ import com.huaguang.flowoftime.other.EventList
 import com.huaguang.flowoftime.other.EventTrackerMediator
 import com.huaguang.flowoftime.other.duration_slider.DurationSlider
 import com.huaguang.flowoftime.other.header.HeaderRow
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.SharedState
 import kotlinx.coroutines.launch
 
 @Composable

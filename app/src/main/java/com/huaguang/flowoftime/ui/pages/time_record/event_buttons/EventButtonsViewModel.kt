@@ -12,8 +12,8 @@ import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
-import com.huaguang.flowoftime.state.ButtonsState
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.ButtonsState
+import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime

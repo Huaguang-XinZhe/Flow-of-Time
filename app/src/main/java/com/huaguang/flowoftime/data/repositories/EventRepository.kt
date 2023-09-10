@@ -178,17 +178,17 @@ class EventRepository(
 
 
     suspend fun updateDatabase(newCustomTime: CustomTime, newDuration: Duration?) {
-        val initialTime = newCustomTime.initialTime!!
+        val eventId = newCustomTime.eventInfo.id
         val newTime = newCustomTime.timeState.value!!
 
         withContext(Dispatchers.IO) {
             // TODO: 这里根据开始或结束时间来更新事件可能会出现问题
             if (newCustomTime.type == TimeType.START) {
                 RDALogger.info("更新开始时间！")
-                eventDao.updateEventByStartTime(initialTime, newTime, newDuration)
+                eventDao.updateStartTimeAndDurationById(eventId, newTime, newDuration)
             } else {
                 RDALogger.info("更新结束时间！")
-                eventDao.updateEventByEndTime(initialTime, newTime, newDuration!!) // 调整结束时间时的新 duration 绝不为 0！
+                eventDao.updateEndTimeAndDurationById(eventId, newTime, newDuration!!) // 调整结束时间时的新 duration 绝不为 0！
             }
         }
     }
@@ -254,19 +254,24 @@ class EventRepository(
         }
     }
 
-    suspend fun updateEndTimeAndDuration(subjectId: Long, subjectDuration: Duration) {
+    suspend fun updateDB(
+        eventId: Long,
+        endTime: LocalDateTime,
+        newDuration: Duration,
+        withContent: Boolean = true,
+    ) {
         withContext(Dispatchers.IO) {
-            eventDao.updateEndTimeAndDurationById(subjectId, LocalDateTime.now(), subjectDuration)
+            eventDao.updateDB(eventId, endTime, newDuration, withContent)
         }
     }
 
 
-    suspend fun calTotalInsertDuration(
+    suspend fun calTotalSubInsertDuration(
         id: Long,
         eventType: EventType = EventType.INSERT
     ): Duration {
         val insertDurationList = withContext(Dispatchers.IO) {
-            eventDao.getInsertDurationList(id, eventType)
+            eventDao.getSubInsertDurationList(id, eventType)
         }
         return insertDurationList.fold(Duration.ZERO) { total, duration ->
             total.plus(duration)
@@ -290,6 +295,11 @@ class EventRepository(
     suspend fun getPauseIntervalById(id: Long) =
         withContext(Dispatchers.IO) {
             eventDao.getPauseIntervalById(id)
+        }
+
+    suspend fun getDurationById(eventId: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getDurationById(eventId)
         }
 
 

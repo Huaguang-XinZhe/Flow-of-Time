@@ -9,7 +9,7 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
-import com.huaguang.flowoftime.state.SharedState
+import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
