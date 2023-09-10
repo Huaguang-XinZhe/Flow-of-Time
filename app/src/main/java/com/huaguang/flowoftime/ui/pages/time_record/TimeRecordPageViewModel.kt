@@ -9,6 +9,7 @@ import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.IdState
 import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -34,6 +35,7 @@ class TimeRecordPageViewModel(
     val eventInputViewModel: EventInputViewModel,
     val repository: EventRepository,
     private val spHelper: SPHelper,
+    private val idState: IdState,
     val sharedState: SharedState,
     private val dndManager: DNDManager,
 ) : ViewModel() {
@@ -43,19 +45,11 @@ class TimeRecordPageViewModel(
         set(value) {
             sharedState.currentEvent = value
         }
-    private var autoId
-        get() = sharedState.autoId
-        set(value) {
-            sharedState.autoId = value
-        }
 
     private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
     val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
     private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
     val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
-
-    var subjectId = 0L
-    var stepId = 0L
 
     init {
         RDALogger.info("init 块执行！")
@@ -85,15 +79,9 @@ class TimeRecordPageViewModel(
         override fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
             viewModelScope.launch {
                 currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
-                autoId = repository.insertEvent(currentEvent!!) // 存入数据库
+                val autoId = repository.insertEvent(currentEvent!!) // 存入数据库
                 RDALogger.info("autoId = $autoId")
-
-                if (eventType == EventType.SUBJECT) {
-                    subjectId = autoId
-                } else if (eventType == EventType.STEP) {
-                    stepId = autoId // 有新步骤的话，就会不对的覆盖，所以，stepId 其实最新的步骤事件的 id
-                }
-
+                updateIdState(autoId, eventType)
                 updateInputState(autoId, name)
             }
 
@@ -102,7 +90,8 @@ class TimeRecordPageViewModel(
         override fun stopEvent(eventType: EventType) {
             viewModelScope.launch {
                 if (withContent(eventType)) {
-                    val eventId = if (eventType == EventType.SUBJECT) subjectId else stepId // else 只可能是步骤事项了
+                    val eventId = if (eventType == EventType.SUBJECT) idState.subject.value
+                        else idState.step.value // else 只可能是步骤事项了
                     val duration = calEventDuration(eventId)
                     repository.updateEndTimeAndDuration(eventId, duration)
                 } else {
@@ -115,12 +104,25 @@ class TimeRecordPageViewModel(
         }
     }
 
+    private fun updateIdState(autoId: Long, eventType: EventType) {
+        idState.apply {
+            current.value = autoId
+            if (eventType == EventType.SUBJECT) {
+                subject.value = autoId
+            } else if (eventType == EventType.STEP) {
+                step.value = autoId // 有新步骤的话，就会对旧的覆盖，所以，stepId 其实最新的步骤事件的 id
+            }
+        }
+    }
+
     /**
      * 判断一个事项是否有内容事项，或者说有下级
      */
     private fun withContent(eventType: EventType): Boolean {
-        return (eventType == EventType.SUBJECT && autoId != subjectId) || // 结束的是主题事项，但它却不是当前的，代表有下级
-                (eventType == EventType.STEP && autoId != stepId) // 结束的是步骤事项，但它也不是当前的，那就代表有下级
+        idState.apply {
+            return (eventType == EventType.SUBJECT && current.value != subject.value) || // 结束的是主题事项，但它却不是当前的，代表有下级
+                    (eventType == EventType.STEP && current.value != step.value) // 结束的是步骤事项，但它也不是当前的，那就代表有下级
+        }
     }
 
 
@@ -154,8 +156,11 @@ class TimeRecordPageViewModel(
 
         currentEvent?.let {
             val newEvent = it.copy() // 先复制原始对象
+            val autoId = idState.current.value
             // 插入事项不允许有暂停间隔
-            val pauseInterval = if (newEvent.type == EventType.INSERT) 0 else repository.getPauseIntervalById(autoId)
+            val pauseInterval = if (newEvent.type == EventType.INSERT) 0 else {
+                repository.getPauseIntervalById(autoId)
+            }
             val endTime = LocalDateTime.now()
             val duration = Duration.between(newEvent.startTime, endTime)
                 .minus(Duration.ofMinutes(pauseInterval.toLong()))
@@ -188,14 +193,14 @@ class TimeRecordPageViewModel(
 
 
     private fun getParentEventId(type: EventType): Long? {
-        RDALogger.info("subjectId = $subjectId")
-        RDALogger.info("getParentEventId 里边：autoId = $autoId")
-        return when(type) {
-            EventType.SUBJECT -> null
-            EventType.STEP, EventType.FOLLOW -> subjectId
-            EventType.INSERT -> {
-                val parentType = if (subjectId > stepId) EventType.SUBJECT else EventType.STEP
-                if (parentType == EventType.STEP) stepId else subjectId
+        idState.apply {
+            return when(type) {
+                EventType.SUBJECT -> null
+                EventType.STEP, EventType.FOLLOW -> subject.value
+                EventType.INSERT -> {
+                    val parentType = if (subject.value > step.value) EventType.SUBJECT else EventType.STEP
+                    if (parentType == EventType.STEP) step.value else subject.value
+                }
             }
         }
     }

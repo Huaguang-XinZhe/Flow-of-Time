@@ -1,8 +1,10 @@
 package com.huaguang.flowoftime.data.sources
 
 import android.content.Context
+import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.IdState
 import kotlinx.serialization.json.Json
 import java.time.Duration
 
@@ -25,6 +27,21 @@ class SPHelper private constructor(context: Context) {
             return instance as SPHelper
         }
     }
+
+    fun saveIdState(idState: IdState) {
+        with(sp.edit()) {
+            putLong("current", idState.current.value)
+            putLong("subject", idState.subject.value)
+            putLong("step", idState.step.value)
+            apply()
+        }
+    }
+
+    fun getIdState() = IdState(
+        current = mutableStateOf(sp.getLong("current", 0L)),
+        subject = mutableStateOf(sp.getLong("subject", 0L)),
+        step = mutableStateOf(sp.getLong("step", 0L))
+    )
 
     fun savePauseInterval(value: Int) {
         val accValue = getPauseInterval() + value

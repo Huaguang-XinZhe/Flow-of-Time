@@ -8,6 +8,8 @@ import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import com.huaguang.flowoftime.EventStatus
+import com.huaguang.flowoftime.data.models.IdState
 import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
@@ -30,6 +32,8 @@ class TimeRecordFragment : Fragment() {
     lateinit var spHelper: SPHelper
     @Inject
     lateinit var sharedState: SharedState
+    @Inject
+    lateinit var idState: IdState
     lateinit var dndManager: DNDManager
 
     // 注入各大组件的 ViewModel
@@ -49,6 +53,7 @@ class TimeRecordFragment : Fragment() {
             eventInputViewModel,
             eventRepository,
             spHelper,
+            idState,
             sharedState,
             dndManager
         )
@@ -78,6 +83,14 @@ class TimeRecordFragment : Fragment() {
             Toast.makeText(requireContext(), toastMessage, Toast.LENGTH_SHORT).show()
         }
 
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        if (sharedState.eventStatus.value != EventStatus.NO_EVENT) { // 有事件正在进行才保存
+            spHelper.saveIdState(idState)
+        }
     }
 
 }

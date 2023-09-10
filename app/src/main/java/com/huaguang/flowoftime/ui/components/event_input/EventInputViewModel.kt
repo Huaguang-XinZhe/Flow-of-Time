@@ -8,6 +8,7 @@ import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.IdState
 import com.huaguang.flowoftime.data.models.InputState
 import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -23,6 +24,7 @@ class EventInputViewModel @Inject constructor(
     val repository: EventRepository,
     val iconRepository: IconMappingRepository,
     private val spHelper: SPHelper,
+    private val idState: IdState,
     val sharedState: SharedState,
     val inputState: InputState,
 ) : ViewModel() {
@@ -162,7 +164,7 @@ class EventInputViewModel @Inject constructor(
         inputState.apply {
             if (intent.value == InputIntent.MODIFY) {
                 // 只要在修改的坏境下，这个判断条件才成立，才能代表正在进行的当前项
-                if (endTime == null && eventId.value == sharedState.autoId) {
+                if (endTime == null && eventId.value == idState.current.value) {
                     result = true
                 }
             } else { // 记录的环境下
