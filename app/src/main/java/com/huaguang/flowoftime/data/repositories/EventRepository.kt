@@ -121,20 +121,12 @@ class EventRepository(
         }
     }
 
-    suspend fun fetchMainEventId() =
-        withContext(Dispatchers.IO) {
-            eventDao.getLatestMainEventId()
-        }
+
 
     suspend fun insertEvent(event: Event) =
         withContext(Dispatchers.IO) {
             eventDao.insertEvent(event)
         }
-
-
-    suspend fun hasSubEvents(parentId: Long?): Boolean {
-        return parentId?.let { eventDao.countSubEvents(it) > 0 } ?: false
-    }
 
 
     suspend fun getOffsetStartTime(): LocalDateTime? {
@@ -179,7 +171,10 @@ class EventRepository(
             eventDao.getEventsWithSubEvents(eventId)
         }
 
-    suspend fun getCurrentEvent() = eventDao.getCurrentEvent()
+    suspend fun getCurrentEvent() =
+        withContext(Dispatchers.IO) {
+            eventDao.getCurrentEvent()
+        }
 
 
     suspend fun updateDatabase(newCustomTime: CustomTime, newDuration: Duration?) {
@@ -205,7 +200,9 @@ class EventRepository(
     }
 
     suspend fun getCombinedEvents(): List<CombinedEvent> {
-        val allEventsMap = eventDao.getAllEvents().associateBy { it.id }
+        val allEventsMap = withContext(Dispatchers.IO) {
+            eventDao.getAllEvents().associateBy { it.id }
+        }
         return buildCombinedEvents(allEventsMap, null)
     }
 
@@ -265,10 +262,12 @@ class EventRepository(
 
 
     suspend fun calTotalInsertDuration(
-        subjectId: Long,
+        id: Long,
         eventType: EventType = EventType.INSERT
     ): Duration {
-        val insertDurationList = eventDao.getInsertDurationList(subjectId, eventType)
+        val insertDurationList = withContext(Dispatchers.IO) {
+            eventDao.getInsertDurationList(id, eventType)
+        }
         return insertDurationList.fold(Duration.ZERO) { total, duration ->
             total.plus(duration)
         }
@@ -279,8 +278,19 @@ class EventRepository(
             eventDao.getEventById(id)
         }
 
-    suspend fun getLastEventType(currentId: Long): EventType {
-        return eventDao.getEventTypeById(currentId - 1)
-    }
+    suspend fun getEventTypeById(id: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getEventTypeById(id)
+        }
+
+    suspend fun getStopRequired(eventId: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getStopRequired(eventId)
+        }
+    suspend fun getPauseIntervalById(id: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getPauseIntervalById(id)
+        }
+
 
 }

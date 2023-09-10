@@ -55,6 +55,7 @@ class TimeRecordPageViewModel(
     val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
 
     var subjectId = 0L
+    var stepId = 0L
 
     init {
         RDALogger.info("init 块执行！")
@@ -85,9 +86,12 @@ class TimeRecordPageViewModel(
             viewModelScope.launch {
                 currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
                 autoId = repository.insertEvent(currentEvent!!) // 存入数据库
+                RDALogger.info("autoId = $autoId")
 
                 if (eventType == EventType.SUBJECT) {
                     subjectId = autoId
+                } else if (eventType == EventType.STEP) {
+                    stepId = autoId // 有新步骤的话，就会不对的覆盖，所以，stepId 其实最新的步骤事件的 id
                 }
 
                 updateInputState(autoId, name)
@@ -97,9 +101,10 @@ class TimeRecordPageViewModel(
 
         override fun stopEvent(eventType: EventType) {
             viewModelScope.launch {
-                if (notCurrentSubjectEvent(eventType)) {
-                    val subjectDuration = calSubjectEventDuration()
-                    repository.updateEndTimeAndDuration(subjectId, subjectDuration)
+                if (withContent(eventType)) {
+                    val eventId = if (eventType == EventType.SUBJECT) subjectId else stepId // else 只可能是步骤事项了
+                    val duration = calEventDuration(eventId)
+                    repository.updateEndTimeAndDuration(eventId, duration)
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
@@ -110,23 +115,25 @@ class TimeRecordPageViewModel(
         }
     }
 
+    /**
+     * 判断一个事项是否有内容事项，或者说有下级
+     */
+    private fun withContent(eventType: EventType): Boolean {
+        return (eventType == EventType.SUBJECT && autoId != subjectId) || // 结束的是主题事项，但它却不是当前的，代表有下级
+                (eventType == EventType.STEP && autoId != stepId) // 结束的是步骤事项，但它也不是当前的，那就代表有下级
+    }
+
 
     /**
-     * 不是当前项的主题事项
+     * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
      */
-    private fun notCurrentSubjectEvent(eventType: EventType) =
-        eventType == EventType.SUBJECT && autoId != subjectId
+    private suspend fun calEventDuration(eventId: Long): Duration {
+        val stopRequired = repository.getStopRequired(eventId)
+        val pauseIntervalDuration = Duration.ofMinutes(stopRequired.pauseInterval.toLong())
+        val totalDurationOfSubInsert = repository.calTotalInsertDuration(eventId)
+        val standardDuration = Duration.between(stopRequired.startTime, LocalDateTime.now())
 
-    /**
-     * 间隔计算：减去 Item 中所有插入事件的间隔之和，再减去所有暂停间隔之和
-     */
-    private suspend fun calSubjectEventDuration(): Duration {
-        val subjectEvent = repository.getEventById(subjectId)
-        val pauseIntervalDuration = Duration.ofMinutes(subjectEvent.pauseInterval?.toLong() ?: 0L)
-        val totalInsertDuration = repository.calTotalInsertDuration(subjectId)
-        val standardDuration = Duration.between(subjectEvent.startTime, LocalDateTime.now())
-
-        return standardDuration.minus(totalInsertDuration).minus(pauseIntervalDuration)
+        return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
     }
 
     private fun updateInputState(id: Long, name: String) {
@@ -139,16 +146,24 @@ class TimeRecordPageViewModel(
         }
     }
 
-    private fun updateCurrentEvent(): Event {
+    /**
+     * 结束时更新当前事件的信息，插入事件和当前的主题事件会走这条路（即没有下级的会走这条路）
+     */
+    private suspend fun updateCurrentEvent(): Event {
         var event: Event? = null
 
         currentEvent?.let {
             val newEvent = it.copy() // 先复制原始对象
+            // 插入事项不允许有暂停间隔
+            val pauseInterval = if (newEvent.type == EventType.INSERT) 0 else repository.getPauseIntervalById(autoId)
+            val endTime = LocalDateTime.now()
+            val duration = Duration.between(newEvent.startTime, endTime)
+                .minus(Duration.ofMinutes(pauseInterval.toLong()))
 
             newEvent.id = autoId // 必须指定这一条，否则数据库不会更新
-            newEvent.endTime = LocalDateTime.now()
-            newEvent.duration = Duration.between(newEvent.startTime, newEvent.endTime)
-            newEvent.pauseInterval = spHelper.getPauseInterval()
+            newEvent.endTime = endTime
+            newEvent.pauseInterval = pauseInterval
+            newEvent.duration = duration
 
             event = newEvent
         }
@@ -156,7 +171,7 @@ class TimeRecordPageViewModel(
         return event!!
     }
 
-    private suspend fun createCurrentEvent(
+    private fun createCurrentEvent(
         startTime: LocalDateTime,
         name: String,
         type: EventType,
@@ -172,13 +187,15 @@ class TimeRecordPageViewModel(
     )
 
 
-    private suspend fun getParentEventId(type: EventType): Long? {
+    private fun getParentEventId(type: EventType): Long? {
+        RDALogger.info("subjectId = $subjectId")
+        RDALogger.info("getParentEventId 里边：autoId = $autoId")
         return when(type) {
             EventType.SUBJECT -> null
-            EventType.STEP, EventType.FOLLOW -> subjectId // TODO: 这个值和 autoId 是关键，onStop 的时候要存起来
+            EventType.STEP, EventType.FOLLOW -> subjectId
             EventType.INSERT -> {
-                val lastEventType = repository.getLastEventType(autoId)
-                if (lastEventType == EventType.STEP) autoId - 1 else subjectId
+                val parentType = if (subjectId > stepId) EventType.SUBJECT else EventType.STEP
+                if (parentType == EventType.STEP) stepId else subjectId
             }
         }
     }

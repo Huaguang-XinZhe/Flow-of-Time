@@ -40,6 +40,8 @@ class EventButtonsViewModel @Inject constructor(
     val subButtonShow = MutableLiveData(false)
     val undoFilledIconShow = mutableStateOf(false)
 
+    private var stepInsert = false
+
     val buttonsStateControl = object : ButtonsStateControl {
         override fun toggleMainEnd() {
             toggleStateOnMainStart()
@@ -47,13 +49,16 @@ class EventButtonsViewModel @Inject constructor(
 
         override fun toggleSubEnd(type: EventType) {
             currentStatus = EventStatus.SUB_TIMING
-            subButtonText.value = when(type) {
-                EventType.FOLLOW -> "伴随结束"
-                EventType.STEP -> "步骤结束"
-                else -> "插入结束"
-            }
-            mainButtonShow.value = false
             undoFilledIconShow.value = false
+
+            if (type == EventType.FOLLOW) {
+                mainButtonShow.value = false
+                subButtonText.value = "伴随结束"
+            } else if (type == EventType.STEP) {
+                mainButtonText.value = "步骤结束"
+                subButtonText.value = "插入"
+                stepInsert = true
+            }
         }
 
         override fun hasSubjectExist() = currentStatus != EventStatus.NO_EVENT
@@ -67,7 +72,7 @@ class EventButtonsViewModel @Inject constructor(
     }
 
     private fun toggleStateOnSubStop() {
-        currentStatus = EventStatus.SUBJECT_ONLY
+        currentStatus = if (stepInsert) EventStatus.SUB_TIMING else EventStatus.SUBJECT_ONLY
         subButtonText.value = "插入"
         mainButtonShow.value = true
         undoFilledIconShow.value = true
@@ -105,6 +110,12 @@ class EventButtonsViewModel @Inject constructor(
                     toggleStateOnMainStop()
                 }
             }
+            "步骤结束" -> {
+                viewModelScope.launch {
+                    eventControl.stopEvent(eventType = EventType.STEP)
+                    toggleStateOnMainStart()
+                }
+            }
         }
     }
 
@@ -135,7 +146,7 @@ class EventButtonsViewModel @Inject constructor(
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
                 eventControl.startEvent(eventType = EventType.INSERT)
             }
-            "插入结束", "伴随结束", "步骤结束" -> {
+            "插入结束", "伴随结束" -> {
                 viewModelScope.launch {
                     eventControl.stopEvent(eventType = EventType.INSERT)
                     toggleStateOnSubStop()

@@ -11,6 +11,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.EventTimes
+import com.huaguang.flowoftime.data.models.StopRequired
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
 import java.time.Duration
@@ -39,11 +40,11 @@ interface EventDao {
 """)
     fun getSecondLatestRootEventAndChildren(): Flow<List<Event>>
 
-    @Query("SELECT pauseInterval FROM events WHERE id = :subjectId")
-    suspend fun getPauseIntervalById(subjectId: Long): Int?
+    @Query("SELECT startTime, pauseInterval FROM events WHERE id = :id")
+    suspend fun getStopRequired(id: Long): StopRequired
 
-    @Query("SELECT duration FROM events WHERE id > :subjectId AND type = :eventType")
-    suspend fun getInsertDurationList(subjectId: Long, eventType: EventType): List<Duration>
+    @Query("SELECT duration FROM events WHERE id > :id AND type = :eventType")
+    suspend fun getInsertDurationList(id: Long, eventType: EventType): List<Duration>
 
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
@@ -186,6 +187,9 @@ interface EventDao {
 
     @Query("SELECT type FROM events WHERE id = :id")
     suspend fun getEventTypeById(id: Long): EventType
+
+    @Query("SELECT pauseInterval FROM events WHERE id = :id")
+    suspend fun getPauseIntervalById(id: Long): Int
 
 
 //    @Transaction
