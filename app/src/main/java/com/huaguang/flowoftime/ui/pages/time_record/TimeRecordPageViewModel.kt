@@ -41,6 +41,7 @@ class TimeRecordPageViewModel(
             sharedState.currentEvent = value
         }
 
+    private var stepOver = false // TODO: 这个值要存起来
 
     init {
         // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
@@ -58,6 +59,8 @@ class TimeRecordPageViewModel(
                 RDALogger.info("autoId = $autoId")
                 updateIdState(autoId, eventType)
                 updateInputState(autoId, name)
+
+                if (eventType == EventType.STEP) stepOver = false // 重置
             }
 
         }
@@ -69,6 +72,8 @@ class TimeRecordPageViewModel(
                         else idState.step.value // else 只可能是步骤事项了
                     val duration = calEventDuration(eventId)
                     repository.updateEndTimeAndDuration(eventId, duration)
+
+                    if (eventType == EventType.STEP) stepOver = true // 为了在插入事件时获取正确的 parentId
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
@@ -173,7 +178,9 @@ class TimeRecordPageViewModel(
                 EventType.SUBJECT -> null
                 EventType.STEP, EventType.FOLLOW -> subject.value
                 EventType.INSERT -> {
-                    val parentType = if (subject.value > step.value) EventType.SUBJECT else EventType.STEP
+                    val parentType = if (subject.value > step.value) EventType.SUBJECT
+                        else if (stepOver) EventType.SUBJECT else EventType.STEP
+                    RDALogger.info("stepOver = $stepOver，parentType = $parentType")
                     if (parentType == EventType.STEP) step.value else subject.value
                 }
             }
