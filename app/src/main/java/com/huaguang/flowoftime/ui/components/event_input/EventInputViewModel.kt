@@ -1,12 +1,15 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.IdState
 import com.huaguang.flowoftime.data.models.InputState
@@ -15,6 +18,10 @@ import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -33,6 +40,29 @@ class EventInputViewModel @Inject constructor(
     private var endTime: LocalDateTime? = null
     var coreName = ""
     var confirmThenStart = false
+    val scrollTrigger = mutableStateOf(false)
+    val scrollOffset = mutableStateOf(0f)
+
+    private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
+    val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
+    private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
+    val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            repository.getCurrentCombinedEventFlow().filterNotNull().collect { combinedEvent ->
+                RDALogger.info("收集到当前项：combinedEvent = $combinedEvent")
+                _currentCombinedEventFlow.value = combinedEvent // 传给 UI
+            }
+        }
+
+        viewModelScope.launch {
+            repository.getSecondLatestCombinedEventFlow().filterNotNull().collect { combinedEvent ->
+                RDALogger.info("收集到上一个：combinedEvent = $combinedEvent")
+                _secondLatestCombinedEventFlow.value = combinedEvent // 传给 UI
+            }
+        }
+    }
 
     fun onConfirmButtonClick(text: String) {
         inputState.apply {
@@ -74,6 +104,14 @@ class EventInputViewModel @Inject constructor(
 
         initialName = event.name // 传出，给更新数据用
         endTime = event.endTime // 传出，用于判断事件是否正在进行
+
+        val diff = event.id - idState.subject.value
+        RDALogger.info("subjectId = ${idState.subject.value}")
+        RDALogger.info("diff = $diff")
+        if (itemType == ItemType.RECORD && diff > 0) { // 触发滚动
+            scrollTrigger.value = !scrollTrigger.value
+            scrollOffset.value = diff * 25f
+        }
     }
 
 

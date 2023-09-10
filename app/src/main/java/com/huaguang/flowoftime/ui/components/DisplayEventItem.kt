@@ -189,7 +189,7 @@ fun DurationText(duration: Duration, type: EventType) {
         fontSize = if (type == EventType.SUBJECT) 18.sp else 12.sp,
         fontWeight = FontWeight.ExtraBold,
         fontStyle = FontStyle.Italic,
-        modifier = Modifier.padding(start = 5.dp),
+        modifier = Modifier.padding(start = 5.dp, end = 10.dp),
     )
 }
 

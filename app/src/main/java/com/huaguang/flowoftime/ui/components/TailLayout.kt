@@ -80,8 +80,9 @@ fun TailLayout(
                     OutlinedIconButton(
                         onClick = { viewModel.onStepButtonClick(eventControl, buttonsStateControl) },
                         modifier = Modifier
-                            .padding(horizontal = 5.dp)
+                            .padding(start = 5.dp)
                             .size(24.dp),
+                        enabled = !viewModel.inputState.show.value
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.step),

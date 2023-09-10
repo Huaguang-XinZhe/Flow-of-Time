@@ -7,7 +7,6 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
-import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.Event
 import com.huaguang.flowoftime.data.models.IdState
 import com.huaguang.flowoftime.data.models.SharedState
@@ -18,10 +17,6 @@ import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsVi
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
@@ -46,28 +41,8 @@ class TimeRecordPageViewModel(
             sharedState.currentEvent = value
         }
 
-    private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
-    val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
-    private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
-    val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
 
     init {
-        RDALogger.info("init 块执行！")
-
-        viewModelScope.launch {
-            repository.getCurrentCombinedEventFlow().filterNotNull().collect { combinedEvent ->
-                RDALogger.info("收集到当前项：combinedEvent = $combinedEvent")
-                _currentCombinedEventFlow.value = combinedEvent // 传给 UI
-            }
-        }
-
-        viewModelScope.launch {
-            repository.getSecondLatestCombinedEventFlow().filterNotNull().collect { combinedEvent ->
-                RDALogger.info("收集到上一个：combinedEvent = $combinedEvent")
-                _secondLatestCombinedEventFlow.value = combinedEvent // 传给 UI
-            }
-        }
-
         // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
         viewModelScope.launch {
             if (currentEvent == null) currentEvent = repository.getCurrentEvent()
