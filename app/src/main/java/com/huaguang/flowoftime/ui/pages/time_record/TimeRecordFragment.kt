@@ -9,11 +9,11 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.huaguang.flowoftime.EventStatus
-import com.huaguang.flowoftime.data.models.IdState
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
+import com.huaguang.flowoftime.state.IdState
+import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
@@ -89,7 +89,7 @@ class TimeRecordFragment : Fragment() {
         super.onStop()
 
         if (sharedState.eventStatus.value != EventStatus.NO_EVENT) { // 有事件正在进行才保存
-            spHelper.saveIdState(idState)
+            spHelper.saveState(idState, eventButtonsViewModel.buttonsState)
         }
     }
 

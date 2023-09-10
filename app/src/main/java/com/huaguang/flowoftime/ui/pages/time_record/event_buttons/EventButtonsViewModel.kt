@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record.event_buttons
 
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -12,8 +11,9 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.state.ButtonsState
+import com.huaguang.flowoftime.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
@@ -22,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class EventButtonsViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val sharedState: SharedState
+    private val sharedState: SharedState,
+    val buttonsState: ButtonsState,
 ) : ViewModel() {
 
     private var currentStatus
@@ -34,13 +35,7 @@ class EventButtonsViewModel @Inject constructor(
     private val _eventLiveData = MutableLiveData<Event>()
     val eventLiveData: LiveData<Event> get() = _eventLiveData
 
-    val mainButtonText = mutableStateOf("开始")
-    val subButtonText = mutableStateOf("插入")
-    val mainButtonShow = MutableLiveData(true)
-    val subButtonShow = MutableLiveData(false)
-    val undoFilledIconShow = mutableStateOf(false)
-
-    private var stepInsert = false
+    private var stepInsert = false // TODO: 为什么要引入？引入为什么不重置？
 
     val buttonsStateControl = object : ButtonsStateControl {
         override fun toggleMainEnd() {
@@ -49,15 +44,19 @@ class EventButtonsViewModel @Inject constructor(
 
         override fun toggleSubEnd(type: EventType) {
             currentStatus = EventStatus.SUB_TIMING
-            undoFilledIconShow.value = false
+            
+            buttonsState.apply {
+                undoShow.value = false
 
-            if (type == EventType.FOLLOW) {
-                mainButtonShow.value = false
-                subButtonText.value = "伴随结束"
-            } else if (type == EventType.STEP) {
-                mainButtonText.value = "步骤结束"
-                subButtonText.value = "插入"
-                stepInsert = true
+                if (type == EventType.FOLLOW) {
+                    mainShow.value = false
+                    subText.value = "伴随结束"
+                } else if (type == EventType.STEP) {
+                    mainText.value = "步骤结束"
+                    subText.value = "插入"
+                    
+                    stepInsert = true
+                }
             }
         }
 
@@ -66,40 +65,49 @@ class EventButtonsViewModel @Inject constructor(
 
     fun toggleStateOnMainStop() {
         currentStatus = EventStatus.NO_EVENT
-        mainButtonText.value = "开始"
-        subButtonShow.value = false
-        undoFilledIconShow.value = true
+        
+        buttonsState.apply {
+            mainText.value = "开始"
+            subShow.value = false
+            undoShow.value = true
+        }
     }
 
     private fun toggleStateOnSubStop() {
         currentStatus = if (stepInsert) EventStatus.SUB_TIMING else EventStatus.SUBJECT_ONLY
-        subButtonText.value = "插入"
-        mainButtonShow.value = true
-        undoFilledIconShow.value = true
+
+        buttonsState.apply {
+            subText.value = "插入"
+            mainShow.value = true
+            undoShow.value = true
+        }
     }
 
     fun restoreButtonShow() {
-        if (mainButtonText.value == "开始") return
+        buttonsState.apply {
+            if (mainText.value == "开始") return
 
-        if (subButtonText.value == "插入结束") {
-            mainButtonShow.value = false
+            if (subText.value == "插入结束") {
+                mainShow.value = false
+            }
+
+            subShow.value = true
         }
-
-        subButtonShow.value = true
-
     }
 
     fun updateStateOnGetUpConfirmed() {
-        // 按钮文本直接还原为开始，不需要结束
-        mainButtonText.value = "开始"
-        // 比较特殊，插入按钮不需要显示
-        subButtonShow.value = false
+        buttonsState.apply {
+            // 按钮文本直接还原为开始，不需要结束
+            mainText.value = "开始"
+            // 比较特殊，插入按钮不需要显示
+            subShow.value = false
+        }
     }
 
     fun onMainButtonClick(eventControl: EventControl, selectedTime: MutableState<LocalDateTime?>?) {
         selectedTime?.value = null // 取消选中状态
 
-        when (mainButtonText.value) {
+        when (buttonsState.mainText.value) {
             "开始" -> {
                 toggleStateOnMainStart()
                 eventControl.startEvent(eventType = EventType.SUBJECT)
@@ -120,7 +128,7 @@ class EventButtonsViewModel @Inject constructor(
     }
 
     fun onMainButtonLongClick(eventControl: EventControl) {
-        if (mainButtonText.value == "结束") return
+        if (buttonsState.mainText.value == "结束") return
 
         // ButtonText 的值除了结束就是开始了，不可能为 null
         viewModelScope.launch {
@@ -141,7 +149,7 @@ class EventButtonsViewModel @Inject constructor(
     fun onSubButtonClick(eventControl: EventControl, selectedTime: MutableState<LocalDateTime?>?) {
         selectedTime?.value = null // 取消选中状态
 
-        when (subButtonText.value) {
+        when (buttonsState.subText.value) {
             "插入" -> {
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
                 eventControl.startEvent(eventType = EventType.INSERT)
@@ -156,7 +164,7 @@ class EventButtonsViewModel @Inject constructor(
     }
 
     fun onSubButtonLongClick(eventControl: EventControl) {
-        if (subButtonText.value == "插入") return
+        if (buttonsState.subText.value == "插入") return
 
         viewModelScope.launch {
             // 结束子事件————————————————
@@ -193,7 +201,7 @@ class EventButtonsViewModel @Inject constructor(
             }
         }
 
-        undoFilledIconShow.value = false
+        buttonsState.undoShow.value = false
     }
 
     /**
@@ -201,7 +209,7 @@ class EventButtonsViewModel @Inject constructor(
      */
     private suspend fun getJustEndedEvent(): Event {
         RDALogger.info("getJustEndedEvent 执行！")
-        return if (mainButtonShow.value == true && mainButtonText.value == "开始") {
+        return if (buttonsState.mainShow.value && buttonsState.mainText.value == "开始") {
             RDALogger.info("从最近的主事件中获取")
             repository.getLastMainEvent()!! // 主事件刚结束，从最近的主事件获取
         } else repository.getLastEvent() // 子事件结束，获取最近的事件
@@ -209,16 +217,22 @@ class EventButtonsViewModel @Inject constructor(
 
     private fun toggleStateOnMainStart() {
         currentStatus = EventStatus.SUBJECT_ONLY
-        mainButtonText.value = "结束"
-        subButtonShow.value = true
-        undoFilledIconShow.value = false
+
+        buttonsState.apply {
+            mainText.value = "结束"
+            subShow.value = true
+            undoShow.value = false
+        }
     }
 
     private fun toggleStateOnSubInsert() {
         currentStatus = EventStatus.SUB_TIMING
-        subButtonText.value = "插入结束"
-        mainButtonShow.value = false
-        undoFilledIconShow.value = false
+
+        buttonsState.apply {
+            subText.value = "插入结束"
+            mainShow.value = false
+            undoShow.value = false
+        }
     }
 
 }

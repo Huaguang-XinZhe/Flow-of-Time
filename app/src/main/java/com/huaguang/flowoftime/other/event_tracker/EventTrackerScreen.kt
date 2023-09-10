@@ -14,11 +14,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.other.EventList
 import com.huaguang.flowoftime.other.EventTrackerMediator
 import com.huaguang.flowoftime.other.duration_slider.DurationSlider
 import com.huaguang.flowoftime.other.header.HeaderRow
+import com.huaguang.flowoftime.state.SharedState
 import kotlinx.coroutines.launch
 
 @Composable

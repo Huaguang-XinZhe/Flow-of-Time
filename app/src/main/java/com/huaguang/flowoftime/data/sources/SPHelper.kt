@@ -1,10 +1,12 @@
 package com.huaguang.flowoftime.data.sources
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.IdState
+import com.huaguang.flowoftime.state.ButtonsState
+import com.huaguang.flowoftime.state.IdState
 import kotlinx.serialization.json.Json
 import java.time.Duration
 
@@ -28,14 +30,44 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
-    fun saveIdState(idState: IdState) {
-        with(sp.edit()) {
+    fun saveState(
+        idState: IdState,
+        buttonsState: ButtonsState,
+    ) {
+        val editor = sp.edit()
+        saveIdState(editor, idState)
+        saveButtonsState(editor, buttonsState)
+        editor.apply()
+    }
+
+    private fun saveIdState(editor: SharedPreferences.Editor, idState: IdState) {
+        with(editor) {
             putLong("current", idState.current.value)
             putLong("subject", idState.subject.value)
             putLong("step", idState.step.value)
-            apply()
         }
     }
+
+    private fun saveButtonsState(editor: SharedPreferences.Editor, buttonsState: ButtonsState) {
+        with(editor) {
+            putString("mainText", buttonsState.mainText.value)
+            putBoolean("mainShow", buttonsState.mainShow.value)
+            putString("subText", buttonsState.subText.value)
+            putBoolean("subShow", buttonsState.subShow.value)
+            putBoolean("undoShow", buttonsState.undoShow.value)
+        }
+    }
+
+    fun getButtonsState(): ButtonsState {
+        return ButtonsState(
+            mainText = mutableStateOf(sp.getString("mainText", "开始") ?: "开始"),
+            mainShow = mutableStateOf(sp.getBoolean("mainShow", true)),
+            subText = mutableStateOf(sp.getString("subText", "插入") ?: "插入"),
+            subShow = mutableStateOf(sp.getBoolean("subShow", false)),
+            undoShow = mutableStateOf(sp.getBoolean("undoShow", false))
+        )
+    }
+
 
     fun getIdState() = IdState(
         current = mutableStateOf(sp.getLong("current", 0L)),
@@ -83,8 +115,8 @@ class SPHelper private constructor(context: Context) {
     fun saveState(
         isOneDayButtonClicked: Boolean,
         isInputShow: Boolean,
-        buttonText: String,
-        subButtonText: String,
+//        buttonText: String,
+//        subButtonText: String,
         scrollIndex: Int,
         coreDuration: Duration,
         currentEvent: Event?,
@@ -93,8 +125,8 @@ class SPHelper private constructor(context: Context) {
         sp.edit().apply {
             putBoolean("IS_ONE_DAY_BUTTON_CLICKED", isOneDayButtonClicked)
             putBoolean("is_input_show", isInputShow)
-            putString("button_text", buttonText)
-            putString("sub_button_text", subButtonText)
+//            putString("button_text", buttonText)
+//            putString("sub_button_text", subButtonText)
             putInt("scroll_index", scrollIndex)
             putLong("core_duration", coreDuration.toMillis())
 //            putInt("event_status_value", eventStatus.value)

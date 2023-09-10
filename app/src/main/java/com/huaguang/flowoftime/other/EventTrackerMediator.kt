@@ -6,13 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.other.current_item.CurrentItemViewModel
 import com.huaguang.flowoftime.other.duration_slider.DurationSliderViewModel
 import com.huaguang.flowoftime.other.event_name.EventNameViewModel
 import com.huaguang.flowoftime.other.header.HeaderViewModel
+import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.isCoreEvent
@@ -362,10 +362,10 @@ class EventTrackerMediator(
 
 //        currentEvent = data.currentEvent
 
-        eventButtonsViewModel.apply {
-            mainButtonText.value = data.buttonText
-            subButtonText.value = data.subButtonText
-        }
+//        eventButtonsViewModel.apply {
+//            `buttonsState.mainText`.value = data.buttonText
+//            `buttonsState.subText`.value = data.subButtonText
+//        }
 
     }
 
@@ -374,8 +374,8 @@ class EventTrackerMediator(
             spHelper.saveState(
                 headerViewModel.isOneDayButtonClicked.value,
                 sharedState.isInputShow.value,
-                eventButtonsViewModel.mainButtonText.value,
-                eventButtonsViewModel.subButtonText.value,
+//                eventButtonsViewModel.`buttonsState.mainText`.value,
+//                eventButtonsViewModel.`buttonsState.subText`.value,
                 sharedState.scrollIndex.value,
                 durationSliderViewModel.coreDuration.value,
                 currentItemViewModel.currentEvent.value,

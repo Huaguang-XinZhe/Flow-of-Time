@@ -1,9 +1,10 @@
-package com.huaguang.flowoftime.data.models
+package com.huaguang.flowoftime.state
 
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.EventStatus
+import com.huaguang.flowoftime.data.models.Event
 
 class SharedState(val application: Application) {
     // TODO: 这两个状态已经没用了

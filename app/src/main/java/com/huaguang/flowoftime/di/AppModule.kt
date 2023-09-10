@@ -6,9 +6,6 @@ import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.dao.IconMappingDao
-import com.huaguang.flowoftime.data.models.IdState
-import com.huaguang.flowoftime.data.models.InputState
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
@@ -17,6 +14,10 @@ import com.huaguang.flowoftime.data.sources.IconDatabase
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.other.AlarmHelper
 import com.huaguang.flowoftime.other.LocalDateTimeSerializer
+import com.huaguang.flowoftime.state.ButtonsState
+import com.huaguang.flowoftime.state.IdState
+import com.huaguang.flowoftime.state.InputState
+import com.huaguang.flowoftime.state.SharedState
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -122,7 +123,13 @@ object AppModule {
         return IdState.initialValue(spHelper)
     }
 
-    // 其他的依赖
+    @Singleton
+    @Provides
+    fun provideButtonsState(spHelper: SPHelper): ButtonsState {
+        return ButtonsState.initialValue(spHelper)
+    }
+
+
 }
 
 

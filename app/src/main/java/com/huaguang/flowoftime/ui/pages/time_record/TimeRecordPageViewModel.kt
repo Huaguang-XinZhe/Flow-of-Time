@@ -8,10 +8,10 @@ import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.IdState
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
+import com.huaguang.flowoftime.state.IdState
+import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel

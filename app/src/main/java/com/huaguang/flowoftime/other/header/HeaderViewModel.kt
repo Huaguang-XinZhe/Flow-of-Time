@@ -3,10 +3,10 @@ package com.huaguang.flowoftime.other.header
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.other.copyToClipboard
+import com.huaguang.flowoftime.state.SharedState
 import com.huaguang.flowoftime.utils.isGetUpTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers

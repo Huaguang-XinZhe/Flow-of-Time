@@ -11,12 +11,12 @@ import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.IdState
-import com.huaguang.flowoftime.data.models.InputState
-import com.huaguang.flowoftime.data.models.SharedState
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
+import com.huaguang.flowoftime.state.IdState
+import com.huaguang.flowoftime.state.InputState
+import com.huaguang.flowoftime.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

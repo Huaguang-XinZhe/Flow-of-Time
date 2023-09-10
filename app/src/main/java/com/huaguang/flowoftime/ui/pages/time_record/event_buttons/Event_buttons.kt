@@ -9,7 +9,6 @@ import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -48,7 +47,7 @@ fun EventButtons(
             }
         )
 
-        StartOrInsertButtonRow(
+        ButtonsRow(
             viewModel = viewModel,
             eventControl = eventControl,
             selectedTime = selectedTime,
@@ -69,7 +68,7 @@ fun UnDoButton(
     viewModel: EventButtonsViewModel,
     modifier: Modifier = Modifier
 ) {
-    val undoFilledIconShow by viewModel.undoFilledIconShow
+    val undoFilledIconShow by viewModel.buttonsState.undoShow
 
     if (undoFilledIconShow) {
         IconButton(
@@ -86,35 +85,32 @@ fun UnDoButton(
 }
 
 @Composable
-fun StartOrInsertButtonRow(
+fun ButtonsRow(
     viewModel: EventButtonsViewModel,
     eventControl: EventControl,
     selectedTime: MutableState<LocalDateTime?>?,
     modifier: Modifier = Modifier
 ) {
-    val mainEventButtonText by viewModel.mainButtonText
-    val subEventButtonText by viewModel.subButtonText
-    val mainButtonShow by viewModel.mainButtonShow.observeAsState()
-    val subButtonShow by viewModel.subButtonShow.observeAsState()
-
     Row(
         modifier = modifier
     ) {
-        if (mainButtonShow == true) {
-            LongPressButton(
-                onClick = { viewModel.onMainButtonClick(eventControl, selectedTime) },
-                onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
-                text = mainEventButtonText
-            )
-        }
+        viewModel.buttonsState.apply {
+            if (mainShow.value) {
+                LongPressButton(
+                    onClick = { viewModel.onMainButtonClick(eventControl, selectedTime) },
+                    onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
+                    text = mainText.value
+                )
+            }
 
-        if (subButtonShow == true) {
-            LongPressTextButton(
-                text = subEventButtonText,
-                onClick = { viewModel.onSubButtonClick(eventControl, selectedTime) },
-                onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
-                modifier = Modifier.padding(start = 5.dp)
-            )
+            if (subShow.value) {
+                LongPressTextButton(
+                    text = subText.value,
+                    onClick = { viewModel.onSubButtonClick(eventControl, selectedTime) },
+                    onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
+                    modifier = Modifier.padding(start = 5.dp)
+                )
+            }
         }
     }
 }
