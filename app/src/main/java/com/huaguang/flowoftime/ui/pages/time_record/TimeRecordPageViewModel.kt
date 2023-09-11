@@ -183,6 +183,8 @@ class TimeRecordPageViewModel(
                 EventType.SUBJECT -> null
                 EventType.STEP, EventType.FOLLOW -> subject.value
                 EventType.INSERT -> {
+                    RDALogger.info("subjectId = ${subject.value}")
+                    RDALogger.info("stepId = ${step.value}")
                     val parentType = if (subject.value > step.value) EventType.SUBJECT
                         else if (stepOver) EventType.SUBJECT else EventType.STEP
                     RDALogger.info("stepOver = $stepOver，parentType = $parentType")

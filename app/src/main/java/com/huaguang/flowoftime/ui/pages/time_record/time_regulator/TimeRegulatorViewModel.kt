@@ -65,8 +65,6 @@ class TimeRegulatorViewModel @Inject constructor(
 
     }
 
-
-
     private fun debouncedOnClick(onClick: () -> Unit) {
         val currentTime = System.currentTimeMillis()
         // 如果两次点击的时间差小于1000毫秒，则返回
@@ -158,7 +156,6 @@ class TimeRegulatorViewModel @Inject constructor(
             }
         }
     }
-
 
     private fun Long.toDuration(): Duration {
         return if (this == 0L) Duration.ZERO else Duration.ofMinutes(this)

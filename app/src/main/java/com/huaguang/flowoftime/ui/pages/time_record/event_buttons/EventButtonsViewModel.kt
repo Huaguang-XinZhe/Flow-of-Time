@@ -35,27 +35,27 @@ class EventButtonsViewModel @Inject constructor(
     private val _eventLiveData = MutableLiveData<Event>()
     val eventLiveData: LiveData<Event> get() = _eventLiveData
 
-    private var stepInsert = false // TODO: 为什么要引入？引入为什么不重置？
+    private var stepTiming = false // 为了辅助 EventStatus 的确立
 
     val buttonsStateControl = object : ButtonsStateControl {
-        override fun toggleMainEnd() {
+        override fun toggleMainEnd() { // 按钮切换到主题事项结束的状态（说明主题事项正在进行）
             toggleStateOnMainStart()
         }
 
-        override fun toggleSubEnd(type: EventType) {
+        override fun toggleSubEnd(type: EventType) { // 按钮切换到子项结束的状态（说明子项正在进行）
             currentStatus = EventStatus.SUB_TIMING
             
             buttonsState.apply {
                 undoShow.value = false
 
-                if (type == EventType.FOLLOW) {
+                if (type == EventType.FOLLOW) { // 伴随事件正在进行
                     mainShow.value = false
                     subText.value = "伴随结束"
-                } else if (type == EventType.STEP) {
+                } else if (type == EventType.STEP) { // 步骤正在进行
                     mainText.value = "步骤结束"
                     subText.value = "插入"
                     
-                    stepInsert = true
+                    stepTiming = true
                 }
             }
         }
@@ -73,8 +73,8 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    private fun toggleStateOnSubStop() {
-        currentStatus = if (stepInsert) EventStatus.SUB_TIMING else EventStatus.SUBJECT_ONLY
+    private fun insertEnd() {
+        currentStatus = if (stepTiming) EventStatus.SUB_TIMING else EventStatus.SUBJECT_ONLY
 
         buttonsState.apply {
             subText.value = "插入"
@@ -122,6 +122,7 @@ class EventButtonsViewModel @Inject constructor(
                 viewModelScope.launch {
                     eventControl.stopEvent(eventType = EventType.STEP)
                     toggleStateOnMainStart()
+                    stepTiming = false // 结束时重置
                 }
             }
         }
@@ -157,7 +158,7 @@ class EventButtonsViewModel @Inject constructor(
             "插入结束", "伴随结束" -> {
                 viewModelScope.launch {
                     eventControl.stopEvent(eventType = EventType.INSERT)
-                    toggleStateOnSubStop()
+                    insertEnd()
                 }
             }
         }
@@ -169,7 +170,7 @@ class EventButtonsViewModel @Inject constructor(
         viewModelScope.launch {
             // 结束子事件————————————————
             eventControl.stopEvent(eventType = EventType.INSERT)
-            toggleStateOnSubStop()
+            insertEnd()
 
             // 结束主事件————————————————
             eventControl.stopEvent()
