@@ -33,6 +33,11 @@ android {
             versionNameSuffix "-dev"
         }
 
+        prod_dev { // 产线的名称不能使用 `-`，可以使用下划线！！！
+            applicationIdSuffix ".prod.dev"
+            versionNameSuffix "-prod-dev"
+        }
+
         prod {
             // 这里不需要做任何特殊配置，prod flavor 将使用 defaultConfig 中的配置
         }
