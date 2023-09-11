@@ -7,7 +7,7 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
@@ -72,7 +72,8 @@ class TimeRecordPageViewModel(
                     val eventId = if (eventType == EventType.SUBJECT) idState.subject.value
                         else idState.step.value // else 只可能是步骤事项了
 
-                    timeRegulatorViewModel.calParentEventDurationAndUpdateDB(eventId)
+                    val duration = calEventDuration(eventId)
+                    repository.updateEndTimeAndDurationById(eventId, duration)
 
                     if (eventType == EventType.STEP) stepOver = true // 为了在插入事件时获取正确的 parentId
                 } else {
@@ -85,7 +86,21 @@ class TimeRecordPageViewModel(
         }
     }
 
+    /**
+     * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
+     * @param eventId 它就是那个含有下级事项的父事项 id
+     */
+    private suspend fun calEventDuration(eventId: Long): Duration {
+        val stopRequired = repository.getStopRequired(eventId)
+        val pauseIntervalDuration = Duration.ofMinutes(stopRequired.pauseInterval.toLong())
+        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
+        val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
+        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
+        val standardDuration = Duration.between(stopRequired.startTime, LocalDateTime.now())
+        RDALogger.info("standardDuration = $standardDuration")
 
+        return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
+    }
 
     private fun updateIdState(autoId: Long, eventType: EventType) {
         idState.apply {

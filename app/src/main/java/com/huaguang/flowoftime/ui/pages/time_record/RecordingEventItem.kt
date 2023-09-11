@@ -47,7 +47,8 @@ fun RecordingEventItem(
             eventInfo = EventInfo(
                id = event.id,
                isTiming = event.endTime == null,
-               withContent = event.withContent // start 用不着这个
+               parentId = event.parentEventId,
+               eventType = event.type,
             ),
             type = TimeType.START,
             initialTime = event.startTime, // 把 remember 调整到这里是非常重要的一处改变，这使得 initialTime 的值是动态的！
@@ -59,7 +60,8 @@ fun RecordingEventItem(
             eventInfo = EventInfo(
                 id = event.id,
                 isTiming = false,
-                withContent = event.withContent
+                parentId = event.parentEventId,
+                eventType = event.type,
             ),
             type = TimeType.END,
             initialTime = event.endTime, // 重新组合的时候这个状态会被记住，但值会改变

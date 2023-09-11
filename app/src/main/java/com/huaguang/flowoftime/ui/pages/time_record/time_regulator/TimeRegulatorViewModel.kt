@@ -5,7 +5,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -65,32 +65,7 @@ class TimeRegulatorViewModel @Inject constructor(
 
     }
 
-    /**
-     * 计算含有子事项的父事项的真正时长，并更新结束时间和 duration 到数据库
-     */
-    suspend fun calParentEventDurationAndUpdateDB(
-        eventId: Long,
-        endTime: LocalDateTime = LocalDateTime.now(),
-    ) {
-        val duration = calEventDuration(eventId, endTime)
-        repository.updateDB(eventId, endTime, duration)
-    }
 
-    /**
-     * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
-     * @param eventId 它就是那个含有下级事项的父事项 id
-     */
-    private suspend fun calEventDuration(eventId: Long, endTime: LocalDateTime): Duration {
-        val stopRequired = repository.getStopRequired(eventId)
-        val pauseIntervalDuration = Duration.ofMinutes(stopRequired.pauseInterval.toLong())
-        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
-        val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
-        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
-        val standardDuration = Duration.between(stopRequired.startTime, endTime)
-        RDALogger.info("standardDuration = $standardDuration")
-
-        return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
-    }
 
     private fun debouncedOnClick(onClick: () -> Unit) {
         val currentTime = System.currentTimeMillis()
@@ -126,17 +101,9 @@ class TimeRegulatorViewModel @Inject constructor(
             delay(1500) // 延迟1.5秒
 
             val newTime = newCustomTime.timeState.value!!
-            val type = newCustomTime.type
-            if (type == TimeType.START) sharedState.currentEvent?.startTime = newTime
+            if (newCustomTime.type == TimeType.START) sharedState.currentEvent?.startTime = newTime
 
-            newCustomTime.eventInfo.apply {
-                if (type == TimeType.END && withContent && !isTiming) { // 如果调整的是有下级且已经结束过的事项的结束标签，那么就重新计算（结束时计算）
-                    calParentEventDurationAndUpdateDB(id, newTime)
-                } else { // 一般调整的计算方式
-                    val newDuration = calNewDuration(newCustomTime)
-                    repository.updateDatabase(newCustomTime, newDuration) // 更新数据库的开始、结束时间，同时更新 duration
-                }
-            }
+            updateCurrentOrParentEvent(newCustomTime)
 
             selectedTime?.value = null // 取消选中状态
             customTimeState.value = null // 为防止取消选中后再调整的时候更新起作用
@@ -144,24 +111,58 @@ class TimeRegulatorViewModel @Inject constructor(
         }
     }
 
+    private suspend fun updateCurrentOrParentEvent(newCustomTime: CustomTime) {
+        val pair = calNewDurationPair(newCustomTime)
+
+        repository.updateTimeAndDuration(newCustomTime, pair.first) // 更新数据库的开始、结束时间，同时更新 duration
+
+        if (pair.second != null) { // 只更新当前项就可以了
+            repository.updateDuration(newCustomTime.eventInfo.parentId!!, pair.second!!)
+        }
+    }
+
     /**
      * 根据变化量获取。start 反，end 正（变化量和最终 duration 的变化关系）
      * 不能根据结束时间和开始时间的简单相减来获取，这会把结束事件时的计算成果覆灭，结果还不准确。
+     * @return 一般只取返回值的第一个元素（当前调整项的新 Duration），
+     * 第二个元素是为已经结束的插入事件的父事件（也已经结束）准备的，如果为 null，表示不需要更新。
      */
-    private suspend fun calNewDuration(newCustomTime: CustomTime): Duration? {
-        newCustomTime.apply {
-            if (type == TimeType.START && eventInfo.isTiming) return null
+    private suspend fun calNewDurationPair(newCustomTime: CustomTime): Pair<Duration?, Duration?> {
+        with(newCustomTime) {
+            if (type == TimeType.START && eventInfo.isTiming) return null to null
 
-            val deltaDuration = ChronoUnit.MINUTES.between(initialTime, timeState.value).let {
-                if (it == 0L) Duration.ZERO else Duration.ofMinutes(it)
-            }
-            val originalDuration = repository.getDurationById(eventInfo.id)
+            val deltaDuration = ChronoUnit.MINUTES.between(initialTime, timeState.value).toDuration()
 
-            return if (type == TimeType.START) {
-                originalDuration - deltaDuration
-            } else {
-                originalDuration + deltaDuration
+            with(eventInfo) {
+                val originalDuration = repository.getDurationById(id)
+
+                val newDuration = if (type == TimeType.START) {
+                    originalDuration - deltaDuration
+                } else {
+                    originalDuration + deltaDuration
+                }
+
+                if (eventType == EventType.INSERT && !isTiming) {
+                    val parentEvent = repository.getInsertParentById(parentId!!)
+                    if (parentEvent.endTime != null) {
+                        val newParentDuration = if (type == TimeType.START) {
+                            parentEvent.duration + deltaDuration // start 同向变化（父）
+                        } else {
+                            parentEvent.duration - deltaDuration // end 反向变化（父）
+                        }
+                        return newDuration to newParentDuration
+                    }
+                }
+
+                return newDuration to null
             }
         }
     }
+
+
+    private fun Long.toDuration(): Duration {
+        return if (this == 0L) Duration.ZERO else Duration.ofMinutes(this)
+    }
+
+
 }

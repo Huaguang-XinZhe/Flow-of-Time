@@ -9,9 +9,9 @@ import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
-import com.huaguang.flowoftime.data.models.DateDuration
-import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.EventTimes
+import com.huaguang.flowoftime.data.models.db_returns.DateDuration
+import com.huaguang.flowoftime.data.models.db_returns.EventTimes
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import com.huaguang.flowoftime.utils.EventSerializer
 import com.huaguang.flowoftime.utils.formatDurationInText
@@ -177,7 +177,7 @@ class EventRepository(
         }
 
 
-    suspend fun updateDatabase(newCustomTime: CustomTime, newDuration: Duration?) {
+    suspend fun updateTimeAndDuration(newCustomTime: CustomTime, newDuration: Duration?) {
         val eventId = newCustomTime.eventInfo.id
         val newTime = newCustomTime.timeState.value!!
 
@@ -254,14 +254,13 @@ class EventRepository(
         }
     }
 
-    suspend fun updateDB(
+    suspend fun updateEndTimeAndDurationById(
         eventId: Long,
-        endTime: LocalDateTime,
         newDuration: Duration,
-        withContent: Boolean = true,
+        endTime: LocalDateTime = LocalDateTime.now(),
     ) {
         withContext(Dispatchers.IO) {
-            eventDao.updateDB(eventId, endTime, newDuration, withContent)
+            eventDao.updateEndTimeAndDurationById(eventId, endTime, newDuration)
         }
     }
 
@@ -301,6 +300,17 @@ class EventRepository(
         withContext(Dispatchers.IO) {
             eventDao.getDurationById(eventId)
         }
+
+    suspend fun getInsertParentById(parentId: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getInsertParentById(parentId)
+        }
+
+    suspend fun updateDuration(id: Long, newDuration: Duration) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateDurationById(id, newDuration)
+        }
+    }
 
 
 }

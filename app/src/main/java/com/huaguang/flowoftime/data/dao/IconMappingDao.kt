@@ -2,7 +2,7 @@ package com.huaguang.flowoftime.data.dao
 
 import androidx.room.Dao
 import androidx.room.Query
-import com.huaguang.flowoftime.data.models.IconMapping
+import com.huaguang.flowoftime.data.models.tables.IconMapping
 import kotlinx.coroutines.flow.Flow
 
 @Dao

@@ -21,7 +21,7 @@ import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.LocalButtonsStateControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl

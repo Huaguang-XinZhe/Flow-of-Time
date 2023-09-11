@@ -17,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 
 @Composable
 fun EventName(

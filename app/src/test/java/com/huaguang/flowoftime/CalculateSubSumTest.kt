@@ -1,6 +1,6 @@
 package com.huaguang.flowoftime
 
-import com.huaguang.flowoftime.data.models.EventTimes
+import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import org.junit.Test
 import org.junit.jupiter.api.Assertions.assertEquals
 import java.time.Duration

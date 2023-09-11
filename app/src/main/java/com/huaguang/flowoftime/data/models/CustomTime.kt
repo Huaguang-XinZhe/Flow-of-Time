@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.data.models
 
 import androidx.compose.runtime.MutableState
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import java.time.LocalDateTime
 
@@ -14,5 +15,6 @@ data class CustomTime(
 data class EventInfo(
     val id: Long,
     val isTiming: Boolean,
-    val withContent: Boolean,
+    val parentId: Long?,
+    val eventType: EventType,
 )

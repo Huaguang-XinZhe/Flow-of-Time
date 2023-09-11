@@ -9,9 +9,10 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.data.models.Event
-import com.huaguang.flowoftime.data.models.EventTimes
-import com.huaguang.flowoftime.data.models.StopRequired
+import com.huaguang.flowoftime.data.models.db_returns.EventTimes
+import com.huaguang.flowoftime.data.models.db_returns.InsertParent
+import com.huaguang.flowoftime.data.models.db_returns.StopRequired
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
 import java.time.Duration
@@ -67,19 +68,6 @@ interface EventDao {
         duration: Duration
     )
 
-    @Query("""
-        UPDATE events 
-        SET endTime = :endTime, duration = :duration, withContent = :withContent
-        WHERE id = :id
-    """)
-    suspend fun updateDB(
-        id: Long,
-        endTime: LocalDateTime,
-        duration: Duration,
-        withContent: Boolean,
-    )
-
-
     @Update
     suspend fun updateEvent(event: Event)
 
@@ -101,13 +89,6 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE id = (SELECT MAX(id) FROM events)")
     suspend fun getCurrentEvent(): Event?
-
-//    @Query("SELECT * FROM events WHERE name IN (:names) AND eventDate = :currentDate " +
-//            "AND duration IS NOT NULL")
-//    suspend fun getFilteredEvents(
-//        names: List<String>,
-//        currentDate: LocalDate = LocalDate.now()
-//    ): List<Event>
 
     @RawQuery
     suspend fun getEventsWithCustomQuery(query: SimpleSQLiteQuery): List<Event>
@@ -200,9 +181,11 @@ interface EventDao {
     @Query("SELECT duration FROM events WHERE id = :eventId")
     suspend fun getDurationById(eventId: Long): Duration
 
+    @Query("SELECT endTime, duration FROM events WHERE id = :parentId")
+    suspend fun getInsertParentById(parentId: Long): InsertParent
 
-//    @Transaction
-//    @Query("SELECT * FROM events")
-//    fun getAllEvents(): PagingSource<Int, Event>
+    @Query("UPDATE events SET duration = :newDuration WHERE id = :id")
+    suspend fun updateDurationById(id: Long, newDuration: Duration)
+
 
 }

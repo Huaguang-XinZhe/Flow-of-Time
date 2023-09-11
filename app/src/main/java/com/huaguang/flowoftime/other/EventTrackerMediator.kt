@@ -5,7 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.other.current_item.CurrentItemViewModel

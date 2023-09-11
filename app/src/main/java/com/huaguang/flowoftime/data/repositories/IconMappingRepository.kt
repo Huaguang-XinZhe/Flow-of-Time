@@ -2,7 +2,7 @@ package com.huaguang.flowoftime.data.repositories
 
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.dao.IconMappingDao
-import com.huaguang.flowoftime.data.models.IconMapping
+import com.huaguang.flowoftime.data.models.tables.IconMapping
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

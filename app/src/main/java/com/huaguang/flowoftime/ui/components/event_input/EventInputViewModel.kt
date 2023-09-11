@@ -9,7 +9,7 @@ import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CombinedEvent
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper

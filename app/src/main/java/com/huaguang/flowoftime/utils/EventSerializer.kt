@@ -1,7 +1,7 @@
 package com.huaguang.flowoftime.utils
 
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 import java.time.LocalDate
 
 object EventSerializer {

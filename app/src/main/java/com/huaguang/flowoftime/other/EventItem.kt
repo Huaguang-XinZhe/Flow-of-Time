@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.data.models.Event
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.event_name.EventName
 import com.huaguang.flowoftime.ui.theme.DarkGray24
 import com.huaguang.flowoftime.utils.formatDurationInText

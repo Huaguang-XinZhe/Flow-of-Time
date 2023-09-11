@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data.models
+package com.huaguang.flowoftime.data.models.db_returns
 
 import java.time.LocalDateTime
 
