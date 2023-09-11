@@ -7,6 +7,4 @@ interface ButtonsStateControl {
     fun toggleMainEnd()
 
     fun toggleSubEnd(type: EventType)
-
-    fun hasSubjectExist(): Boolean
 }

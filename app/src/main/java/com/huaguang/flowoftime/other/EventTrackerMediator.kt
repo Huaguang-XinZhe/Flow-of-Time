@@ -74,7 +74,6 @@ class EventTrackerMediator(
         viewModelScope.launch {
             initialized.value = true
 
-            eventButtonsViewModel.restoreButtonShow()
             durationSliderViewModel.resetCoreDuration()
 //            repository.generateDurationStr()
         }

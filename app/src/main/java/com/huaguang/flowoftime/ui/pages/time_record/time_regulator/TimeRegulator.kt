@@ -24,7 +24,7 @@ import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 
 @Composable
 fun TimeRegulator(
-    customTimeState: MutableState<CustomTime?>,
+    customTimeState: MutableState<CustomTime?>, // 这个值在选中 TimeLabel 的时候才会传递过来，否则为 null
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
@@ -65,13 +65,14 @@ fun TimeRegulator(
 
         TimeAdjustIconButton(-1, R.drawable.minus)
 
-        FilledIconToggleButton(
+        FilledIconToggleButton( // 暂停/恢复按钮，应当允许长按，暂停/恢复只针对当前最近的正在进行的事项
             checked = toggleState.value,
             onCheckedChange = {
                 toggleState.value = it
                 viewModel.calPauseInterval(it)
             },
-            modifier = Modifier.size(36.dp)
+            modifier = Modifier.size(36.dp),
+            enabled = viewModel.pauseButtonEnabled()
         ) {
             val iconRes = if (toggleState.value) R.drawable.continute else R.drawable.pause
             Icon(

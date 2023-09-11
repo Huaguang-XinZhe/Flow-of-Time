@@ -135,15 +135,13 @@ class TimeRecordPageViewModel(
     /**
      * 结束时更新当前事件的信息，插入事件和当前的主题事件会走这条路（即没有下级的会走这条路）
      */
-    private suspend fun updateCurrentEvent(): Event {
+    private fun updateCurrentEvent(): Event {
         var event: Event? = null
 
         currentEvent?.let {
             val autoId = idState.current.value
             // 插入事项不允许有暂停间隔
-            val pauseInterval = if (it.type == EventType.INSERT) 0 else {
-                repository.getPauseIntervalById(autoId)
-            }
+            val pauseInterval = if (it.type == EventType.INSERT) 0 else spHelper.getPauseInterval()
             val endTime = LocalDateTime.now()
             val duration = Duration.between(it.startTime, endTime)
                 .minus(Duration.ofMinutes(pauseInterval.toLong()))

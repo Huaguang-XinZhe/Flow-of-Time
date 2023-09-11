@@ -3,6 +3,7 @@ package com.huaguang.flowoftime.ui.components.event_input
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
@@ -88,8 +89,6 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
-
-
     fun onNameClick(event: Event, itemType: ItemType) {
         inputState.apply {
             eventId.value = event.id
@@ -108,8 +107,6 @@ class EventInputViewModel @Inject constructor(
             scrollOffset.value = diff * 25f
         }
     }
-
-
 
     fun onStepButtonClick(
         eventControl: EventControl,
@@ -135,14 +132,14 @@ class EventInputViewModel @Inject constructor(
             return
         }
 
-        val type = if (buttonsStateControl.hasSubjectExist()) EventType.FOLLOW else EventType.SUBJECT
+        val type = if (hasSubjectExist()) EventType.FOLLOW else EventType.SUBJECT
 
         eventControl.startEvent(
             name = coreName,
             eventType = type
         )
 
-        if (buttonsStateControl.hasSubjectExist()) {
+        if (hasSubjectExist()) {
             buttonsStateControl.toggleSubEnd(type) // 切换到 ”伴随结束“ 的按钮状态
         } else {
             buttonsStateControl.toggleMainEnd() // 切换到 “主题结束” 的按钮状态
@@ -207,6 +204,8 @@ class EventInputViewModel @Inject constructor(
 
         return result
     }
+
+    private fun hasSubjectExist() = sharedState.eventStatus.value != EventStatus.NO_EVENT
 
 }
 

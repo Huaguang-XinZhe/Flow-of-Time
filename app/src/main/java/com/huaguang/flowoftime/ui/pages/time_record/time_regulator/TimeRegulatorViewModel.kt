@@ -41,6 +41,12 @@ class TimeRegulatorViewModel @Inject constructor(
         updateJob?.cancel()
     }
 
+    /**
+     * 暂停/恢复按钮是否允许点击？
+     * 只要当前有事件正在进行，且不为插入事件就可以了。
+     */
+    fun pauseButtonEnabled() = sharedState.cursorType.value.let { it != null && it != EventType.INSERT }
+
     fun calPauseInterval(checked: Boolean) { // checked 为 true 是继续（播放），表明当前事项正在计时……
         if (!checked) { // 暂停
             recordTime = LocalTime.now()
