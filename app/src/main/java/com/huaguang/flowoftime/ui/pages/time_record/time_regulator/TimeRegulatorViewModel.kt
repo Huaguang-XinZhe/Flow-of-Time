@@ -30,7 +30,7 @@ class TimeRegulatorViewModel @Inject constructor(
 
     var selectedTime: MutableState<LocalDateTime?>? = null
 
-    private lateinit var recordTime: LocalTime
+    private var recordTime: LocalTime? = null
     // 用于取消之前的协程
     private var updateJob: Job? = null
     // 存储上次点击的时间戳
@@ -51,7 +51,9 @@ class TimeRegulatorViewModel @Inject constructor(
         if (!checked) { // 暂停
             recordTime = LocalTime.now()
         } else { // 继续
-            val interval = Duration.between(recordTime, LocalTime.now()).toMinutes().toInt()
+            val interval = if (recordTime == null) 0 else {
+                ChronoUnit.MINUTES.between(recordTime, LocalTime.now()).toInt()
+            }
             spHelper.savePauseInterval(interval)
         }
     }

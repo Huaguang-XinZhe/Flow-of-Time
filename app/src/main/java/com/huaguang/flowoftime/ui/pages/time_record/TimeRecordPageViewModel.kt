@@ -77,8 +77,8 @@ class TimeRecordPageViewModel(
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
+                    spHelper.resetPauseInterval()
                 }
-                spHelper.resetPauseInterval()
             }
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }

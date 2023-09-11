@@ -93,9 +93,11 @@ class EventButtonsViewModel @Inject constructor(
 
     fun onMainButtonClick(
         eventControl: EventControl,
-        selectedTime: MutableState<LocalDateTime?>?
+        selectedTime: MutableState<LocalDateTime?>?,
+        toggleState: MutableState<Boolean>
     ) {
-        selectedTime?.value = null // 取消选中状态
+        unCheck(selectedTime)
+        pauseRecovery(toggleState)
 
         when (buttonsState.mainText.value) {
             "开始" -> {
@@ -139,9 +141,11 @@ class EventButtonsViewModel @Inject constructor(
 
     fun onSubButtonClick(
         eventControl: EventControl,
-        selectedTime: MutableState<LocalDateTime?>?
+        selectedTime: MutableState<LocalDateTime?>?,
+        toggleState: MutableState<Boolean>
     ) {
-        selectedTime?.value = null // 取消选中状态
+        unCheck(selectedTime)
+        pauseRecovery(toggleState)
 
         when (buttonsState.subText.value) {
             "插入" -> {
@@ -256,6 +260,20 @@ class EventButtonsViewModel @Inject constructor(
             mainShow.value = true
             undoShow.value = true
         }
+    }
+
+    /**
+     * “暂停/恢复” 按钮恢复初始状态（继续）
+     */
+    private fun pauseRecovery(toggleState: MutableState<Boolean>) {
+        if (!toggleState.value) toggleState.value = true
+    }
+
+    /**
+     * 取消时间标签的选中状态
+     */
+    private fun unCheck(selectedTime: MutableState<LocalDateTime?>?) {
+        selectedTime?.value = null
     }
 
 }

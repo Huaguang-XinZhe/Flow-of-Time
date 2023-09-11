@@ -17,6 +17,7 @@ import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
+import com.huaguang.flowoftime.ui.pages.time_record.LocalToggleState
 import com.huaguang.flowoftime.ui.widget.LongPressButton
 import com.huaguang.flowoftime.ui.widget.LongPressTextButton
 import java.time.LocalDateTime
@@ -29,6 +30,7 @@ fun EventButtons(
 
     val eventControl = LocalEventControl.current
     val selectedTime = LocalSelectedTime.current
+    val toggleState = LocalToggleState.current
 
     ConstraintLayout (
         modifier = modifier
@@ -51,6 +53,7 @@ fun EventButtons(
             viewModel = viewModel,
             eventControl = eventControl,
             selectedTime = selectedTime,
+            toggleState = toggleState,
             modifier = Modifier.constrainAs(buttonRowRef) {
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
@@ -89,6 +92,7 @@ fun ButtonsRow(
     viewModel: EventButtonsViewModel,
     eventControl: EventControl,
     selectedTime: MutableState<LocalDateTime?>?,
+    toggleState: MutableState<Boolean>,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -97,7 +101,7 @@ fun ButtonsRow(
         viewModel.buttonsState.apply {
             if (mainShow.value) {
                 LongPressButton(
-                    onClick = { viewModel.onMainButtonClick(eventControl, selectedTime) },
+                    onClick = { viewModel.onMainButtonClick(eventControl, selectedTime, toggleState) },
                     onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
                     text = mainText.value
                 )
@@ -106,7 +110,7 @@ fun ButtonsRow(
             if (subShow.value) {
                 LongPressTextButton(
                     text = subText.value,
-                    onClick = { viewModel.onSubButtonClick(eventControl, selectedTime) },
+                    onClick = { viewModel.onSubButtonClick(eventControl, selectedTime, toggleState) },
                     onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
                     modifier = Modifier.padding(start = 5.dp)
                 )

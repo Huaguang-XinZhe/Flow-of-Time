@@ -23,6 +23,7 @@ val LocalButtonsStateControl = compositionLocalOf<ButtonsStateControl> {
     error("没有提供实现 ButtonsStateControl 接口的对象！")
 }
 val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
+val LocalToggleState = compositionLocalOf { mutableStateOf(true) }
 
 @Composable
 fun TimeRecordPage(
@@ -30,6 +31,7 @@ fun TimeRecordPage(
 ) {
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
+    val toggleState = remember { mutableStateOf(true) }
 
     ConstraintLayout(
         modifier = Modifier.padding(vertical = 10.dp)
@@ -46,7 +48,8 @@ fun TimeRecordPage(
         CompositionLocalProvider(
             LocalSelectedTime provides selectedTime,
             LocalEventControl provides pageViewModel.eventControl,
-            LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl
+            LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl,
+            LocalToggleState provides toggleState,
         ) {
             DisplayAndRecordingItemColumn(
                 viewModel = pageViewModel.eventInputViewModel,
