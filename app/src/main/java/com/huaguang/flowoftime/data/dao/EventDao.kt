@@ -187,5 +187,8 @@ interface EventDao {
     @Query("UPDATE events SET duration = :newDuration WHERE id = :id")
     suspend fun updateDurationById(id: Long, newDuration: Duration)
 
+    @Query("UPDATE events SET withContent = :value WHERE id = :id")
+    suspend fun updateWithContentById(id: Long, value: Boolean)
+
 
 }

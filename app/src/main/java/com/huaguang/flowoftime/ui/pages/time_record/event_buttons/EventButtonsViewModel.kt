@@ -79,7 +79,7 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    private fun insertEnd() {
+    private fun insertOrFollowEnd() {
         currentStatus = if (stepTiming) EventStatus.SUB_TIMING else EventStatus.SUBJECT_ONLY
 
         buttonsState.apply {
@@ -161,10 +161,16 @@ class EventButtonsViewModel @Inject constructor(
                 toggleStateOnSubInsert() // 这个必须放在前边，否则 start 逻辑会出问题
                 eventControl.startEvent(eventType = EventType.INSERT)
             }
-            "插入结束", "伴随结束" -> {
+            "插入结束" -> {
                 viewModelScope.launch {
                     eventControl.stopEvent(eventType = EventType.INSERT)
-                    insertEnd()
+                    insertOrFollowEnd()
+                }
+            }
+            "伴随结束" -> {
+                viewModelScope.launch {
+                    eventControl.stopEvent(eventType = EventType.FOLLOW)
+                    insertOrFollowEnd()
                 }
             }
         }
@@ -176,7 +182,7 @@ class EventButtonsViewModel @Inject constructor(
         viewModelScope.launch {
             // 结束子事件————————————————
             eventControl.stopEvent(eventType = EventType.INSERT)
-            insertEnd()
+            insertOrFollowEnd()
 
             // 结束主事件————————————————
             eventControl.stopEvent()

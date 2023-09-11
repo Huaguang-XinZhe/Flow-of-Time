@@ -58,7 +58,11 @@ fun DisplayEventItem(
             modifier = Modifier.padding(start = 10.dp, top = 10.dp, bottom = 5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            CategoryIconButton(event.category, viewModel.iconRepository)
+            CategoryIconButton(
+                category = event.category,
+                withContent = event.withContent,
+                iconRepository = viewModel.iconRepository
+            )
 
             TailLayout(
                 event = event,
@@ -102,8 +106,10 @@ fun DisplayEventItem(
 @Composable
 fun CategoryIconButton(
     category: String?,
+    withContent: Boolean,
     iconRepository: IconMappingRepository
 ) {
+    val errorRes = if (withContent) R.drawable.expand else R.drawable.collapse
 
     IconButton(
         onClick = { /*TODO*/ },
@@ -117,7 +123,7 @@ fun CategoryIconButton(
                 .crossfade(true)
                 .build(),
             contentDescription = null,
-            error = painterResource(id = R.drawable.expand),
+            error = painterResource(id = errorRes),
             onSuccess = {
                 RDALogger.info("加载成功了！")
             },

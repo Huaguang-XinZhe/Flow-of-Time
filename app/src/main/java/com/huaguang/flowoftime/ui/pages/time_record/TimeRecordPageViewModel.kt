@@ -46,7 +46,6 @@ class TimeRecordPageViewModel(
         // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
         viewModelScope.launch {
             if (currentEvent == null) currentEvent = repository.getCurrentEvent()
-            // TODO: 这个 currentEvent 的获取现在还没有没必要？如果没必要的话，那就省去，以提高启动速度。
             RDALogger.info("currentEvent = $currentEvent")
         }
     }
@@ -56,7 +55,11 @@ class TimeRecordPageViewModel(
             viewModelScope.launch {
                 currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
                 val autoId = repository.insertEvent(currentEvent!!) // 存入数据库
-                RDALogger.info("autoId = $autoId")
+
+                if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
+                    repository.updateParentWithContent(currentEvent!!.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
+                }
+
                 updateIdState(autoId, eventType)
                 updateInputState(autoId, name)
             }
@@ -65,11 +68,10 @@ class TimeRecordPageViewModel(
 
         override fun stopEvent(eventType: EventType) {
             viewModelScope.launch {
-                if (withContent(eventType)) {
+                if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
                     RDALogger.info("进入 withContent 块结束事件")
                     val eventId = if (eventType == EventType.SUBJECT) idState.subject.value
                         else idState.step.value // else 只可能是步骤事项了
-
                     val duration = calEventDuration(eventId)
                     repository.updateEndTimeAndDurationById(eventId, duration)
                 } else {
@@ -187,6 +189,12 @@ class TimeRecordPageViewModel(
             }
         }
     }
+
+    /**
+     * 判断当前新开始的事件是否有父事件，有的话，说明父事件有下级，那 withContent 就为 true。
+     * 像这种语义不直观的判断，就独立成一个语义明确的方法，哪怕判断很简单。
+     */
+    private fun hasParent(type: EventType) = type != EventType.SUBJECT
 
 
 }

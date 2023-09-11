@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,10 +37,7 @@ fun RecordingEventItem(
     modifier: Modifier = Modifier
 ) {
     val event = combinedEvent?.event ?: return
-
-    // TODO: 隐隐的感觉这里一定会出问题。
-    val expandStates = remember { mutableStateMapOf<Long, MutableState<Boolean>>() }
-    val expandState = remember { mutableStateOf(true) }
+    val expandState = remember { mutableStateOf(false) }
     val startCustomTime =
         CustomTime(
             eventInfo = EventInfo(
@@ -68,9 +64,8 @@ fun RecordingEventItem(
             timeState = remember { mutableStateOf(null) } // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
         )
 
-    LaunchedEffect(event.id) {
-        val isExpanded = expandStates.getOrPut(event.id) { mutableStateOf(true) }.value
-        expandState.value = isExpanded
+    LaunchedEffect(event.withContent) { // 副作用初始化的时候都会执行一次！！！
+        expandState.value = event.withContent
     }
 
     Column(
@@ -112,6 +107,7 @@ fun RecordingEventItem(
 
         }
 
+//        RDALogger.info("eventId = ${event.id}, expandState.value = ${expandState.value}")
         if (expandState.value) {
             val indentModifier = Modifier.padding(start = 30.dp) // 添加缩进
 

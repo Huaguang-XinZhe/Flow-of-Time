@@ -116,7 +116,6 @@ class EventRepository(
 
     suspend fun updateEvent(event: Event) {
         withContext(Dispatchers.IO) {
-            RDALogger.info("updateEvent 被调用！")
             eventDao.updateEvent(event)
         }
     }
@@ -309,6 +308,12 @@ class EventRepository(
     suspend fun updateDuration(id: Long, newDuration: Duration) {
         withContext(Dispatchers.IO) {
             eventDao.updateDurationById(id, newDuration)
+        }
+    }
+
+    suspend fun updateParentWithContent(parentId: Long) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateWithContentById(parentId, true)
         }
     }
 
