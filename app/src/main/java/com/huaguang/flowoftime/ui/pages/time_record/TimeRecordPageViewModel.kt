@@ -40,13 +40,13 @@ class TimeRecordPageViewModel(
         set(value) {
             sharedState.currentEvent = value
         }
-
-    private var stepOver = false // TODO: 这个值要存起来
+    private val stepTiming get() = eventButtonsViewModel.stepTiming
 
     init {
         // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
         viewModelScope.launch {
             if (currentEvent == null) currentEvent = repository.getCurrentEvent()
+            // TODO: 这个 currentEvent 的获取现在还没有没必要？如果没必要的话，那就省去，以提高启动速度。
             RDALogger.info("currentEvent = $currentEvent")
         }
     }
@@ -59,8 +59,6 @@ class TimeRecordPageViewModel(
                 RDALogger.info("autoId = $autoId")
                 updateIdState(autoId, eventType)
                 updateInputState(autoId, name)
-
-                if (eventType == EventType.STEP) stepOver = false // 重置
             }
 
         }
@@ -74,8 +72,6 @@ class TimeRecordPageViewModel(
 
                     val duration = calEventDuration(eventId)
                     repository.updateEndTimeAndDurationById(eventId, duration)
-
-                    if (eventType == EventType.STEP) stepOver = true // 为了在插入事件时获取正确的 parentId
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
@@ -93,11 +89,11 @@ class TimeRecordPageViewModel(
     private suspend fun calEventDuration(eventId: Long): Duration {
         val stopRequired = repository.getStopRequired(eventId)
         val pauseIntervalDuration = Duration.ofMinutes(stopRequired.pauseInterval.toLong())
-        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
+//        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
         val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
-        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
+//        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         val standardDuration = Duration.between(stopRequired.startTime, LocalDateTime.now())
-        RDALogger.info("standardDuration = $standardDuration")
+//        RDALogger.info("standardDuration = $standardDuration")
 
         return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
     }
@@ -183,11 +179,9 @@ class TimeRecordPageViewModel(
                 EventType.SUBJECT -> null
                 EventType.STEP, EventType.FOLLOW -> subject.value
                 EventType.INSERT -> {
-                    RDALogger.info("subjectId = ${subject.value}")
-                    RDALogger.info("stepId = ${step.value}")
                     val parentType = if (subject.value > step.value) EventType.SUBJECT
-                        else if (stepOver) EventType.SUBJECT else EventType.STEP
-                    RDALogger.info("stepOver = $stepOver，parentType = $parentType")
+                        else if (stepTiming) EventType.STEP else EventType.SUBJECT
+                    RDALogger.info("stepTiming = $stepTiming，parentType = $parentType")
                     if (parentType == EventType.STEP) step.value else subject.value
                 }
             }

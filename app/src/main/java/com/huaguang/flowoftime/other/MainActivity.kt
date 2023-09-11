@@ -84,10 +84,7 @@ class MainActivity : ComponentActivity() {
 //        mediator.increaseCDonResume()
     }
 
-    override fun onStop() {
-        super.onStop()
-        mediator.saveState()
-    }
+
 
 }
 

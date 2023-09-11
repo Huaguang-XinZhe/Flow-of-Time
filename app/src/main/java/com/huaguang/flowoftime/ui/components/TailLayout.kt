@@ -17,7 +17,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.ItemType
@@ -48,7 +47,6 @@ fun TailLayout(
         if (itemType == ItemType.DISPLAY) FontWeight.Light else FontWeight.Normal
     }
 
-    RDALogger.info("eventStatus = ${viewModel.sharedState.eventStatus.value}")
     val allowShow = itemType == ItemType.RECORD && event.type == EventType.SUBJECT && event.name.isNotEmpty() && // 标配判断
             viewModel.sharedState.eventStatus.value == EventStatus.SUBJECT_ONLY // 关键判断
 

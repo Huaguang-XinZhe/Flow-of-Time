@@ -16,8 +16,6 @@ import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsVi
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.isCoreEvent
-import com.huaguang.flowoftime.utils.isGetUpTime
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -25,9 +23,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.time.Duration
-import java.time.LocalTime
 
 class EventTrackerMediator(
     val headerViewModel: HeaderViewModel,
@@ -76,8 +72,6 @@ class EventTrackerMediator(
 
     init {
         viewModelScope.launch {
-            retrieveStateFromSP() // 恢复相关状态
-
             initialized.value = true
 
             eventButtonsViewModel.restoreButtonShow()
@@ -333,55 +327,5 @@ class EventTrackerMediator(
 //
 //    }
 
-    private suspend fun retrieveStateFromSP() {
-        val data = withContext(Dispatchers.IO) {
-            spHelper.getAllData()
-        }
-
-        // 在主线程中使用取出的数据更新状态
-        sharedState.apply { // 共享状态
-            isInputShow.value = data.isInputShow
-//            eventStatus.value = data.eventStatus
-
-            if (data.scrollIndex != -1) {
-                scrollIndex.value = data.scrollIndex
-                eventCount = data.scrollIndex + 1
-            }
-        }
-
-        headerViewModel.apply {
-            isOneDayButtonClicked.value =
-                if (isGetUpTime(LocalTime.now()) && resetListDisplayFlag) {
-                    RDALogger.info("满足重置列表显示模式的条件")
-                    false
-                } else data.isOneDayButtonClicked
-
-        }
-
-        durationSliderViewModel.coreDuration.value = data.coreDuration
-
-//        currentEvent = data.currentEvent
-
-//        eventButtonsViewModel.apply {
-//            `buttonsState.mainText`.value = data.buttonText
-//            `buttonsState.subText`.value = data.subButtonText
-//        }
-
-    }
-
-    fun saveState() {
-        viewModelScope.launch(Dispatchers.IO) {
-            spHelper.saveState(
-                headerViewModel.isOneDayButtonClicked.value,
-                sharedState.isInputShow.value,
-//                eventButtonsViewModel.`buttonsState.mainText`.value,
-//                eventButtonsViewModel.`buttonsState.subText`.value,
-                sharedState.scrollIndex.value,
-                durationSliderViewModel.coreDuration.value,
-                currentItemViewModel.currentEvent.value,
-                currentStatus,
-            )
-        }
-    }
 
 }

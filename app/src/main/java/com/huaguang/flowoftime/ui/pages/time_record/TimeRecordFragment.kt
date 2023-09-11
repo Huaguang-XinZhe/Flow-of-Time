@@ -8,7 +8,6 @@ import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -88,9 +87,10 @@ class TimeRecordFragment : Fragment() {
     override fun onStop() {
         super.onStop()
 
-        if (sharedState.eventStatus.value != EventStatus.NO_EVENT) { // 有事件正在进行才保存
-            spHelper.saveState(idState, eventButtonsViewModel.buttonsState)
+        eventButtonsViewModel.apply {
+            spHelper.saveState(idState, buttonsState, stepTiming)
         }
+
     }
 
 }

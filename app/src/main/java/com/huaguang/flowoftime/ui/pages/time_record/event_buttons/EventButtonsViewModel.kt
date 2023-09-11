@@ -12,6 +12,7 @@ import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,6 +23,7 @@ import javax.inject.Inject
 @HiltViewModel
 class EventButtonsViewModel @Inject constructor(
     private val repository: EventRepository,
+    spHelper: SPHelper,
     private val sharedState: SharedState,
     val buttonsState: ButtonsState,
 ) : ViewModel() {
@@ -35,7 +37,11 @@ class EventButtonsViewModel @Inject constructor(
     private val _eventLiveData = MutableLiveData<Event>()
     val eventLiveData: LiveData<Event> get() = _eventLiveData
 
-    private var stepTiming = false // 为了辅助 EventStatus 的确立
+    var stepTiming = false // 为了辅助 EventStatus 的确立
+
+    init {
+        stepTiming = spHelper.getStepTiming()
+    }
 
     val buttonsStateControl = object : ButtonsStateControl {
         override fun toggleMainEnd() { // 按钮切换到主题事项结束的状态（说明主题事项正在进行）
