@@ -52,10 +52,9 @@ fun TimeRecordPage(
                 viewModel = pageViewModel.eventInputViewModel,
                 customTimeState = customTimeState,
                 modifier = Modifier.constrainAs(itemColumn) {
-                        top.linkTo(topBar.bottom, 5.dp)
-                        start.linkTo(parent.start)
+                    top.linkTo(topBar.bottom, 5.dp)
+                    start.linkTo(parent.start)
                 }
-
             )
 
             EventButtons(
@@ -75,21 +74,14 @@ fun TimeRecordPage(
                 }
             )
 
+            EventInputField(
+                viewModel = pageViewModel.eventInputViewModel,
+                modifier = Modifier.constrainAs(eventInput) {
+                    bottom.linkTo(timeRegulator.top, 100.dp)
+                    start.linkTo(parent.start)
+                }
+            )
 
-        }
-
-        EventInputField(
-            viewModel = pageViewModel.eventInputViewModel,
-            modifier = Modifier.constrainAs(eventInput) {
-                bottom.linkTo(timeRegulator.top, 100.dp)
-                start.linkTo(parent.start)
-            }
-        )
-
-        CompositionLocalProvider(
-            LocalEventControl provides pageViewModel.eventControl,
-            LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl
-        ) {
             CoreFloatingButton(
                 viewModel = pageViewModel.eventInputViewModel,
                 modifier = Modifier.constrainAs(floatingButton) {
@@ -100,9 +92,5 @@ fun TimeRecordPage(
 
             InputAlertDialog(viewModel = pageViewModel.eventInputViewModel)
         }
-
     }
-
 }
-
-
