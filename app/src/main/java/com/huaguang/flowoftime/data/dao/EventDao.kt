@@ -190,5 +190,8 @@ interface EventDao {
     @Query("UPDATE events SET withContent = :value WHERE id = :id")
     suspend fun updateWithContentById(id: Long, value: Boolean)
 
+    @Query("SELECT endTime FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 1")
+    suspend fun getLastSubjectEndTime(): LocalDateTime?
+
 
 }

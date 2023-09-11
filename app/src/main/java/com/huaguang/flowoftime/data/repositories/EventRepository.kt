@@ -1,7 +1,7 @@
 package com.huaguang.flowoftime.data.repositories
 
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.DEFAULT_EVENT_INTERVAL
+
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.coreEventKeyWords
@@ -129,11 +129,12 @@ class EventRepository(
 
 
     suspend fun getOffsetStartTime(): LocalDateTime? {
-        val lastEvent = withContext(Dispatchers.IO) {
-            eventDao.getLastMainEvent()
+        val endTime = withContext(Dispatchers.IO) {
+            eventDao.getLastSubjectEndTime()
         }
-        return lastEvent?.endTime?.plus(DEFAULT_EVENT_INTERVAL)
-            ?: lastEvent?.startTime?.plus(DEFAULT_EVENT_INTERVAL)
+        val interval = Duration.ofMinutes(2L)
+
+        return endTime?.plus(interval) // 如果数据库不为空的话，一般 endTime 不为 null
     }
 
     suspend fun deleteEventWithSubEvents(

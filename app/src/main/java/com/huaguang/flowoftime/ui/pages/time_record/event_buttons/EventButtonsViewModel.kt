@@ -141,7 +141,7 @@ class EventButtonsViewModel @Inject constructor(
         viewModelScope.launch {
             val startTime = repository.getOffsetStartTime()
 
-            if (startTime == null) {
+            if (startTime == null) { //
                 sharedState.toastMessage.value = "当前无法补计，直接开始吧"
                 return@launch
             }
