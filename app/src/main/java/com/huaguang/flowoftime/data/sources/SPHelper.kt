@@ -40,7 +40,9 @@ class SPHelper private constructor(context: Context) {
 
         return PauseState(
             start = mutableStateOf(start),
-            acc = mutableStateOf(sp.getInt("acc", 0))
+            acc = mutableStateOf(sp.getInt("acc", 0)),
+            subjectAcc = mutableStateOf(sp.getInt("subject_acc", 0)),
+            stepAcc = mutableStateOf(sp.getInt("step_acc", 0))
         )
     }
 
@@ -127,6 +129,8 @@ class SPHelper private constructor(context: Context) {
         with(this) {
             putLong("start_second", epochSecond)
             putInt("acc", pauseState.acc.value)
+            putInt("subject_acc", pauseState.subjectAcc.value)
+            putInt("step_acc", pauseState.stepAcc.value)
         }
     }
 

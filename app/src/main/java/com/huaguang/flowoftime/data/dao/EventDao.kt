@@ -11,7 +11,6 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
-import com.huaguang.flowoftime.data.models.db_returns.StopRequired
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
@@ -41,8 +40,8 @@ interface EventDao {
     """)
     fun getSecondLatestRootEventAndChildren(): Flow<List<Event>>
 
-    @Query("SELECT startTime, pauseInterval FROM events WHERE id = :id")
-    suspend fun getStopRequired(id: Long): StopRequired
+    @Query("SELECT startTime FROM events WHERE id = :id")
+    suspend fun getStartTimeById(id: Long): LocalDateTime
 
     @Query("SELECT duration FROM events WHERE parentEventId = :id AND type = :eventType")
     suspend fun getSubInsertDurationList(id: Long, eventType: EventType): List<Duration>
@@ -66,6 +65,18 @@ interface EventDao {
         id: Long,
         endTime: LocalDateTime,
         duration: Duration
+    )
+
+    @Query("""
+        UPDATE events 
+        SET endTime = :endTime, duration = :duration, pauseInterval = :totalPauseInterval
+        WHERE id = :id
+    """)
+    suspend fun updateThree(
+        id: Long,
+        duration: Duration,
+        totalPauseInterval: Int,
+        endTime: LocalDateTime
     )
 
     @Update

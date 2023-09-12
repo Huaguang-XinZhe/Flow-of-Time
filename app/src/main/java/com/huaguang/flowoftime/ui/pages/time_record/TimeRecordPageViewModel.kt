@@ -13,6 +13,7 @@ import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
@@ -30,6 +31,7 @@ class TimeRecordPageViewModel(
     val repository: EventRepository,
     private val idState: IdState,
     val sharedState: SharedState,
+    private val pauseState: PauseState,
     private val dndManager: DNDManager,
 ) : ViewModel() {
 
@@ -57,6 +59,7 @@ class TimeRecordPageViewModel(
                 val autoId = repository.insertEvent(currentEvent!!) // 存入数据库
 
                 if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
+                    collectPauseInterval(eventType)
                     repository.updateParentWithContent(currentEvent!!.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
                 }
 
@@ -70,10 +73,9 @@ class TimeRecordPageViewModel(
             viewModelScope.launch {
                 if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
                     RDALogger.info("进入 withContent 块结束事件")
-                    val eventId = if (eventType == EventType.SUBJECT) idState.subject.value
-                        else idState.step.value // else 只可能是步骤事项了
+                    val (eventId, totalPauseInterval) = handlePauseInterval(eventType)
                     val duration = calEventDuration(eventId)
-                    repository.updateEndTimeAndDurationById(eventId, duration)// TODO: 还要加一个 pauseInterval 
+                    repository.updateThree(eventId, duration, totalPauseInterval)
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
@@ -85,16 +87,38 @@ class TimeRecordPageViewModel(
     }
 
     /**
+     * pauseInterval 的确立和重置逻辑
+     */
+    private fun handlePauseInterval(eventType: EventType): Pair<Long, Int> {
+        val eventId: Long
+        val totalPauseInterval: Int
+
+        pauseState.apply {
+            if (eventType == EventType.SUBJECT) {
+                eventId = idState.subject.value
+                totalPauseInterval = subjectAcc.value
+                subjectAcc.value = 0 // 重置
+            } else { // else 只可能是步骤事项了
+                eventId = idState.step.value
+                totalPauseInterval = stepAcc.value
+                stepAcc.value = 0 // 重置
+            }
+        }
+
+        return Pair(eventId, totalPauseInterval)
+    }
+
+    /**
      * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
      * @param eventId 它就是那个含有下级事项的父事项 id
      */
     private suspend fun calEventDuration(eventId: Long): Duration {
-        val stopRequired = repository.getStopRequired(eventId)
-        val pauseIntervalDuration = Duration.ofMinutes(stopRequired.pauseInterval.toLong())
+        val startTime = repository.getStartTimeOfWithContentEvent(eventId)
+        val pauseIntervalDuration = Duration.ofMinutes(pauseState.subjectAcc.value.toLong())
 //        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
         val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
 //        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
-        val standardDuration = Duration.between(stopRequired.startTime, LocalDateTime.now())
+        val standardDuration = Duration.between(startTime, LocalDateTime.now())
 //        RDALogger.info("standardDuration = $standardDuration")
 
         return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
@@ -173,19 +197,24 @@ class TimeRecordPageViewModel(
     )
 
 
+    /**
+     * 在事件更新到数据库之前，获取当前事件的父事件的 id
+     */
     private fun getParentEventId(type: EventType): Long? {
         idState.apply {
             return when(type) {
                 EventType.SUBJECT -> null
                 EventType.STEP, EventType.FOLLOW -> subject.value
                 EventType.INSERT -> {
-                    val parentType = if (subject.value > step.value) EventType.SUBJECT
-                        else if (stepTiming) EventType.STEP else EventType.SUBJECT
-                    RDALogger.info("stepTiming = $stepTiming，parentType = $parentType")
+                    val parentType = getInsertParentType()
                     if (parentType == EventType.STEP) step.value else subject.value
                 }
             }
         }
+    }
+
+    private fun getInsertParentType(): EventType {
+        return if (stepTiming && idState.let { it.subject.value < it.step.value }) EventType.STEP else EventType.SUBJECT
     }
 
     /**
@@ -193,6 +222,21 @@ class TimeRecordPageViewModel(
      * 像这种语义不直观的判断，就独立成一个语义明确的方法，哪怕判断很简单。
      */
     private fun hasParent(type: EventType) = type != EventType.SUBJECT
+
+    /**
+     * 收集含有下级的事件（主题或步骤）的暂停间隔
+     */
+    private fun collectPauseInterval(eventType: EventType) {
+        pauseState.apply {
+            if (acc.value == 0) return
+
+            RDALogger.info("收集开始")
+            val totalInterval = if (eventType == EventType.INSERT &&
+                getInsertParentType() == EventType.STEP) stepAcc else subjectAcc
+            RDALogger.info("totalInterval = $totalInterval")
+            totalInterval.value += acc.value
+        }
+    }
 
 
 }

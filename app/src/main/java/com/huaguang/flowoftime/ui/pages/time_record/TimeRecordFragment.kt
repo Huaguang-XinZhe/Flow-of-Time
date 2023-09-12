@@ -16,6 +16,7 @@ import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import dagger.hilt.android.AndroidEntryPoint
@@ -34,6 +35,8 @@ class TimeRecordFragment : Fragment() {
     lateinit var sharedState: SharedState
     @Inject
     lateinit var idState: IdState
+    @Inject
+    lateinit var pauseState: PauseState
     lateinit var dndManager: DNDManager
 
     // 注入各大组件的 ViewModel
@@ -56,6 +59,7 @@ class TimeRecordFragment : Fragment() {
             eventRepository,
             idState,
             sharedState,
+            pauseState,
             dndManager
         )
     }

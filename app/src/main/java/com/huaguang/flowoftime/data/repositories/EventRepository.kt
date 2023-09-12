@@ -120,8 +120,6 @@ class EventRepository(
         }
     }
 
-
-
     suspend fun insertEvent(event: Event) =
         withContext(Dispatchers.IO) {
             eventDao.insertEvent(event)
@@ -164,11 +162,6 @@ class EventRepository(
     suspend fun getLastEvent() =
         withContext(Dispatchers.IO) {
             eventDao.getLastEvent()
-        }
-
-    suspend fun getEventWithSubEvents(eventId: Long) =
-        withContext(Dispatchers.IO) {
-            eventDao.getEventsWithSubEvents(eventId)
         }
 
     suspend fun getCurrentEvent() =
@@ -254,13 +247,14 @@ class EventRepository(
         }
     }
 
-    suspend fun updateEndTimeAndDurationById(
+    suspend fun updateThree(
         eventId: Long,
         newDuration: Duration,
+        totalPauseInterval: Int,
         endTime: LocalDateTime = LocalDateTime.now(),
     ) {
         withContext(Dispatchers.IO) {
-            eventDao.updateEndTimeAndDurationById(eventId, endTime, newDuration)
+            eventDao.updateThree(eventId, newDuration, totalPauseInterval, endTime)
         }
     }
 
@@ -282,19 +276,12 @@ class EventRepository(
             eventDao.getEventById(id)
         }
 
-    suspend fun getEventTypeById(id: Long) =
+
+    suspend fun getStartTimeOfWithContentEvent(eventId: Long) =
         withContext(Dispatchers.IO) {
-            eventDao.getEventTypeById(id)
+            eventDao.getStartTimeById(eventId)
         }
 
-    suspend fun getStopRequired(eventId: Long) =
-        withContext(Dispatchers.IO) {
-            eventDao.getStopRequired(eventId)
-        }
-    suspend fun getPauseIntervalById(id: Long) =
-        withContext(Dispatchers.IO) {
-            eventDao.getPauseIntervalById(id)
-        }
 
     suspend fun getDurationById(eventId: Long) =
         withContext(Dispatchers.IO) {

@@ -100,8 +100,7 @@ class EventButtonsViewModel @Inject constructor(
         selectedTime: MutableState<LocalDateTime?>?,
         checked: MutableLiveData<Boolean>
     ) {
-        unCheck(selectedTime)
-        pauseRecovery(checked)
+        clearState(checked, selectedTime)
 
         when (buttonsState.mainText.value) {
             "开始" -> {
@@ -148,8 +147,7 @@ class EventButtonsViewModel @Inject constructor(
         selectedTime: MutableState<LocalDateTime?>?,
         checked: MutableLiveData<Boolean>
     ) {
-        unCheck(selectedTime)
-        pauseRecovery(checked)
+        clearState(checked, selectedTime)
 
         when (buttonsState.subText.value) {
             "插入" -> {
@@ -264,6 +262,14 @@ class EventButtonsViewModel @Inject constructor(
             mainShow.value = true
             undoShow.value = true
         }
+    }
+
+    private fun clearState(
+        checked: MutableLiveData<Boolean>,
+        selectedTime: MutableState<LocalDateTime?>?,
+    ) {
+        unCheck(selectedTime)
+        pauseRecovery(checked)
     }
 
     /**

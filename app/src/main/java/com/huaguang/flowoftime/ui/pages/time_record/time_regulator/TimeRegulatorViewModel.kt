@@ -27,7 +27,7 @@ import javax.inject.Inject
 class TimeRegulatorViewModel @Inject constructor(
     private val repository: EventRepository,
     private val sharedState: SharedState,
-    val pauseState: PauseState,
+    private val pauseState: PauseState,
     val inputState: InputState,
 ) : ViewModel() {
 
