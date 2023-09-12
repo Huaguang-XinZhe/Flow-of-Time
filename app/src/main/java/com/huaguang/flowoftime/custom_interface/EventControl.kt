@@ -4,12 +4,12 @@ import com.huaguang.flowoftime.EventType
 import java.time.LocalDateTime
 
 interface EventControl {
-    fun startEvent(
+    suspend fun startEvent(
         startTime: LocalDateTime = LocalDateTime.now(),
         name: String = "",
         eventType: EventType = EventType.SUBJECT
     )
 
-    fun stopEvent(eventType: EventType = EventType.SUBJECT)
+    suspend fun stopEvent(eventType: EventType = EventType.SUBJECT)
 
 }

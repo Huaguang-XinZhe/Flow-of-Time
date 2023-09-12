@@ -1,10 +1,5 @@
 package com.huaguang.flowoftime
 
-enum class EventStatus {
-    NO_EVENT,
-    SUBJECT_ONLY,
-    SUB_TIMING,
-}
 
 enum class EventType {
     SUBJECT, // 可以有子事件：步骤、插入、伴随

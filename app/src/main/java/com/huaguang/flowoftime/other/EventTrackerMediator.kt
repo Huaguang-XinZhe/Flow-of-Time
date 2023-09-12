@@ -38,8 +38,7 @@ class EventTrackerMediator(
 ) : ViewModel() {
 
     // 依赖的共享状态
-    private val currentStatus
-        get() = sharedState.eventStatus.value
+
     private val newEventName
         get() = sharedState.newEventName.value
 

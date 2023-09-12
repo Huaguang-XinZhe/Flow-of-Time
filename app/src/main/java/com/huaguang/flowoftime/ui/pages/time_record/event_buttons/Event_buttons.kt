@@ -104,15 +104,15 @@ fun ButtonsRow(
         viewModel.buttonsState.apply {
             if (mainShow.value) {
                 LongPressButton(
+                    text = mainText.value,
                     onClick = { viewModel.onMainButtonClick(eventControl, selectedTime, checked) },
                     onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
-                    text = mainText.value
                 )
             }
 
             if (subShow.value) {
                 LongPressTextButton(
-                    text = subText.value,
+                    text = viewModel.getDisplayTextForSub(subText.value),
                     onClick = { viewModel.onSubButtonClick(eventControl, selectedTime, checked) },
                     onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
                     modifier = Modifier.padding(start = 5.dp)

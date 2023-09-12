@@ -22,9 +22,10 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LongPressButton(
+    text: String,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
-    text: String
+    modifier: Modifier = Modifier
 ) {
     // 创建一个自定义的 InteractionSource
     val interactionSource = remember { MutableInteractionSource() }
@@ -32,7 +33,7 @@ fun LongPressButton(
     val rippleIndication = rememberRipple(bounded = false, radius = 30.dp)
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .clip(RoundedCornerShape(25.dp)) // 必须先调用，要不然会被背景覆盖
             .background(MaterialTheme.colorScheme.primary)
             .padding(vertical = 10.dp, horizontal = 20.dp)

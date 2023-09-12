@@ -9,7 +9,6 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
-import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -20,16 +19,10 @@ import javax.inject.Inject
 @HiltViewModel
 class CurrentItemViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val sharedState: SharedState,
     private val dataStoreHelper: DataStoreHelper,
 ) : ViewModel() {
 
     // 共享依赖
-    private var eventStatus
-        get() = sharedState.eventStatus.value
-        set(value) {
-            sharedState.eventStatus.value = value
-        }
 
     val currentEvent: MutableState<Event?> =  mutableStateOf(null)
     private var subEventCount = 0

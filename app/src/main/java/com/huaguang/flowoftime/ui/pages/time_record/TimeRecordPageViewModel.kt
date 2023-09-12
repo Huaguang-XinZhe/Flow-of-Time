@@ -40,7 +40,6 @@ class TimeRecordPageViewModel(
         set(value) {
             sharedState.currentEvent = value
         }
-    private val stepTiming get() = eventButtonsViewModel.stepTiming
 
     var pauseAcc = 0 // 临时变量，不需要保存，只在结束那一瞬起作用
 
@@ -53,34 +52,29 @@ class TimeRecordPageViewModel(
     }
 
     val eventControl = object : EventControl {
-        override fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
-            viewModelScope.launch {
-                currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
-                val autoId = repository.insertEvent(currentEvent!!) // 存入数据库
+        override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
+            currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
+            val autoId = repository.insertEvent(currentEvent!!) // 存入数据库
 
-                if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
-                    collectPauseInterval(eventType)
-                    repository.updateParentWithContent(currentEvent!!.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
-                }
-
-                updateIdState(autoId, eventType)
-                updateInputState(autoId, name)
+            if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
+                collectPauseInterval(eventType)
+                repository.updateParentWithContent(currentEvent!!.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
             }
 
+            updateIdState(autoId, eventType)
+            updateInputState(autoId, name)
         }
 
-        override fun stopEvent(eventType: EventType) {
-            viewModelScope.launch {
-                if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
-                    RDALogger.info("进入 withContent 块结束事件")
-                    val (eventId, totalPauseInterval) = handlePauseInterval(eventType)
-                    val duration = calEventDuration(eventId)
-                    repository.updateThree(eventId, duration, totalPauseInterval)
-                } else {
-                    currentEvent = updateCurrentEvent()
-                    repository.updateEvent(currentEvent!!) // 更新数据库
+        override suspend fun stopEvent(eventType: EventType) {
+            if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
+                RDALogger.info("进入 withContent 块结束事件")
+                val (eventId, totalPauseInterval) = handlePauseInterval(eventType)
+                val duration = calEventDuration(eventId)
+                repository.updateThree(eventId, duration, totalPauseInterval)
+            } else {
+                currentEvent = updateCurrentEvent()
+                repository.updateEvent(currentEvent!!) // 更新数据库
 
-                }
             }
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
@@ -213,9 +207,9 @@ class TimeRecordPageViewModel(
         }
     }
 
-    private fun getInsertParentType(): EventType {
-        return if (stepTiming && idState.let { it.subject.value < it.step.value }) EventType.STEP else EventType.SUBJECT
-    }
+    private fun getInsertParentType() = if (sharedState.cursorType.value == EventType.STEP &&
+        idState.let { it.subject.value < it.step.value }) EventType.STEP else EventType.SUBJECT
+
 
     /**
      * 判断当前新开始的事件是否有父事件，有的话，说明父事件有下级，那 withContent 就为 true。

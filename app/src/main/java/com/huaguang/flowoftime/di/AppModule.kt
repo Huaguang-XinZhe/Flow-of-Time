@@ -108,8 +108,8 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideSharedState(application: Application): SharedState {
-        return SharedState(application)
+    fun provideSharedState(application: Application, spHelper: SPHelper): SharedState {
+        return SharedState(application, spHelper)
     }
 
     @Singleton

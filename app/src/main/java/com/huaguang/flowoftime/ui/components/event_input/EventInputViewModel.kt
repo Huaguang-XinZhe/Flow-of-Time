@@ -3,7 +3,6 @@ package com.huaguang.flowoftime.ui.components.event_input
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
@@ -62,6 +61,14 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
+    fun coreButtonNotShow(): Boolean{
+        val subTiming = sharedState.cursorType.value?.let {
+            it != EventType.SUBJECT
+        } ?: false // 没有事件正在计时，也就意味着没有子项正在计时，为 false
+
+        return inputState.show.value || subTiming
+    }
+
     fun onConfirmButtonClick(text: String) {
         inputState.apply {
             newName.value = text // 把输入完成的值赋给 newName
@@ -112,37 +119,41 @@ class EventInputViewModel @Inject constructor(
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
     ) {
-        eventControl.startEvent(eventType = EventType.STEP)
-        buttonsStateControl.toggleSubEnd(EventType.STEP)
+        viewModelScope.launch {
+            eventControl.startEvent(eventType = EventType.STEP)
+            buttonsStateControl.toggleSubEnd(EventType.STEP)
+        }
     }
 
     fun onCoreFloatingButtonClick(
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
     ) {
-        coreName = spHelper.getCurrentCoreEventName(coreName)
+        viewModelScope.launch {
+            coreName = spHelper.getCurrentCoreEventName(coreName)
 
-        if (coreName.isEmpty()) { // 在最开始的时候，SP 中没有值，coreName 仍有可能为空，这是就弹窗请用户设置，然后再开始事件
-            sharedState.apply {
-                dialogShow.value = true
-                toastMessage.value = "请预先设置当前核心（名称）"
+            if (coreName.isEmpty()) { // 在最开始的时候，SP 中没有值，coreName 仍有可能为空，这是就弹窗请用户设置，然后再开始事件
+                sharedState.apply {
+                    dialogShow.value = true
+                    toastMessage.value = "请预先设置当前核心（名称）"
+                }
+                confirmThenStart = true // 设置好点击确认就马上开启一个新事件
+
+                return@launch
             }
-            confirmThenStart = true // 设置好点击确认就马上开启一个新事件
 
-            return
-        }
+            val type = if (hasSubjectExist()) EventType.FOLLOW else EventType.SUBJECT
 
-        val type = if (hasSubjectExist()) EventType.FOLLOW else EventType.SUBJECT
+            eventControl.startEvent(
+                name = coreName,
+                eventType = type
+            )
 
-        eventControl.startEvent(
-            name = coreName,
-            eventType = type
-        )
-
-        if (hasSubjectExist()) {
-            buttonsStateControl.toggleSubEnd(type) // 切换到 ”伴随结束“ 的按钮状态
-        } else {
-            buttonsStateControl.toggleMainEnd() // 切换到 “主题结束” 的按钮状态
+            if (hasSubjectExist()) {
+                buttonsStateControl.toggleSubEnd(type) // 切换到 ”伴随结束“ 的按钮状态
+            } else {
+                buttonsStateControl.toggleMainEnd() // 切换到 “主题结束” 的按钮状态
+            }
         }
     }
 
@@ -205,7 +216,7 @@ class EventInputViewModel @Inject constructor(
         return result
     }
 
-    private fun hasSubjectExist() = sharedState.eventStatus.value != EventStatus.NO_EVENT
+    private fun hasSubjectExist() = sharedState.cursorType.value != null
 
 }
 

@@ -7,7 +7,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.EventStatus
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.widget.LongPressFloatingActionButton
@@ -17,8 +16,8 @@ fun CoreFloatingButton(
     viewModel: EventInputViewModel,
     modifier: Modifier = Modifier
 ) {
-    if (viewModel.inputState.show.value ||
-        viewModel.sharedState.eventStatus.value == EventStatus.SUB_TIMING) return
+
+    if (viewModel.coreButtonNotShow()) return
 
     val eventControl = LocalEventControl.current
     val buttonsStateControl = LocalButtonsStateControl.current

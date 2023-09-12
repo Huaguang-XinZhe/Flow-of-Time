@@ -2,7 +2,9 @@ package com.huaguang.flowoftime.data.sources
 
 import android.content.Context
 import android.content.SharedPreferences
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.PauseState
@@ -31,6 +33,11 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
+    fun getCursorType(): MutableState<EventType?> {
+        val typeName = sp.getString("cursor_type", null) ?: return mutableStateOf(null)
+        return mutableStateOf(EventType.valueOf(typeName))
+    }
+
     fun getPauseState(): PauseState {
         val startLong = sp.getLong("start_second", -1L)
         val start = if (startLong != -1L) {
@@ -46,24 +53,22 @@ class SPHelper private constructor(context: Context) {
         )
     }
 
-    fun getStepTiming(): Boolean {
-        return sp.getBoolean("step_timing", false)
-    }
-
     fun saveState(
         idState: IdState,
         buttonsState: ButtonsState,
         pauseState: PauseState,
-        stepTiming: Boolean
+        cursorType: MutableState<EventType?>,
     ) {
         sp.edit().apply {
             saveIdState(idState)
             saveButtonsState(buttonsState)
             savePauseState(pauseState)
-            saveStepTiming(stepTiming)
+            saveCursorType(cursorType)
             apply()
         }
     }
+
+
 
     fun getButtonsState(): ButtonsState {
         return ButtonsState(
@@ -118,10 +123,6 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
-    private fun SharedPreferences.Editor.saveStepTiming(value: Boolean) {
-        this.putBoolean("step_timing", value)
-    }
-
     private fun SharedPreferences.Editor.savePauseState(pauseState: PauseState) {
         val zonedDateTime = ZonedDateTime.of(pauseState.start.value, ZoneId.systemDefault())
         val epochSecond = zonedDateTime.toEpochSecond()
@@ -132,6 +133,10 @@ class SPHelper private constructor(context: Context) {
             putInt("subject_acc", pauseState.subjectAcc.value)
             putInt("step_acc", pauseState.stepAcc.value)
         }
+    }
+
+    private fun SharedPreferences.Editor.saveCursorType(cursorType: MutableState<EventType?>) {
+        this.putString("cursor_type", cursorType.value?.name)
     }
 
 }
