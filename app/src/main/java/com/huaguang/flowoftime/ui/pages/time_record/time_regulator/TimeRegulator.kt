@@ -13,6 +13,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -23,7 +25,6 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
-import com.huaguang.flowoftime.ui.pages.time_record.LocalToggleState
 
 @Composable
 fun TimeRegulator(
@@ -31,6 +32,8 @@ fun TimeRegulator(
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
+    if (viewModel.inputState.show.value) return
+
     val selectedTime = LocalSelectedTime.current
     viewModel.selectedTime = selectedTime
 
@@ -76,27 +79,19 @@ fun TimeRegulator(
 
 @Composable
 fun PauseButton(viewModel: TimeRegulatorViewModel) {
-    val toggleState = LocalToggleState.current
-    val iconRes = if (toggleState.value) R.drawable.continute else R.drawable.pause
+    val checked by viewModel.checkedLiveData.observeAsState(initial = true)
+    val checkedState = remember { mutableStateOf(checked) }
+    val iconRes = if (checkedState.value) R.drawable.continute else R.drawable.pause
 
-    // 创建一个变量来跟踪组件是否已初始化
-    val initialized = remember { mutableStateOf(false) }
-
-    LaunchedEffect(toggleState.value) {
-        // 如果组件已初始化，才执行副作用
-        if (initialized.value) {
-            RDALogger.info("PauseButton 副作用执行！")
-            viewModel.calPauseInterval(toggleState.value)
-        } else {
-            // 标记组件为已初始化
-            initialized.value = true
-        }
+    LaunchedEffect(checked) { // 想要观察到 LiveData 的变化，一定要加上 observeAsState 才行！
+        RDALogger.info("副作用执行！checked 赋值。")
+        checkedState.value = checked
     }
 
     FilledIconToggleButton(
-        checked = toggleState.value,
+        checked = checkedState.value,
         onCheckedChange = {
-            toggleState.value = it
+            viewModel.toggleChecked(it) // 通过 ViewModel 更新 LiveData 的值（也只能这样了）
         },
         modifier = Modifier.size(36.dp),
         enabled = viewModel.pauseButtonEnabled()
@@ -108,5 +103,4 @@ fun PauseButton(viewModel: TimeRegulatorViewModel) {
         )
     }
 }
-
 

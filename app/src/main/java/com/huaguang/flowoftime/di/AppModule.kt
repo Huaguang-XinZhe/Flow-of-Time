@@ -17,6 +17,7 @@ import com.huaguang.flowoftime.other.LocalDateTimeSerializer
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.Module
 import dagger.Provides
@@ -127,6 +128,12 @@ object AppModule {
     @Provides
     fun provideButtonsState(spHelper: SPHelper): ButtonsState {
         return ButtonsState.initialValue(spHelper)
+    }
+
+    @Singleton
+    @Provides
+    fun providePauseState(spHelper: SPHelper): PauseState {
+        return PauseState.initialValue(spHelper)
     }
 
 

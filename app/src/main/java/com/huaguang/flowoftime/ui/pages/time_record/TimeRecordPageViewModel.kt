@@ -9,7 +9,6 @@ import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
-import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
@@ -29,7 +28,6 @@ class TimeRecordPageViewModel(
     val timeRegulatorViewModel: TimeRegulatorViewModel,
     val eventInputViewModel: EventInputViewModel,
     val repository: EventRepository,
-    private val spHelper: SPHelper,
     private val idState: IdState,
     val sharedState: SharedState,
     private val dndManager: DNDManager,
@@ -41,6 +39,8 @@ class TimeRecordPageViewModel(
             sharedState.currentEvent = value
         }
     private val stepTiming get() = eventButtonsViewModel.stepTiming
+
+    var pauseAcc = 0 // 临时变量，不需要保存，只在结束那一瞬起作用
 
     init {
         // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
@@ -73,11 +73,11 @@ class TimeRecordPageViewModel(
                     val eventId = if (eventType == EventType.SUBJECT) idState.subject.value
                         else idState.step.value // else 只可能是步骤事项了
                     val duration = calEventDuration(eventId)
-                    repository.updateEndTimeAndDurationById(eventId, duration)
+                    repository.updateEndTimeAndDurationById(eventId, duration)// TODO: 还要加一个 pauseInterval 
                 } else {
                     currentEvent = updateCurrentEvent()
                     repository.updateEvent(currentEvent!!) // 更新数据库
-                    spHelper.resetPauseInterval()
+
                 }
             }
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
@@ -141,7 +141,7 @@ class TimeRecordPageViewModel(
         currentEvent?.let {
             val autoId = idState.current.value
             // 插入事项不允许有暂停间隔
-            val pauseInterval = if (it.type == EventType.INSERT) 0 else spHelper.getPauseInterval()
+            val pauseInterval = if (it.type == EventType.INSERT) 0 else pauseAcc
             val endTime = LocalDateTime.now()
             val duration = Duration.between(it.startTime, endTime)
                 .minus(Duration.ofMinutes(pauseInterval.toLong()))

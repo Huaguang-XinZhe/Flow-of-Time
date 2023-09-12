@@ -5,6 +5,11 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.PauseState
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
 /**
  * 实现了单例的 SharedPreferences 帮助类
@@ -26,6 +31,19 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
+    fun getPauseState(): PauseState {
+        val startLong = sp.getLong("start_second", -1L)
+        val start = if (startLong != -1L) {
+            val instant = Instant.ofEpochSecond(startLong)
+            LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+        } else null
+
+        return PauseState(
+            start = mutableStateOf(start),
+            acc = mutableStateOf(sp.getInt("acc", 0))
+        )
+    }
+
     fun getStepTiming(): Boolean {
         return sp.getBoolean("step_timing", false)
     }
@@ -33,13 +51,16 @@ class SPHelper private constructor(context: Context) {
     fun saveState(
         idState: IdState,
         buttonsState: ButtonsState,
+        pauseState: PauseState,
         stepTiming: Boolean
     ) {
-        val editor = sp.edit()
-        saveIdState(editor, idState)
-        saveButtonsState(editor, buttonsState)
-        saveStepTiming(editor, stepTiming)
-        editor.apply()
+        sp.edit().apply {
+            saveIdState(idState)
+            saveButtonsState(buttonsState)
+            savePauseState(pauseState)
+            saveStepTiming(stepTiming)
+            apply()
+        }
     }
 
     fun getButtonsState(): ButtonsState {
@@ -59,25 +80,6 @@ class SPHelper private constructor(context: Context) {
         step = mutableStateOf(sp.getLong("step", 0L))
     )
 
-    fun savePauseInterval(value: Int) {
-        val accValue = getPauseInterval() + value
-        sp.edit().putInt("pause_interval", accValue).apply()
-    }
-
-    /**
-     * 结束的时候需要获取，然后存入数据库
-     */
-    fun getPauseInterval(): Int {
-        return sp.getInt("pause_interval", 0)
-    }
-
-    /**
-     * 结束当前事件的时候重置
-     */
-    fun resetPauseInterval() {
-        sp.edit().putInt("pause_interval", 0).apply()
-    }
-
     fun saveRingVolume(value: Int) {
         sp.edit().putInt("ring_volume", value).apply()
     }
@@ -96,16 +98,16 @@ class SPHelper private constructor(context: Context) {
         sp.edit().putString("current_core_event_name", value).apply()
     }
 
-    private fun saveIdState(editor: SharedPreferences.Editor, idState: IdState) {
-        with(editor) {
+    private fun SharedPreferences.Editor.saveIdState(idState: IdState) {
+        with(this) {
             putLong("current", idState.current.value)
             putLong("subject", idState.subject.value)
             putLong("step", idState.step.value)
         }
     }
 
-    private fun saveButtonsState(editor: SharedPreferences.Editor, buttonsState: ButtonsState) {
-        with(editor) {
+    private fun SharedPreferences.Editor.saveButtonsState(buttonsState: ButtonsState) {
+        with(this) {
             putString("mainText", buttonsState.mainText.value)
             putBoolean("mainShow", buttonsState.mainShow.value)
             putString("subText", buttonsState.subText.value)
@@ -114,8 +116,18 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
-    private fun saveStepTiming(editor: SharedPreferences.Editor, value: Boolean) {
-        editor.putBoolean("step_timing", value)
+    private fun SharedPreferences.Editor.saveStepTiming(value: Boolean) {
+        this.putBoolean("step_timing", value)
+    }
+
+    private fun SharedPreferences.Editor.savePauseState(pauseState: PauseState) {
+        val zonedDateTime = ZonedDateTime.of(pauseState.start.value, ZoneId.systemDefault())
+        val epochSecond = zonedDateTime.toEpochSecond()
+
+        with(this) {
+            putLong("start_second", epochSecond)
+            putInt("acc", pauseState.acc.value)
+        }
     }
 
 }

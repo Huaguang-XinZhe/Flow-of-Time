@@ -3,13 +3,16 @@ package com.huaguang.flowoftime.ui.pages.time_record.time_regulator
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.repositories.EventRepository
-import com.huaguang.flowoftime.data.sources.SPHelper
+import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -17,28 +20,34 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class TimeRegulatorViewModel @Inject constructor(
-    private val spHelper: SPHelper,
     private val repository: EventRepository,
     private val sharedState: SharedState,
+    val pauseState: PauseState,
+    val inputState: InputState,
 ) : ViewModel() {
 
     var selectedTime: MutableState<LocalDateTime?>? = null
 
-    private var recordTime: LocalTime? = null
     // 用于取消之前的协程
     private var updateJob: Job? = null
     // 存储上次点击的时间戳
     private var lastClickTime: Long = 0
 
+    val checkedLiveData = MutableLiveData(true) // 我需要的就是外界更改其值，所以就不保护了！
+
     override fun onCleared() {
         super.onCleared()
         updateJob?.cancel()
+    }
+
+    fun toggleChecked(checked: Boolean) {
+        checkedLiveData.value = checked
+        RDALogger.info("toggle 执行，checkedLiveData.value = ${checkedLiveData.value}")
     }
 
     /**
@@ -47,14 +56,18 @@ class TimeRegulatorViewModel @Inject constructor(
      */
     fun pauseButtonEnabled() = sharedState.cursorType.value.let { it != null && it != EventType.INSERT }
 
-    fun calPauseInterval(checked: Boolean) { // checked 为 true 是继续（播放），表明当前事项正在计时……
-        if (!checked) { // 暂停
-            recordTime = LocalTime.now()
-        } else { // 继续
-            val interval = if (recordTime == null) 0 else {
-                ChronoUnit.MINUTES.between(recordTime, LocalTime.now()).toInt()
+    fun calPauseInterval(checked: Boolean?) { // checked 为 true 是继续（播放），表明当前事项正在计时……
+        pauseState.apply {
+            if (checked == false) { // 暂停
+                start.value = LocalDateTime.now()
+                RDALogger.info("暂停之后：start = ${start.value}")
+            } else { // 继续
+                RDALogger.info("恢复/继续！acc = ${acc.value}, start = ${start.value}")
+                val interval = if (start.value == null) 0 else {
+                    ChronoUnit.MINUTES.between(start.value, LocalDateTime.now()).toInt()
+                }
+                acc.value += interval
             }
-            spHelper.savePauseInterval(interval)
         }
     }
 
@@ -151,12 +164,14 @@ class TimeRegulatorViewModel @Inject constructor(
                 if (eventType == EventType.INSERT && !isTiming) {
                     val parentEvent = repository.getInsertParentById(parentId!!)
                     if (parentEvent.endTime != null) {
-                        val newParentDuration = if (type == TimeType.START) {
-                            parentEvent.duration + deltaDuration // start 同向变化（父）
-                        } else {
-                            parentEvent.duration - deltaDuration // end 反向变化（父）
+                        parentEvent.duration!!.let {
+                            val newParentDuration = if (type == TimeType.START) {
+                                parentEvent.duration + deltaDuration // start 同向变化（父）
+                            } else {
+                                parentEvent.duration - deltaDuration // end 反向变化（父）
+                            }
+                            return newDuration to newParentDuration
                         }
-                        return newDuration to newParentDuration
                     }
                 }
 

@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CustomTime
@@ -23,7 +24,7 @@ val LocalButtonsStateControl = compositionLocalOf<ButtonsStateControl> {
     error("没有提供实现 ButtonsStateControl 接口的对象！")
 }
 val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
-val LocalToggleState = compositionLocalOf { mutableStateOf(true) }
+val LocalCheckedLiveData = compositionLocalOf { MutableLiveData(true) }
 
 @Composable
 fun TimeRecordPage(
@@ -31,7 +32,6 @@ fun TimeRecordPage(
 ) {
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
-    val toggleState = remember { mutableStateOf(true) }
 
     ConstraintLayout(
         modifier = Modifier.padding(vertical = 10.dp)
@@ -49,7 +49,7 @@ fun TimeRecordPage(
             LocalSelectedTime provides selectedTime,
             LocalEventControl provides pageViewModel.eventControl,
             LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl,
-            LocalToggleState provides toggleState,
+            LocalCheckedLiveData provides pageViewModel.timeRegulatorViewModel.checkedLiveData,
         ) {
             DisplayAndRecordingItemColumn(
                 viewModel = pageViewModel.eventInputViewModel,
@@ -77,19 +77,19 @@ fun TimeRecordPage(
                 }
             )
 
-            EventInputField(
-                viewModel = pageViewModel.eventInputViewModel,
-                modifier = Modifier.constrainAs(eventInput) {
-                    bottom.linkTo(timeRegulator.top, 100.dp)
-                    start.linkTo(parent.start)
-                }
-            )
-
             CoreFloatingButton(
                 viewModel = pageViewModel.eventInputViewModel,
                 modifier = Modifier.constrainAs(floatingButton) {
                     bottom.linkTo(timeRegulator.top, 20.dp)
                     end.linkTo(parent.end, 16.dp)
+                }
+            )
+
+            EventInputField(
+                viewModel = pageViewModel.eventInputViewModel,
+                modifier = Modifier.constrainAs(eventInput) {
+                    bottom.linkTo(parent.bottom, 200.dp)
+                    start.linkTo(parent.start)
                 }
             )
 

@@ -13,11 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.ui.pages.time_record.LocalCheckedLiveData
 import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
-import com.huaguang.flowoftime.ui.pages.time_record.LocalToggleState
 import com.huaguang.flowoftime.ui.widget.LongPressButton
 import com.huaguang.flowoftime.ui.widget.LongPressTextButton
 import java.time.LocalDateTime
@@ -30,7 +31,7 @@ fun EventButtons(
 
     val eventControl = LocalEventControl.current
     val selectedTime = LocalSelectedTime.current
-    val toggleState = LocalToggleState.current
+    val checked = LocalCheckedLiveData.current
 
     ConstraintLayout (
         modifier = modifier
@@ -53,7 +54,7 @@ fun EventButtons(
             viewModel = viewModel,
             eventControl = eventControl,
             selectedTime = selectedTime,
-            toggleState = toggleState,
+            checked = checked,
             modifier = Modifier.constrainAs(buttonRowRef) {
                 start.linkTo(parent.start)
                 end.linkTo(parent.end)
@@ -92,16 +93,18 @@ fun ButtonsRow(
     viewModel: EventButtonsViewModel,
     eventControl: EventControl,
     selectedTime: MutableState<LocalDateTime?>?,
-    toggleState: MutableState<Boolean>,
+    checked: MutableLiveData<Boolean>,
     modifier: Modifier = Modifier
 ) {
+    if (viewModel.inputState.show.value) return // 输入框弹起，就不显示
+
     Row(
         modifier = modifier
     ) {
         viewModel.buttonsState.apply {
             if (mainShow.value) {
                 LongPressButton(
-                    onClick = { viewModel.onMainButtonClick(eventControl, selectedTime, toggleState) },
+                    onClick = { viewModel.onMainButtonClick(eventControl, selectedTime, checked) },
                     onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
                     text = mainText.value
                 )
@@ -110,7 +113,7 @@ fun ButtonsRow(
             if (subShow.value) {
                 LongPressTextButton(
                     text = subText.value,
-                    onClick = { viewModel.onSubButtonClick(eventControl, selectedTime, toggleState) },
+                    onClick = { viewModel.onSubButtonClick(eventControl, selectedTime, checked) },
                     onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
                     modifier = Modifier.padding(start = 5.dp)
                 )

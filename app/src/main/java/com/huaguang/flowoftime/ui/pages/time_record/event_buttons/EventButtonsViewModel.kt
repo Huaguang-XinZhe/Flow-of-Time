@@ -14,6 +14,8 @@ import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.state.ButtonsState
+import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -26,6 +28,8 @@ class EventButtonsViewModel @Inject constructor(
     spHelper: SPHelper,
     private val sharedState: SharedState,
     val buttonsState: ButtonsState,
+    val pauseState: PauseState,
+    val inputState: InputState,
 ) : ViewModel() {
 
     private var currentStatus get() = sharedState.eventStatus.value
@@ -94,10 +98,10 @@ class EventButtonsViewModel @Inject constructor(
     fun onMainButtonClick(
         eventControl: EventControl,
         selectedTime: MutableState<LocalDateTime?>?,
-        toggleState: MutableState<Boolean>
+        checked: MutableLiveData<Boolean>
     ) {
         unCheck(selectedTime)
-        pauseRecovery(toggleState)
+        pauseRecovery(checked)
 
         when (buttonsState.mainText.value) {
             "开始" -> {
@@ -142,10 +146,10 @@ class EventButtonsViewModel @Inject constructor(
     fun onSubButtonClick(
         eventControl: EventControl,
         selectedTime: MutableState<LocalDateTime?>?,
-        toggleState: MutableState<Boolean>
+        checked: MutableLiveData<Boolean>
     ) {
         unCheck(selectedTime)
-        pauseRecovery(toggleState)
+        pauseRecovery(checked)
 
         when (buttonsState.subText.value) {
             "插入" -> {
@@ -264,9 +268,12 @@ class EventButtonsViewModel @Inject constructor(
 
     /**
      * “暂停/恢复” 按钮恢复初始状态（继续）
+     * checked 为继续的状态，!checked 即暂停的状态
      */
-    private fun pauseRecovery(toggleState: MutableState<Boolean>) {
-        if (!toggleState.value) toggleState.value = true
+    private fun pauseRecovery(checked: MutableLiveData<Boolean>) {
+        if (checked.value == false) { // 只有以前是暂停的状态，才恢复
+            checked.value = true // 状态改变后会触发副作用内的逻辑，但需要时间，在此之前，下面的代码会先执行。
+        }
     }
 
     /**
