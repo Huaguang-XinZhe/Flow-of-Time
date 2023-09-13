@@ -9,6 +9,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.UndoStack
+import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -37,6 +39,8 @@ class TimeRecordFragment : Fragment() {
     lateinit var idState: IdState
     @Inject
     lateinit var pauseState: PauseState
+    @Inject
+    lateinit var undoStack: UndoStack<Operation>
     lateinit var dndManager: DNDManager
 
     // 注入各大组件的 ViewModel
@@ -60,7 +64,8 @@ class TimeRecordFragment : Fragment() {
             idState,
             sharedState,
             pauseState,
-            dndManager
+            dndManager,
+            undoStack,
         )
     }
 

@@ -93,27 +93,26 @@ class EventButtonsViewModel @Inject constructor(
     ) {
         clearState(checked, selectedTime)
 
-        when (buttonsState.mainText.value) {
-            "开始" -> {
-                viewModelScope.launch {
-                    toggleStateOnMainStart()
-                    eventControl.startEvent(eventType = EventType.SUBJECT)
-                }
-            }
-            "结束" -> {
-                viewModelScope.launch {
-                    eventControl.stopEvent()
-                    toggleStateOnMainStop()
-                }
-            }
-            "步骤结束" -> {
-                viewModelScope.launch {
-                    eventControl.stopEvent(eventType = EventType.STEP)
-                    toggleStateOnMainStart()
+        viewModelScope.launch {
+            eventControl.apply {
+                when (buttonsState.mainText.value) {
+                    "开始" -> {
+                        toggleStateOnMainStart()
+                        startEvent(eventType = EventType.SUBJECT)
+                    }
+                    "结束" -> {
+                        stopEvent()
+                        toggleStateOnMainStop()
+                    }
+                    "步骤结束" -> {
+                        stopEvent(eventType = EventType.STEP)
+                        toggleStateOnMainStart()
+                    }
                 }
             }
         }
     }
+
 
     fun onMainButtonLongClick(eventControl: EventControl) {
         if (buttonsState.mainText.value == "结束") return
@@ -142,20 +141,24 @@ class EventButtonsViewModel @Inject constructor(
         clearState(checked, selectedTime)
 
         viewModelScope.launch {
-            when (buttonsState.subText.value) {
-                "插入", "step 插入" -> {
-                    toggleStateOnSubInsert(buttonsState.subText.value)
-                    eventControl.startEvent(eventType = EventType.INSERT)
-                }
-                "插入结束", "step 插入结束" -> {
-                    eventControl.stopEvent(eventType = EventType.INSERT)
-                    cursorType = if (buttonsState.subText.value == "插入结束") EventType.SUBJECT else EventType.STEP
-                    updateButtonsStateToInsert()
-                }
-                "伴随结束" -> {
-                    eventControl.stopEvent(eventType = EventType.FOLLOW)
-                    cursorType = EventType.SUBJECT
-                    updateButtonsStateToInsert()
+            eventControl.apply {
+                when (buttonsState.subText.value) {
+                    "插入" -> startInsert(EventType.SUBJECT_INSERT)
+                    "step 插入" -> startInsert(EventType.STEP_INSERT)
+                    "插入结束" -> endInsert(
+                        stopEventType = EventType.SUBJECT_INSERT,
+                        newCursorType = EventType.SUBJECT,
+                    )
+                    "step 插入结束" -> endInsert(
+                        stopEventType = EventType.STEP_INSERT,
+                        newCursorType = EventType.STEP,
+                        newSubTextValue = "step 插入"
+                    )
+                    "伴随结束" -> {
+                        stopEvent(eventType = EventType.FOLLOW)
+                        cursorType = EventType.SUBJECT
+                        updateButtonsStateToInsert()
+                    }
                 }
             }
         }
@@ -166,7 +169,7 @@ class EventButtonsViewModel @Inject constructor(
 
         viewModelScope.launch {
             // 结束子事件————————————————
-            eventControl.stopEvent(eventType = EventType.INSERT)
+//            eventControl.stopEvent(eventType = EventType.INSERT)
 //            insertOrFollowEnd(EventType.INSERT)
 
             // 结束主事件————————————————
@@ -223,24 +226,6 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    private fun toggleStateOnSubInsert(subText: String) {
-        cursorType = EventType.INSERT
-
-        buttonsState.apply {
-            this.subText.value = if (subText == "插入") "插入结束" else "step 插入结束"
-            mainShow.value = false
-            undoShow.value = false
-        }
-    }
-
-    private fun updateButtonsStateToInsert() {
-        buttonsState.apply {
-            subText.value = "插入"
-            mainShow.value = true
-            undoShow.value = true
-        }
-    }
-
     private fun clearState(
         checked: MutableLiveData<Boolean>,
         selectedTime: MutableState<LocalDateTime?>?,
@@ -264,6 +249,36 @@ class EventButtonsViewModel @Inject constructor(
      */
     private fun unCheck(selectedTime: MutableState<LocalDateTime?>?) {
         selectedTime?.value = null
+    }
+
+    private suspend fun EventControl.startInsert(eventType: EventType) {
+        buttonsState.apply {
+            subText.value = eventType.endName()
+            mainShow.value = false
+            undoShow.value = false
+        }
+        cursorType = eventType
+        startEvent(eventType = eventType)
+    }
+
+    private suspend fun EventControl.endInsert(
+        stopEventType: EventType,
+        newCursorType: EventType,
+        newSubTextValue: String = "插入"
+    ) {
+        stopEvent(eventType = stopEventType)
+        cursorType = newCursorType
+        updateButtonsStateToInsert(newSubTextValue)
+    }
+
+    private fun updateButtonsStateToInsert(
+        newSubTextValue: String = "插入"
+    ) {
+        buttonsState.apply {
+            subText.value = newSubTextValue
+            mainShow.value = true
+            undoShow.value = true
+        }
     }
 
 }

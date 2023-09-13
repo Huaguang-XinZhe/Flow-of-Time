@@ -5,9 +5,32 @@ enum class EventType {
     SUBJECT, // 可以有子事件：步骤、插入、伴随
     STEP, // 也可以有子事件：插入（只能在主题事件之下）
     FOLLOW, // 不能有子事件（一般在主题事件之下）
-    INSERT; // 不能有子事件（可以在步骤和主题之下）
+    SUBJECT_INSERT,
+    STEP_INSERT; // 不能有子事件（可以在步骤和主题之下）
 
     fun isExpandable() = this == SUBJECT || this == STEP
+
+    fun isInsert() = this == SUBJECT_INSERT || this == STEP_INSERT
+
+    /**
+     * 只允许主题插入和步骤插入调用此方法，这是在编码是调用的，一般不会出错，即结果不会是空字符串。
+     */
+    fun endName(): String {
+        return if (this == SUBJECT_INSERT) "插入结束" else if (this == STEP_INSERT) "step 插入结束" else ""
+    }
+}
+
+enum class Action {
+    SUBJECT_START,
+    SUBJECT_END,
+    STEP_START,
+    STEP_END,
+    SUBJECT_INSERT_START,
+    SUBJECT_INSERT_END,
+    STEP_INSERT_START,
+    STEP_INSERT_END,
+    FOLLOW_START,
+    FOLLOW_END,
 }
 
 enum class TimeType {

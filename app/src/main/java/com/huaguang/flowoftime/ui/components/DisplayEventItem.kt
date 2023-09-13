@@ -175,7 +175,7 @@ fun ContentRowList(
 fun PrefixText(type: EventType) {
     val prefix = when (type) {
         EventType.STEP -> "•"
-        EventType.INSERT -> ">"
+        EventType.SUBJECT_INSERT, EventType.STEP_INSERT -> ">"
         EventType.FOLLOW -> "*"
         else -> ""
     }

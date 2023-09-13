@@ -261,10 +261,10 @@ class EventRepository(
 
     suspend fun calTotalSubInsertDuration(
         id: Long,
-        eventType: EventType = EventType.INSERT
+        eventTypes: List<EventType> = listOf(EventType.SUBJECT_INSERT, EventType.STEP_INSERT)
     ): Duration {
         val insertDurationList = withContext(Dispatchers.IO) {
-            eventDao.getSubInsertDurationList(id, eventType)
+            eventDao.getSubInsertDurationList(id, eventTypes)
         }
         return insertDurationList.fold(Duration.ZERO) { total, duration ->
             total.plus(duration)

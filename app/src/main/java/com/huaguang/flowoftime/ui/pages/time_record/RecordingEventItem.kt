@@ -131,7 +131,7 @@ fun FlagText(type: EventType) {
 
     if (type == EventType.FOLLOW) {
         flag = "f: "
-    } else if (type == EventType.INSERT) {
+    } else if (type.isInsert()) {
         flag = "i: "
     }
 

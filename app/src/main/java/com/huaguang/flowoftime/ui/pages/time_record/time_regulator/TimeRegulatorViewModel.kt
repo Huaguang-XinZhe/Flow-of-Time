@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -54,7 +53,7 @@ class TimeRegulatorViewModel @Inject constructor(
      * 暂停/恢复按钮是否允许点击？
      * 只要当前有事件正在进行，且不为插入事件就可以了。
      */
-    fun pauseButtonEnabled() = sharedState.cursorType.value.let { it != null && it != EventType.INSERT }
+    fun pauseButtonEnabled() = sharedState.cursorType.value.let { it != null && !it.isInsert() }
 
     fun calPauseInterval(checked: Boolean?) { // checked 为 true 是继续（播放），表明当前事项正在计时……
         pauseState.apply {
@@ -161,7 +160,7 @@ class TimeRegulatorViewModel @Inject constructor(
                     originalDuration + deltaDuration
                 }
 
-                if (eventType == EventType.INSERT && !isTiming) {
+                if (eventType.isInsert() && !isTiming) {
                     val parentEvent = repository.getInsertParentById(parentId!!)
                     if (parentEvent.endTime != null) {
                         parentEvent.duration!!.let {

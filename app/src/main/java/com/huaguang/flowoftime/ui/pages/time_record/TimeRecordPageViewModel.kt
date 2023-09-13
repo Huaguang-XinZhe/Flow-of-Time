@@ -3,10 +3,13 @@ package com.huaguang.flowoftime.ui.pages.time_record
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
@@ -33,6 +36,7 @@ class TimeRecordPageViewModel(
     val sharedState: SharedState,
     private val pauseState: PauseState,
     private val dndManager: DNDManager,
+    private val undoStack: UndoStack<Operation>,
 ) : ViewModel() {
 
     private var currentEvent
@@ -49,6 +53,8 @@ class TimeRecordPageViewModel(
             if (currentEvent == null) currentEvent = repository.getCurrentEvent()
             RDALogger.info("currentEvent = $currentEvent")
         }
+
+
     }
 
     val eventControl = object : EventControl {
@@ -63,6 +69,11 @@ class TimeRecordPageViewModel(
 
             updateIdState(autoId, eventType)
             updateInputState(autoId, name)
+
+            undoStack.addState(Operation( // 将当前操作添加到撤销栈
+                action = getActionByType(eventType),
+                eventId = autoId,
+            ))
         }
 
         override suspend fun stopEvent(eventType: EventType) {
@@ -77,6 +88,16 @@ class TimeRecordPageViewModel(
 
             }
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
+        }
+    }
+
+    private fun getActionByType(eventType: EventType): Action {
+        return when (eventType) {
+            EventType.SUBJECT -> Action.SUBJECT_START
+            EventType.STEP -> Action.STEP_START
+            EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_START
+            EventType.STEP_INSERT -> Action.STEP_INSERT_START
+            EventType.FOLLOW -> Action.FOLLOW_START
         }
     }
 
@@ -121,6 +142,7 @@ class TimeRecordPageViewModel(
     private fun updateIdState(autoId: Long, eventType: EventType) {
         idState.apply {
             current.value = autoId
+
             if (eventType == EventType.SUBJECT) {
                 subject.value = autoId
             } else if (eventType == EventType.STEP) {
@@ -159,7 +181,7 @@ class TimeRecordPageViewModel(
         currentEvent?.let {
             val autoId = idState.current.value
             // 插入事项不允许有暂停间隔
-            val pauseInterval = if (it.type == EventType.INSERT) 0 else pauseAcc
+            val pauseInterval = if (it.type.isInsert()) 0 else pauseAcc
             val endTime = LocalDateTime.now()
             val duration = Duration.between(it.startTime, endTime)
                 .minus(Duration.ofMinutes(pauseInterval.toLong()))
@@ -199,16 +221,11 @@ class TimeRecordPageViewModel(
             return when(type) {
                 EventType.SUBJECT -> null
                 EventType.STEP, EventType.FOLLOW -> subject.value
-                EventType.INSERT -> {
-                    val parentType = getInsertParentType()
-                    if (parentType == EventType.STEP) step.value else subject.value
-                }
+                EventType.SUBJECT_INSERT -> subject.value
+                EventType.STEP_INSERT -> step.value
             }
         }
     }
-
-    private fun getInsertParentType() = if (sharedState.cursorType.value == EventType.STEP &&
-        idState.let { it.subject.value < it.step.value }) EventType.STEP else EventType.SUBJECT
 
 
     /**
@@ -225,8 +242,7 @@ class TimeRecordPageViewModel(
             if (acc.value == 0) return
 
             RDALogger.info("收集开始")
-            val totalInterval = if (eventType == EventType.INSERT &&
-                getInsertParentType() == EventType.STEP) stepAcc else subjectAcc
+            val totalInterval = if (eventType == EventType.STEP_INSERT) stepAcc else subjectAcc
             RDALogger.info("totalInterval = $totalInterval")
             totalInterval.value += acc.value
         }

@@ -3,9 +3,11 @@ package com.huaguang.flowoftime.di
 import android.app.Application
 import android.content.Context
 import com.huaguang.flowoftime.TimeStreamApplication
+import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.dao.IconMappingDao
+import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
@@ -136,6 +138,11 @@ object AppModule {
         return PauseState.initialValue(spHelper)
     }
 
+    @Singleton
+    @Provides
+    fun provideUndoStack(): UndoStack<Operation> {
+        return UndoStack()
+    }
 
 }
 
