@@ -193,15 +193,7 @@ class EventTrackerMediator(
         }
     }
 
-    private suspend fun stopEventOnConfirmed(newCurrent: Event) {
-        currentEvent = newCurrent
 
-        currentItemViewModel.apply {
-            saveCurrentEvent()
-            hideCurrentItem()
-        }
-        eventButtonsViewModel.toggleStateOnMainStop()
-    }
 
     /**
      * 插入的子事项输入名称后点击确认，会执行此方法进行验证，以确保子事项不进行当下核心事务（包括名称修改）

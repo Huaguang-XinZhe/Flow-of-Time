@@ -1,10 +1,9 @@
 package com.huaguang.flowoftime.custom_interface
 
-import com.huaguang.flowoftime.EventType
-
 interface ButtonsStateControl {
+    fun subjectTiming()
 
-    fun toggleMainEnd()
+    fun followTiming()
 
-    fun toggleSubEnd(type: EventType)
+    fun stepTiming()
 }

@@ -20,17 +20,21 @@ enum class EventType {
     }
 }
 
-enum class Action {
-    SUBJECT_START,
-    SUBJECT_END,
-    STEP_START,
-    STEP_END,
-    SUBJECT_INSERT_START,
-    SUBJECT_INSERT_END,
-    STEP_INSERT_START,
-    STEP_INSERT_END,
-    FOLLOW_START,
-    FOLLOW_END,
+enum class Action(val value: Int) {
+    SUBJECT_START(0),
+    SUBJECT_END(1),
+    STEP_START(0),
+    STEP_END(1),
+    SUBJECT_INSERT_START(0),
+    SUBJECT_INSERT_END(1),
+    STEP_INSERT_START(0),
+    STEP_INSERT_END(1),
+    FOLLOW_START(0),
+    FOLLOW_END(1);
+
+    fun isStart() = this.value == 0
+
+    fun isEnd() = this.value == 1
 }
 
 enum class TimeType {

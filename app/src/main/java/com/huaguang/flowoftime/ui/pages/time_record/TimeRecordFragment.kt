@@ -82,13 +82,9 @@ class TimeRecordFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        eventButtonsViewModel.eventLiveData.observe(viewLifecycleOwner) { event ->
-            sharedState.currentEvent = event // 一但撤销，就赋新值
-        }
-
         timeRegulatorViewModel.apply {
             checkedLiveData.observe(viewLifecycleOwner) { newValue ->
-                RDALogger.info("观察到变化 newValue = $newValue")
+//                RDALogger.info("观察到变化 newValue = $newValue")
                 // 防止初始化的时候执行
                 if (initialized) {
                     calPauseInterval(newValue) // 希望比副作用要快

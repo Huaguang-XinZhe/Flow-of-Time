@@ -22,8 +22,6 @@ data class Event(
 
     var pauseInterval: Int = 0, // 当前事件进行过程中所暂停的时间，原则上不许暂停，为应对现实变化而设置。插入事项不允许有暂停间隔（限制按钮点击）
 
-    var reasonsForDistraction: String? = null, // 分心的理由和时长，有理由就不为 null，其值累加到 pauseInterval 中，但该理由中也保留值。
-
     val type: EventType,
 
     var category: String? = null, // 除主题事件外无类属

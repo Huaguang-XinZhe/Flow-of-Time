@@ -49,7 +49,7 @@ class TimeRecordPageViewModel(
         // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
         viewModelScope.launch {
             if (currentEvent == null) currentEvent = repository.getCurrentEvent()
-            RDALogger.info("currentEvent = $currentEvent")
+//            RDALogger.info("currentEvent = $currentEvent")
         }
 
 

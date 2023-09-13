@@ -13,6 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalCheckedLiveData
@@ -71,10 +72,11 @@ fun UnDoButton(
     viewModel: EventButtonsViewModel,
     modifier: Modifier = Modifier
 ) {
-    if (!viewModel.undoStack.canUndo) return
+    RDALogger.info("在 UnDoButton 中：undoShow = ${viewModel.undoStack.undoShow}")
+    if (!viewModel.undoStack.undoShow) return
 
     IconButton(
-        onClick = { viewModel.onUndoFilledClick() },
+        onClick = { viewModel.onUndoButtonClick() },
         modifier = modifier
     ) {
         Icon(
@@ -109,7 +111,8 @@ fun ButtonsRow(
 
             if (subShow.value) {
                 LongPressTextButton(
-                    text = viewModel.getDisplayTextForSub(subText.value),
+//                    text = viewModel.getDisplayTextForSub(subText.value),
+                    text = subText.value,
                     onClick = { viewModel.onSubButtonClick(eventControl, selectedTime, checked) },
                     onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
                     modifier = Modifier.padding(start = 5.dp)

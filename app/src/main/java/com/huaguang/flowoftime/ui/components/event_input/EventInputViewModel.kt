@@ -121,7 +121,7 @@ class EventInputViewModel @Inject constructor(
     ) {
         viewModelScope.launch {
             eventControl.startEvent(eventType = EventType.STEP)
-            buttonsStateControl.toggleSubEnd(EventType.STEP)
+            buttonsStateControl.stepTiming()
         }
     }
 
@@ -150,9 +150,9 @@ class EventInputViewModel @Inject constructor(
             )
 
             if (hasSubjectExist()) {
-                buttonsStateControl.toggleSubEnd(type) // 切换到 ”伴随结束“ 的按钮状态
+                buttonsStateControl.followTiming() // 切换到 ”伴随结束“ 的按钮状态
             } else {
-                buttonsStateControl.toggleMainEnd() // 切换到 “主题结束” 的按钮状态
+                buttonsStateControl.subjectTiming() // 切换到 “主题结束” 的按钮状态
             }
         }
     }
@@ -160,10 +160,6 @@ class EventInputViewModel @Inject constructor(
     fun onCoreFloatingButtonLongClick() {
         coreName = spHelper.getCurrentCoreEventName(coreName)
         sharedState.dialogShow.value = true // 显示名称输入 Dialog
-    }
-
-    fun undoButtonClick() {
-        TODO("Not yet implemented")
     }
 
     fun onDialogDismiss() {

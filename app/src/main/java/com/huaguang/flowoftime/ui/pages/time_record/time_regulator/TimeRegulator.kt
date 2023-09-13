@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
@@ -84,7 +83,7 @@ fun PauseButton(viewModel: TimeRegulatorViewModel) {
     val iconRes = if (checkedState.value) R.drawable.continute else R.drawable.pause
 
     LaunchedEffect(checked) { // 想要观察到 LiveData 的变化，一定要加上 observeAsState 才行！
-        RDALogger.info("副作用执行！checked 赋值。")
+//        RDALogger.info("副作用执行！checked 赋值。")
         checkedState.value = checked
     }
 
