@@ -113,19 +113,12 @@ class TimeRecordFragment : Fragment() {
 
     }
 
-    override fun onPause() {
-        super.onPause()
-
-        RDALogger.info("onPause() 回调")
-        eventButtonsViewModel.apply {
-            spHelper.saveState(idState, buttonsState, pauseState, sharedState.cursorType)
-        }
-    }
-
     override fun onStop() {
         super.onStop()
         RDALogger.info("回调 onStop()")
-
+        eventButtonsViewModel.apply {
+            spHelper.saveState(idState, buttonsState, pauseState, sharedState.cursorType)
+        }
     }
 
 }

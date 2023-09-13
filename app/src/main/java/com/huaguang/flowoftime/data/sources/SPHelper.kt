@@ -124,8 +124,12 @@ class SPHelper private constructor(context: Context) {
     }
 
     private fun SharedPreferences.Editor.savePauseState(pauseState: PauseState) {
-        val zonedDateTime = ZonedDateTime.of(pauseState.start.value, ZoneId.systemDefault())
-        val epochSecond = zonedDateTime.toEpochSecond()
+        // 注意！这里必须处理 start 的值可能为 null 的情况，要不然每次点开应用都会重新加载，但就是不崩溃！！！
+        // 不，可能已经崩溃了，但因为刚好切换应用（退出前台），所以看不着。
+        val epochSecond = pauseState.start.value?.let {
+            val zonedDateTime = ZonedDateTime.of(pauseState.start.value, ZoneId.systemDefault())
+            zonedDateTime.toEpochSecond()
+        } ?: -1L
 
         with(this) {
             putLong("start_second", epochSecond)
