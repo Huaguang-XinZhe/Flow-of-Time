@@ -249,12 +249,12 @@ class EventRepository(
 
     suspend fun updateThree(
         eventId: Long,
-        newDuration: Duration,
-        totalPauseInterval: Int,
-        endTime: LocalDateTime = LocalDateTime.now(),
+        newDuration: Duration?,
+        pauseInterval: Int,
+        endTime: LocalDateTime? = LocalDateTime.now(),
     ) {
         withContext(Dispatchers.IO) {
-            eventDao.updateThree(eventId, newDuration, totalPauseInterval, endTime)
+            eventDao.updateThree(eventId, newDuration, pauseInterval, endTime)
         }
     }
 

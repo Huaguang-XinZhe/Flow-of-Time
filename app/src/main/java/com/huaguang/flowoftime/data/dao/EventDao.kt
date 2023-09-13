@@ -69,14 +69,14 @@ interface EventDao {
 
     @Query("""
         UPDATE events 
-        SET endTime = :endTime, duration = :duration, pauseInterval = :totalPauseInterval
+        SET endTime = :endTime, duration = :duration, pauseInterval = :pauseInterval
         WHERE id = :id
     """)
     suspend fun updateThree(
         id: Long,
-        duration: Duration,
-        totalPauseInterval: Int,
-        endTime: LocalDateTime
+        duration: Duration?,
+        pauseInterval: Int,
+        endTime: LocalDateTime?
     )
 
     @Update

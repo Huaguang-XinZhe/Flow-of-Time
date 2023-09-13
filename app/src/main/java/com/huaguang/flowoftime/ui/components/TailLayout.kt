@@ -53,7 +53,7 @@ fun TailLayout(
         content = {
             // 事项名称
             Text(
-                text = event.name,
+                text = "${event.id} ${event.name}",
                 maxLines = 2, // 最多两行
                 overflow = TextOverflow.Ellipsis, // 如果文本太长，则使用省略号
                 color = Color.Black,

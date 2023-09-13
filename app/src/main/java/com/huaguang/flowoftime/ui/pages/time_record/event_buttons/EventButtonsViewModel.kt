@@ -170,17 +170,27 @@ class EventButtonsViewModel @Inject constructor(
         val operation = undoStack.undo() ?: return // 其实不大可能为空，栈里要真为空的话，那撤销按钮根本就不会显示
 
         viewModelScope.launch {
-            if (operation.action.isStart()) repository.deleteEvent(operation.eventId)
+            operation.apply {
+                if (action.isStart()) {
+                    repository.deleteEvent(eventId)
+                } else if (action.isEnd()) {
+                    repository.updateThree(eventId, null, pauseInterval, null)
+                }
+            }
         }
 
         // 撤销后要进入的状态
         when(operation.action) {
             Action.SUBJECT_START -> toInitialState()
             Action.STEP_START -> toSubjectTimingState()
-            Action.FOLLOW_START -> toSubjectTimingState() // TODO: 伴随有两种状态，这里要注意
+            Action.FOLLOW_START -> toSubjectTimingState()
             Action.SUBJECT_INSERT_START -> toSubjectTimingState()
             Action.STEP_INSERT_START -> toStepTimingState()
-            else -> return
+            Action.SUBJECT_END -> toSubjectTimingState()
+            Action.STEP_END -> toStepTimingState()
+            Action.FOLLOW_END -> toFollowTimingState()
+            Action.SUBJECT_INSERT_END -> toSubjectInsertState()
+            Action.STEP_INSERT_END -> toStepInsertState()
         }
 
     }

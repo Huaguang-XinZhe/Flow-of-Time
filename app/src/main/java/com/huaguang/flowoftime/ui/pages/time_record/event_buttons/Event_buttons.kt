@@ -13,7 +13,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalCheckedLiveData
@@ -72,7 +71,6 @@ fun UnDoButton(
     viewModel: EventButtonsViewModel,
     modifier: Modifier = Modifier
 ) {
-    RDALogger.info("在 UnDoButton 中：undoShow = ${viewModel.undoStack.undoShow}")
     if (!viewModel.undoStack.undoShow) return
 
     IconButton(

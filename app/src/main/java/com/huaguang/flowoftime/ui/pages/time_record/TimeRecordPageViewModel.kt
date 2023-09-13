@@ -52,7 +52,6 @@ class TimeRecordPageViewModel(
 //            RDALogger.info("currentEvent = $currentEvent")
         }
 
-
     }
 
     val eventControl = object : EventControl {
@@ -69,33 +68,56 @@ class TimeRecordPageViewModel(
             updateInputState(autoId, name)
 
             eventButtonsViewModel.undoStack.addState(Operation( // 将当前操作添加到撤销栈
-                action = getActionByType(eventType),
+                action = getActionByTypeOnStart(eventType),
                 eventId = autoId,
             ))
         }
 
         override suspend fun stopEvent(eventType: EventType) {
+            val eventId: Long
+            val pauseInterval: Int
+
             if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
                 RDALogger.info("进入 withContent 块结束事件")
-                val (eventId, totalPauseInterval) = handlePauseInterval(eventType)
+                handlePauseInterval(eventType).let { pair ->
+                    eventId = pair.first
+                    pauseInterval = pair.second
+                }
                 val duration = calEventDuration(eventId)
-                repository.updateThree(eventId, duration, totalPauseInterval)
+                repository.updateThree(eventId, duration, pauseInterval)
             } else {
-                currentEvent = updateCurrentEvent()
+                eventId = idState.current.value
+                pauseInterval = if (eventType.isInsert()) 0 else pauseAcc // 插入事项不允许有暂停间隔
+                currentEvent = updateCurrentEvent(eventId, pauseInterval)
                 repository.updateEvent(currentEvent!!) // 更新数据库
-
             }
+
+            eventButtonsViewModel.undoStack.addState(Operation( // 结束后添加到撤销栈
+                action = getActionByTypeOnStop(eventType),
+                eventId = eventId,
+                pauseInterval = pauseInterval,
+            ))
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
     }
 
-    private fun getActionByType(eventType: EventType): Action {
+    private fun getActionByTypeOnStart(eventType: EventType): Action {
         return when (eventType) {
             EventType.SUBJECT -> Action.SUBJECT_START
             EventType.STEP -> Action.STEP_START
             EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_START
             EventType.STEP_INSERT -> Action.STEP_INSERT_START
             EventType.FOLLOW -> Action.FOLLOW_START
+        }
+    }
+
+    private fun getActionByTypeOnStop(eventType: EventType): Action {
+        return when (eventType) {
+            EventType.SUBJECT -> Action.SUBJECT_END
+            EventType.STEP -> Action.STEP_END
+            EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_END
+            EventType.STEP_INSERT -> Action.STEP_INSERT_END
+            EventType.FOLLOW -> Action.FOLLOW_END
         }
     }
 
@@ -127,6 +149,7 @@ class TimeRecordPageViewModel(
      */
     private suspend fun calEventDuration(eventId: Long): Duration {
         val startTime = repository.getStartTimeOfWithContentEvent(eventId)
+        RDALogger.info("eventId = $eventId，startTime = $startTime")
         val pauseIntervalDuration = Duration.ofMinutes(pauseState.subjectAcc.value.toLong())
 //        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
         val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
@@ -173,18 +196,15 @@ class TimeRecordPageViewModel(
     /**
      * 结束时更新当前事件的信息，插入事件和当前的主题事件会走这条路（即没有下级的会走这条路）
      */
-    private fun updateCurrentEvent(): Event {
+    private fun updateCurrentEvent(eventId: Long, pauseInterval: Int): Event {
         var event: Event? = null
 
         currentEvent?.let {
-            val autoId = idState.current.value
-            // 插入事项不允许有暂停间隔
-            val pauseInterval = if (it.type.isInsert()) 0 else pauseAcc
             val endTime = LocalDateTime.now()
             val duration = Duration.between(it.startTime, endTime)
                 .minus(Duration.ofMinutes(pauseInterval.toLong()))
 
-            it.id = autoId // 必须指定这一条，否则数据库不会更新
+            it.id = eventId // 必须指定这一条，否则数据库不会更新
             it.endTime = endTime
             it.pauseInterval = pauseInterval
             it.duration = duration
