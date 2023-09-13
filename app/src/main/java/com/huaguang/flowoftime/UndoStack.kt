@@ -1,42 +1,44 @@
 package com.huaguang.flowoftime
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import com.huaguang.flowoftime.data.models.Operation
 import java.util.Stack
 
-class UndoStack<T> {
+class UndoStack {
 
-    private val undoStack = Stack<T>()
+    private val undoStack = Stack<Operation>()
     private val maxUndoSteps = 3
 
-    fun addState(state: T) {
+    var canUndo by mutableStateOf(false)
+        private set
+
+    fun addState(state: Operation) {
         if (undoStack.size == maxUndoSteps) {
-            undoStack.removeAt(0) // 移除最旧的状态来为新状态腾出空间
+            undoStack.removeAt(0)
         }
         undoStack.push(state)
+        updateCanUndo()
     }
 
-    fun undo(): T? {
+    fun undo(): Operation? {
         return if (undoStack.isNotEmpty()) {
             undoStack.pop()
         } else {
             null
+        }.also {
+            updateCanUndo()
         }
     }
 
-    fun canUndo(): Boolean {
-        return undoStack.isNotEmpty()
+    /**
+     * 在使用 Compose 的 mutableStateOf 时，你不需要手动检查新值和旧值是否不同。
+     * Compose 会自动处理这个，只有当值实际更改时才会触发重新组合。
+     */
+    private fun updateCanUndo() {
+        canUndo = undoStack.isNotEmpty()
     }
 }
 
-fun main() {
-    val undoStack = UndoStack<String>()
 
-    undoStack.addState("State1")
-    undoStack.addState("State2")
-    undoStack.addState("State3")
-    undoStack.addState("State4")
-
-    println(undoStack.undo()) // 输出: State4
-    println(undoStack.undo()) // 输出: State3
-    println(undoStack.undo()) // 输出: State2
-    println(undoStack.undo()) // 输出: null
-}

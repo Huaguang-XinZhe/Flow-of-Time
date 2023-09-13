@@ -7,7 +7,6 @@ import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
-import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -36,7 +35,6 @@ class TimeRecordPageViewModel(
     val sharedState: SharedState,
     private val pauseState: PauseState,
     private val dndManager: DNDManager,
-    private val undoStack: UndoStack<Operation>,
 ) : ViewModel() {
 
     private var currentEvent
@@ -70,7 +68,7 @@ class TimeRecordPageViewModel(
             updateIdState(autoId, eventType)
             updateInputState(autoId, name)
 
-            undoStack.addState(Operation( // 将当前操作添加到撤销栈
+            eventButtonsViewModel.undoStack.addState(Operation( // 将当前操作添加到撤销栈
                 action = getActionByType(eventType),
                 eventId = autoId,
             ))

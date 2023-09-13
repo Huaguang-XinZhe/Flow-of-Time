@@ -7,7 +7,6 @@ import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.dao.IconMappingDao
-import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
@@ -140,7 +139,7 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideUndoStack(): UndoStack<Operation> {
+    fun provideUndoStack(): UndoStack {
         return UndoStack()
     }
 

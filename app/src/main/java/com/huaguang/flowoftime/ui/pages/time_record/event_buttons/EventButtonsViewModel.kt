@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -27,6 +28,7 @@ class EventButtonsViewModel @Inject constructor(
     val buttonsState: ButtonsState,
     val pauseState: PauseState,
     val inputState: InputState,
+    val undoStack: UndoStack,
 ) : ViewModel() {
 
     private var cursorType get() = sharedState.cursorType.value
@@ -44,7 +46,6 @@ class EventButtonsViewModel @Inject constructor(
 
         override fun toggleSubEnd(type: EventType) { // 按钮切换到子项结束的状态（说明子项正在进行）
             buttonsState.apply {
-                undoShow.value = false
 
                 if (type == EventType.FOLLOW) { // 伴随事件正在进行
                     mainShow.value = false
@@ -73,7 +74,7 @@ class EventButtonsViewModel @Inject constructor(
         buttonsState.apply {
             mainText.value = "开始"
             subShow.value = false
-            undoShow.value = true
+
         }
     }
 
@@ -202,7 +203,7 @@ class EventButtonsViewModel @Inject constructor(
             }
         }
 
-        buttonsState.undoShow.value = false
+        buttonsState
     }
 
     /**
@@ -222,7 +223,6 @@ class EventButtonsViewModel @Inject constructor(
         buttonsState.apply {
             mainText.value = "结束"
             subShow.value = true
-            undoShow.value = false
         }
     }
 
@@ -255,7 +255,6 @@ class EventButtonsViewModel @Inject constructor(
         buttonsState.apply {
             subText.value = eventType.endName()
             mainShow.value = false
-            undoShow.value = false
         }
         cursorType = eventType
         startEvent(eventType = eventType)
@@ -277,7 +276,7 @@ class EventButtonsViewModel @Inject constructor(
         buttonsState.apply {
             subText.value = newSubTextValue
             mainShow.value = true
-            undoShow.value = true
+
         }
     }
 

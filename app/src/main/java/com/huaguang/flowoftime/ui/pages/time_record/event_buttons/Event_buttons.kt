@@ -8,7 +8,6 @@ import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -72,19 +71,17 @@ fun UnDoButton(
     viewModel: EventButtonsViewModel,
     modifier: Modifier = Modifier
 ) {
-    val undoFilledIconShow by viewModel.buttonsState.undoShow
+    if (!viewModel.undoStack.canUndo) return
 
-    if (undoFilledIconShow) {
-        IconButton(
-            onClick = { viewModel.onUndoFilledClick() },
-            modifier = modifier
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.undo_filled),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+    IconButton(
+        onClick = { viewModel.onUndoFilledClick() },
+        modifier = modifier
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.undo_filled),
+            contentDescription = null,
+            modifier = Modifier.size(24.dp)
+        )
     }
 }
 

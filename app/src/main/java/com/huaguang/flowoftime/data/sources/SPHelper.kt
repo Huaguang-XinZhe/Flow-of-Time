@@ -76,7 +76,6 @@ class SPHelper private constructor(context: Context) {
             mainShow = mutableStateOf(sp.getBoolean("mainShow", true)),
             subText = mutableStateOf(sp.getString("subText", "插入") ?: "插入"),
             subShow = mutableStateOf(sp.getBoolean("subShow", false)),
-            undoShow = mutableStateOf(sp.getBoolean("undoShow", false))
         )
     }
 
@@ -119,7 +118,6 @@ class SPHelper private constructor(context: Context) {
             putBoolean("mainShow", buttonsState.mainShow.value)
             putString("subText", buttonsState.subText.value)
             putBoolean("subShow", buttonsState.subShow.value)
-            putBoolean("undoShow", buttonsState.undoShow.value)
         }
     }
 
