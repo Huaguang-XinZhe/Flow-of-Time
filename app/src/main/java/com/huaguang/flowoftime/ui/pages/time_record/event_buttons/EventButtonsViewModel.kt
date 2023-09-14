@@ -4,7 +4,6 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.UndoStack
@@ -170,8 +169,9 @@ class EventButtonsViewModel @Inject constructor(
         sharedState.toastMessage.value = "全部结束！"
     }
 
-    fun onUndoButtonClick() {
+    fun onUndoButtonClick(checked: MutableLiveData<Boolean>) {
         val operation = undoStack.undo() ?: return // 其实不大可能为空，栈里要真为空的话，那撤销按钮根本就不会显示
+        pauseRecovery(checked) // 恢复暂停按钮状态
 
         viewModelScope.launch {
             operation.apply {
@@ -214,7 +214,6 @@ class EventButtonsViewModel @Inject constructor(
                 step.value = it.step
             }
         }
-        RDALogger.info("恢复之后 idState = $idState")
     }
 
     private fun clearState(

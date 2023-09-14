@@ -199,7 +199,7 @@ class EventRepository(
         return buildCombinedEvents(allEventsMap, null)
     }
 
-    fun getCurrentCombinedEventFlow(): Flow<CombinedEvent?> {
+    fun getCurrentCombinedEventFlow(): Flow<CombinedEvent?> { // 当数据库中没有数据的时候，将发射 null
         return eventDao.getLatestRootEventAndChildren().map { allEvents ->
             buildCombinedEventFromEvents(allEvents)
         }

@@ -49,7 +49,9 @@ class EventInputViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repository.getCurrentCombinedEventFlow().filterNotNull().collect { combinedEvent ->
+            // 去掉 filterNotNull，在数据库为空时将发射 null，否则不会发射值，也就不会通知 UI 变化
+            repository.getCurrentCombinedEventFlow().collect { combinedEvent ->
+//                RDALogger.info("currentCombinedEvent = $combinedEvent")
                 _currentCombinedEventFlow.value = combinedEvent // 传给 UI
             }
         }

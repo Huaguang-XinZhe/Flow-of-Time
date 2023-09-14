@@ -41,6 +41,7 @@ fun EventButtons(
 
         UnDoButton(
             viewModel = viewModel,
+            checked = checked,
             modifier = Modifier.constrainAs(undoButtonRef) {
                 start.linkTo(parent.start, 16.dp)
                 // 为了竖直居中
@@ -69,12 +70,13 @@ fun EventButtons(
 @Composable
 fun UnDoButton(
     viewModel: EventButtonsViewModel,
+    checked: MutableLiveData<Boolean>,
     modifier: Modifier = Modifier
 ) {
     if (!viewModel.undoStack.undoShow) return
 
     IconButton(
-        onClick = { viewModel.onUndoButtonClick() },
+        onClick = { viewModel.onUndoButtonClick(checked) },
         modifier = modifier
     ) {
         Icon(

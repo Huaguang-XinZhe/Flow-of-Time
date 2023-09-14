@@ -50,7 +50,6 @@ class TimeRecordPageViewModel(
 
             updateInputState(autoId, name)
 
-            RDALogger.info("加入到撤销栈之前 idState = $idState")
             addOperationToUndoStack(
                 action = getActionByTypeOnStart(eventType),
                 eventId = autoId,
