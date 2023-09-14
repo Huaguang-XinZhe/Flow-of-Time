@@ -118,9 +118,6 @@ class TimeRegulatorViewModel @Inject constructor(
         updateJob = viewModelScope.launch {
             delay(1500) // 延迟1.5秒
 
-            val newTime = newCustomTime.timeState.value!!
-            if (newCustomTime.type == TimeType.START) sharedState.currentEvent?.startTime = newTime
-
             updateCurrentOrParentEvent(newCustomTime)
 
             selectedTime?.value = null // 取消选中状态

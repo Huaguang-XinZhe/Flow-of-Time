@@ -3,7 +3,6 @@ package com.huaguang.flowoftime.ui.state
 import android.app.Application
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
-import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.sources.SPHelper
 import javax.inject.Inject
 
@@ -18,7 +17,6 @@ class SharedState @Inject constructor(
     val scrollIndex = mutableStateOf(0)
     var eventCount = 0
 
-    var currentEvent: Event? = null
     val toastMessage = MutableLiveData<String>()
     val dialogShow = mutableStateOf(false)
 

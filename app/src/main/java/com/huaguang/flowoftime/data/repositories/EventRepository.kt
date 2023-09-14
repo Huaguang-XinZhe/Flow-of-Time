@@ -277,7 +277,7 @@ class EventRepository(
         }
 
 
-    suspend fun getStartTimeOfWithContentEvent(eventId: Long) =
+    suspend fun getStartTimeById(eventId: Long) =
         withContext(Dispatchers.IO) {
             eventDao.getStartTimeById(eventId)
         }

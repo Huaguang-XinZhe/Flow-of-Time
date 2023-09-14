@@ -138,9 +138,9 @@ class EventTrackerMediator(
                             dndManager.jumpAuth() // 跳到设置页授权，接下来的事儿就交给 MainActivity 的 onResume 回调了
                         }
 
-                        currentEvent?.let {
-                            it.name = "睡"
-                        }
+//                        currentEvent?.let {
+//                            it.name = "睡"
+//                        }
                     }
                 }
                 else -> {

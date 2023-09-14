@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
@@ -20,7 +19,6 @@ import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
-import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -38,31 +36,16 @@ class TimeRecordPageViewModel(
     private val dndManager: DNDManager,
 ) : ViewModel() {
 
-    private var currentEvent
-        get() = sharedState.currentEvent
-        set(value) {
-            sharedState.currentEvent = value
-        }
-
     var pauseAcc = 0 // 临时变量，不需要保存，只在结束那一瞬起作用
-
-    init {
-        // 这个协程会优先于上一个协程的执行，不知道为什么。这个协程只会执行一次，而上面那个协程被挂起，有新值的时候就会执行。
-        viewModelScope.launch {
-            if (currentEvent == null) currentEvent = repository.getCurrentEvent()
-//            RDALogger.info("currentEvent = $currentEvent")
-        }
-
-    }
 
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
-            currentEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
-            val autoId = repository.insertEvent(currentEvent!!) // 存入数据库
+            val newEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
+            val autoId = repository.insertEvent(newEvent) // 存入数据库
 
             if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
                 collectPauseInterval(eventType)
-                repository.updateParentWithContent(currentEvent!!.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
+                repository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
             }
 
             updateInputState(autoId, name)
@@ -78,23 +61,7 @@ class TimeRecordPageViewModel(
         }
 
         override suspend fun stopEvent(eventType: EventType) {
-            val eventId: Long
-            val pauseInterval: Int
-
-            if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
-                RDALogger.info("进入 withContent 块结束事件")
-                handlePauseInterval(eventType).let { pair ->
-                    eventId = pair.first
-                    pauseInterval = pair.second
-                }
-                val duration = calEventDuration(eventId)
-                repository.updateThree(eventId, duration, pauseInterval)
-            } else {
-                eventId = idState.current.value
-                pauseInterval = if (eventType.isInsert()) 0 else pauseAcc // 插入事项不允许有暂停间隔
-                currentEvent = updateCurrentEvent(eventId, pauseInterval)
-                repository.updateEvent(currentEvent!!) // 更新数据库
-            }
+            val (eventId, pauseInterval) = updateDB(eventType)
 
             eventButtonsViewModel.undoStack.addState(Operation( // 结束后添加到撤销栈
                 action = getActionByTypeOnStop(eventType),
@@ -103,6 +70,32 @@ class TimeRecordPageViewModel(
             ))
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
+    }
+
+    private suspend fun updateDB(eventType: EventType): Pair<Long, Int> {
+        val eventId: Long
+        val pauseInterval: Int
+        val duration: Duration
+
+        if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
+            RDALogger.info("进入 withContent 块结束事件")
+            handlePauseInterval(eventType).let { pair ->
+                eventId = pair.first
+                pauseInterval = pair.second
+            }
+            duration = calEventDuration(eventId, repository.getStartTimeById(eventId))
+        } else { // 更新没有下级的当前项
+            eventId = idState.current.value
+            pauseInterval = if (eventType.isInsert()) 0 else pauseAcc // 插入事项不允许有暂停间隔
+            duration = repository.getStartTimeById(eventId).let {
+                Duration.between(it, LocalDateTime.now())
+                    .minus(Duration.ofMinutes(pauseInterval.toLong()))
+            }
+        }
+
+        repository.updateThree(eventId, duration, pauseInterval)
+
+        return Pair(eventId, pauseInterval)
     }
 
     private fun addOperationToUndoStack(action: Action, eventId: Long, idState: IdState) {
@@ -167,9 +160,7 @@ class TimeRecordPageViewModel(
      * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
      * @param eventId 它就是那个含有下级事项的父事项 id
      */
-    private suspend fun calEventDuration(eventId: Long): Duration {
-        val startTime = repository.getStartTimeOfWithContentEvent(eventId)
-        RDALogger.info("eventId = $eventId，startTime = $startTime")
+    private suspend fun calEventDuration(eventId: Long, startTime: LocalDateTime): Duration {
         val pauseIntervalDuration = Duration.ofMinutes(pauseState.subjectAcc.value.toLong())
 //        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
         val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
@@ -211,28 +202,6 @@ class TimeRecordPageViewModel(
             intent.value = InputIntent.RECORD
             type.value = ItemType.RECORD
         }
-    }
-
-    /**
-     * 结束时更新当前事件的信息，插入事件和当前的主题事件会走这条路（即没有下级的会走这条路）
-     */
-    private fun updateCurrentEvent(eventId: Long, pauseInterval: Int): Event {
-        var event: Event? = null
-
-        currentEvent?.let {
-            val endTime = LocalDateTime.now()
-            val duration = Duration.between(it.startTime, endTime)
-                .minus(Duration.ofMinutes(pauseInterval.toLong()))
-
-            it.id = eventId // 必须指定这一条，否则数据库不会更新
-            it.endTime = endTime
-            it.pauseInterval = pauseInterval
-            it.duration = duration
-
-            event = it
-        }
-
-        return event!!
     }
 
     private fun createCurrentEvent(

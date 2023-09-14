@@ -86,10 +86,6 @@ class EventInputViewModel @Inject constructor(
                 handleRecordIntent()
             }
 
-            if (isCurrentRecording()) { // 更新正在进行的当前项的 name 值，不然结束的时候又给改回去了
-                sharedState.currentEvent?.name = text
-            }
-
             viewModelScope.launch {
                 repository.updateEventName(eventId.value, text)
             }
@@ -195,22 +191,6 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
-    private fun isCurrentRecording(): Boolean {
-        var result = false
-
-        inputState.apply {
-            if (intent.value == InputIntent.MODIFY) {
-                // 只要在修改的坏境下，这个判断条件才成立，才能代表正在进行的当前项
-                if (endTime == null && eventId.value == idState.current.value) {
-                    result = true
-                }
-            } else { // 记录的环境下
-                result = true
-            }
-        }
-
-        return result
-    }
 
     private fun hasSubjectExist() = sharedState.cursorType.value != null
 
