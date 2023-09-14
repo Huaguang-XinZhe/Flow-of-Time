@@ -13,6 +13,7 @@ import com.huaguang.flowoftime.data.models.db_returns.DateDuration
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
+import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.utils.EventSerializer
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
@@ -126,13 +127,29 @@ class EventRepository(
         }
 
 
-    suspend fun getOffsetStartTime(): LocalDateTime? {
+    suspend fun getOffsetStartTimeForSubject(): LocalDateTime? {
         val endTime = withContext(Dispatchers.IO) {
             eventDao.getLastSubjectEndTime()
         }
         val interval = Duration.ofMinutes(2L)
 
         return endTime?.plus(interval) // 如果数据库不为空的话，一般 endTime 不为 null
+    }
+
+    suspend fun getOffsetStartTimeForStep(idState: IdState): LocalDateTime {
+        val interval = Duration.ofMinutes(2L)
+
+        val time = withContext(Dispatchers.IO) {
+            with(idState) { // 使用 with 才能把引用传进来并返回块内的值，apply 虽然会传引用，但不会返回块内值，而是返回接收者
+                if (subject.value > step.value) { // 只有一个主题事件，没有步骤
+                    eventDao.getStartTimeById(subject.value)
+                } else { // 在有步骤存在的情况下，长按补计步骤
+                    eventDao.getEndTimeById(step.value)
+                }
+            }
+        }
+
+        return time.plus(interval)
     }
 
     suspend fun deleteEventWithSubEvents(
