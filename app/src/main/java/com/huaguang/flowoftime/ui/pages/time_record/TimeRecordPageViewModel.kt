@@ -8,6 +8,7 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.ImmutableIdState
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -64,13 +65,16 @@ class TimeRecordPageViewModel(
                 repository.updateParentWithContent(currentEvent!!.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
             }
 
-            updateIdState(autoId, eventType)
             updateInputState(autoId, name)
 
-            eventButtonsViewModel.undoStack.addState(Operation( // 将当前操作添加到撤销栈
+            RDALogger.info("加入到撤销栈之前 idState = $idState")
+            addOperationToUndoStack(
                 action = getActionByTypeOnStart(eventType),
                 eventId = autoId,
-            ))
+                idState = idState
+            )
+
+            updateIdState(autoId, eventType)
         }
 
         override suspend fun stopEvent(eventType: EventType) {
@@ -99,6 +103,22 @@ class TimeRecordPageViewModel(
             ))
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
         }
+    }
+
+    private fun addOperationToUndoStack(action: Action, eventId: Long, idState: IdState) {
+        val immutableIdState = ImmutableIdState(
+            current = idState.current.value,
+            subject = idState.subject.value,
+            step = idState.step.value,
+        )
+
+        eventButtonsViewModel.undoStack.addState(
+            Operation(
+                action = action,
+                eventId = eventId,
+                immutableIdState = immutableIdState
+            )
+        )
     }
 
     private fun getActionByTypeOnStart(eventType: EventType): Action {
@@ -185,7 +205,7 @@ class TimeRecordPageViewModel(
 
     private fun updateInputState(id: Long, name: String) {
         eventInputViewModel.inputState.apply {
-            eventId.value = id
+            eventId.value = id // TODO: 这个有没有必要，如果没有必要的话，就移到前边去。
             show.value = name.isEmpty() // 不传 name，或 name 值为空字符串，就不弹输入框
             newName.value = ""
             intent.value = InputIntent.RECORD
@@ -238,8 +258,7 @@ class TimeRecordPageViewModel(
         idState.apply {
             return when(type) {
                 EventType.SUBJECT -> null
-                EventType.STEP, EventType.FOLLOW -> subject.value
-                EventType.SUBJECT_INSERT -> subject.value
+                EventType.STEP, EventType.FOLLOW, EventType.SUBJECT_INSERT -> subject.value
                 EventType.STEP_INSERT -> step.value
             }
         }

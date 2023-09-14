@@ -16,7 +16,6 @@ class UndoStack {
         private set
 
     fun addState(state: Operation) {
-        RDALogger.info("size前 = ${undoStack.size}")
         if (undoStack.size == maxUndoSteps) {
             undoStack.removeAt(0)
         }
@@ -44,9 +43,7 @@ class UndoStack {
      * Compose 会自动处理这个，只有当值实际更改时才会触发重新组合。
      */
     private fun setUndoShow() {
-        RDALogger.info("size后 = ${undoStack.size}")
         undoShow = undoStack.isNotEmpty() // 只有撤销栈非空才显示按钮
-        RDALogger.info("undoShow = $undoShow")
         undoStack.forEach { operation ->
             RDALogger.info("operation = $operation")
         }

@@ -4,13 +4,16 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.ButtonsState
+import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
@@ -27,6 +30,7 @@ class EventButtonsViewModel @Inject constructor(
     val pauseState: PauseState,
     val inputState: InputState,
     val undoStack: UndoStack,
+    private val idState: IdState,
 ) : ViewModel() {
 
     private var cursorType get() = sharedState.cursorType.value
@@ -102,13 +106,13 @@ class EventButtonsViewModel @Inject constructor(
         viewModelScope.launch {
             val startTime = repository.getOffsetStartTime()
 
-            if (startTime == null) { //
+            if (startTime == null) {
                 sharedState.toastMessage.value = "当前无法补计，直接开始吧"
                 return@launch
             }
 
+            toSubjectTimingState()
             eventControl.startEvent(startTime = startTime, eventType = EventType.SUBJECT)
-//            toggleStateOnMainStart()
 
             sharedState.toastMessage.value = "开始补计……"
         }
@@ -172,6 +176,7 @@ class EventButtonsViewModel @Inject constructor(
         viewModelScope.launch {
             operation.apply {
                 if (action.isStart()) {
+                    restoreIdState(operation)
                     repository.deleteEvent(eventId)
                 } else if (action.isEnd()) {
                     repository.updateThree(eventId, null, pauseInterval, null)
@@ -182,17 +187,34 @@ class EventButtonsViewModel @Inject constructor(
         // 撤销后要进入的状态
         when(operation.action) {
             Action.SUBJECT_START -> toInitialState()
-            Action.STEP_START -> toSubjectTimingState()
-            Action.FOLLOW_START -> toSubjectTimingState()
-            Action.SUBJECT_INSERT_START -> toSubjectTimingState()
-            Action.STEP_INSERT_START -> toStepTimingState()
+
+            Action.STEP_START,
+            Action.FOLLOW_START,
+            Action.SUBJECT_INSERT_START,
             Action.SUBJECT_END -> toSubjectTimingState()
+
+            Action.STEP_INSERT_START,
             Action.STEP_END -> toStepTimingState()
+
             Action.FOLLOW_END -> toFollowTimingState()
+
             Action.SUBJECT_INSERT_END -> toSubjectInsertState()
+
             Action.STEP_INSERT_END -> toStepInsertState()
         }
 
+
+    }
+
+    private fun restoreIdState(operation: Operation) {
+        idState.apply {
+            operation.immutableIdState?.let {
+                current.value = it.current
+                subject.value = it.subject
+                step.value = it.step
+            }
+        }
+        RDALogger.info("恢复之后 idState = $idState")
     }
 
     private fun clearState(
