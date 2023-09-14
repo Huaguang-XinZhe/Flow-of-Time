@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -30,6 +29,7 @@ import com.huaguang.flowoftime.data.models.EventInfo
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.ui.components.TailLayout
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.widget.LongPressOutlinedIconButton
 import kotlinx.coroutines.delay
 
 @Composable
@@ -162,11 +162,10 @@ fun RecordingTailLayout(
             val eventControl = LocalEventControl.current
             val buttonsStateControl = LocalButtonsStateControl.current
 
-            OutlinedIconButton(
+            LongPressOutlinedIconButton(
                 onClick = { viewModel.onStepButtonClick(eventControl, buttonsStateControl) },
-                modifier = Modifier
-                    .padding(start = 5.dp)
-                    .size(24.dp),
+                onLongClick = { viewModel.onStepButtonLongClick(eventControl, buttonsStateControl) },
+                modifier = Modifier.padding(start = 5.dp),
                 enabled = !viewModel.inputState.show.value
             ) {
                 Icon(

@@ -204,5 +204,8 @@ interface EventDao {
     @Query("SELECT endTime FROM events WHERE parentEventId IS NULL ORDER BY id DESC LIMIT 1")
     suspend fun getLastSubjectEndTime(): LocalDateTime?
 
+    @Query("SELECT endTime FROM events WHERE id = :id")
+    suspend fun getEndTimeById(id: Long): LocalDateTime
+
 
 }

@@ -118,9 +118,25 @@ class EventInputViewModel @Inject constructor(
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
     ) {
+        buttonsStateControl.stepTiming()
+
         viewModelScope.launch {
             eventControl.startEvent(eventType = EventType.STEP)
+        }
+    }
+
+    fun onStepButtonLongClick(
+        eventControl: EventControl,
+        buttonsStateControl: ButtonsStateControl
+    ) {
+        viewModelScope.launch {
+            val startTime = repository.getOffsetStartTimeForStep(idState)
+            eventControl.startEvent( // start 放在前边，输入框弹的快一些。
+                startTime = startTime,
+                eventType = EventType.STEP
+            )
             buttonsStateControl.stepTiming()
+            sharedState.toastMessage.value = "step 补计……"
         }
     }
 
@@ -196,6 +212,7 @@ class EventInputViewModel @Inject constructor(
 
 
     private fun hasSubjectExist() = sharedState.cursorType.value != null
+
 
 }
 

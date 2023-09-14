@@ -81,8 +81,8 @@ class EventButtonsViewModel @Inject constructor(
             eventControl.apply {
                 when (buttonsState.mainText.value) {
                     "开始" -> {
-                        toSubjectTimingState()
                         startEvent(eventType = EventType.SUBJECT)
+                        toSubjectTimingState()
                     }
                     "结束" -> {
                         toInitialState()
@@ -99,20 +99,19 @@ class EventButtonsViewModel @Inject constructor(
 
 
     fun onMainButtonLongClick(eventControl: EventControl) {
-        if (buttonsState.mainText.value == "结束") return
+        if (buttonsState.mainText.value != "开始") return
 
         // ButtonText 的值除了结束就是开始了，不可能为 null
         viewModelScope.launch {
-            val startTime = repository.getOffsetStartTime()
+            val startTime = repository.getOffsetStartTimeForSubject()
 
             if (startTime == null) {
                 sharedState.toastMessage.value = "当前无法补计，直接开始吧"
                 return@launch
             }
 
-            toSubjectTimingState()
             eventControl.startEvent(startTime = startTime, eventType = EventType.SUBJECT)
-
+            toSubjectTimingState()
             sharedState.toastMessage.value = "开始补计……"
         }
     }
@@ -128,12 +127,12 @@ class EventButtonsViewModel @Inject constructor(
             eventControl.apply {
                 when (buttonsState.subText.value) {
                     "插入" -> {
-                        toSubjectInsertState()
                         startEvent(eventType = EventType.SUBJECT_INSERT)
+                        toSubjectInsertState()
                     }
                     "step 插入" -> {
-                        toStepInsertState()
                         startEvent(eventType = EventType.STEP_INSERT)
+                        toStepInsertState()
                     }
                     "插入结束" -> {
                         toSubjectTimingState()
