@@ -40,15 +40,9 @@ class TimeRecordPageViewModel(
 
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
-            val newEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
-            val autoId = repository.insertEvent(newEvent) // 存入数据库
-
-            if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
-                collectPauseInterval(eventType)
-                repository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
+            val autoId = updateInputState(name) { // 这个 it 就是 name
+                updateDBOnStart(startTime, it, eventType)
             }
-
-            updateInputState(autoId, name)
 
             addOperationToUndoStack(
                 action = getActionByTypeOnStart(eventType),
@@ -56,11 +50,11 @@ class TimeRecordPageViewModel(
                 idState = idState
             )
 
-            updateIdState(autoId, eventType)
+            updateIdState(autoId, eventType) // 必须放在入栈的后边才能更新 idState 里边状态的值
         }
 
         override suspend fun stopEvent(eventType: EventType) {
-            val (eventId, pauseInterval) = updateDB(eventType)
+            val (eventId, pauseInterval) = updateDBOnStop(eventType)
 
             eventButtonsViewModel.undoStack.addState(Operation( // 结束后添加到撤销栈
                 action = getActionByTypeOnStop(eventType),
@@ -71,7 +65,39 @@ class TimeRecordPageViewModel(
         }
     }
 
-    private suspend fun updateDB(eventType: EventType): Pair<Long, Int> {
+    private suspend fun updateInputState(
+        name: String,
+        updateDB: suspend (name: String) -> Long
+    ): Long {
+        eventInputViewModel.inputState.apply {
+            show.value = name.isEmpty() // 不传 name 就不弹输入框，必须放在前边
+            newName.value = ""
+            intent.value = InputIntent.RECORD
+            type.value = ItemType.RECORD
+            val id = updateDB(name) // 插入更新数据库，计算 Id 的方法，这么做是为了代码简洁美观的同时，保证输入框的快速弹起
+            eventId.value = id
+
+            return id
+        }
+    }
+
+    private suspend fun updateDBOnStart(
+        startTime: LocalDateTime,
+        name: String,
+        eventType: EventType,
+    ): Long {
+        val newEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
+        val autoId = repository.insertEvent(newEvent) // 存入数据库
+
+        if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
+            collectPauseInterval(eventType)
+            repository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
+        }
+
+        return autoId
+    }
+
+    private suspend fun updateDBOnStop(eventType: EventType): Pair<Long, Int> {
         val eventId: Long
         val pauseInterval: Int
         val duration: Duration
@@ -95,42 +121,6 @@ class TimeRecordPageViewModel(
         repository.updateThree(eventId, duration, pauseInterval)
 
         return Pair(eventId, pauseInterval)
-    }
-
-    private fun addOperationToUndoStack(action: Action, eventId: Long, idState: IdState) {
-        val immutableIdState = ImmutableIdState(
-            current = idState.current.value,
-            subject = idState.subject.value,
-            step = idState.step.value,
-        )
-
-        eventButtonsViewModel.undoStack.addState(
-            Operation(
-                action = action,
-                eventId = eventId,
-                immutableIdState = immutableIdState
-            )
-        )
-    }
-
-    private fun getActionByTypeOnStart(eventType: EventType): Action {
-        return when (eventType) {
-            EventType.SUBJECT -> Action.SUBJECT_START
-            EventType.STEP -> Action.STEP_START
-            EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_START
-            EventType.STEP_INSERT -> Action.STEP_INSERT_START
-            EventType.FOLLOW -> Action.FOLLOW_START
-        }
-    }
-
-    private fun getActionByTypeOnStop(eventType: EventType): Action {
-        return when (eventType) {
-            EventType.SUBJECT -> Action.SUBJECT_END
-            EventType.STEP -> Action.STEP_END
-            EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_END
-            EventType.STEP_INSERT -> Action.STEP_INSERT_END
-            EventType.FOLLOW -> Action.FOLLOW_END
-        }
     }
 
     /**
@@ -193,16 +183,6 @@ class TimeRecordPageViewModel(
     }
 
 
-    private fun updateInputState(id: Long, name: String) {
-        eventInputViewModel.inputState.apply {
-            eventId.value = id // TODO: 这个有没有必要，如果没有必要的话，就移到前边去。
-            show.value = name.isEmpty() // 不传 name，或 name 值为空字符串，就不弹输入框
-            newName.value = ""
-            intent.value = InputIntent.RECORD
-            type.value = ItemType.RECORD
-        }
-    }
-
     private fun createCurrentEvent(
         startTime: LocalDateTime,
         name: String,
@@ -250,6 +230,42 @@ class TimeRecordPageViewModel(
             val totalInterval = if (eventType == EventType.STEP_INSERT) stepAcc else subjectAcc
             RDALogger.info("totalInterval = $totalInterval")
             totalInterval.value += acc.value
+        }
+    }
+
+    private fun addOperationToUndoStack(action: Action, eventId: Long, idState: IdState) {
+        val immutableIdState = ImmutableIdState(
+            current = idState.current.value,
+            subject = idState.subject.value,
+            step = idState.step.value,
+        )
+
+        eventButtonsViewModel.undoStack.addState(
+            Operation(
+                action = action,
+                eventId = eventId,
+                immutableIdState = immutableIdState
+            )
+        )
+    }
+
+    private fun getActionByTypeOnStart(eventType: EventType): Action {
+        return when (eventType) {
+            EventType.SUBJECT -> Action.SUBJECT_START
+            EventType.STEP -> Action.STEP_START
+            EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_START
+            EventType.STEP_INSERT -> Action.STEP_INSERT_START
+            EventType.FOLLOW -> Action.FOLLOW_START
+        }
+    }
+
+    private fun getActionByTypeOnStop(eventType: EventType): Action {
+        return when (eventType) {
+            EventType.SUBJECT -> Action.SUBJECT_END
+            EventType.STEP -> Action.STEP_END
+            EventType.SUBJECT_INSERT -> Action.SUBJECT_INSERT_END
+            EventType.STEP_INSERT -> Action.STEP_INSERT_END
+            EventType.FOLLOW -> Action.FOLLOW_END
         }
     }
 

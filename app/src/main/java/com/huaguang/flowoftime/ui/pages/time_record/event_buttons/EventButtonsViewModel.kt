@@ -85,12 +85,12 @@ class EventButtonsViewModel @Inject constructor(
                         startEvent(eventType = EventType.SUBJECT)
                     }
                     "结束" -> {
-                        stopEvent()
                         toInitialState()
+                        stopEvent()
                     }
                     "步骤结束" -> {
-                        stopEvent(eventType = EventType.STEP)
                         toSubjectTimingState()
+                        stopEvent(eventType = EventType.STEP)
                     }
                 }
             }

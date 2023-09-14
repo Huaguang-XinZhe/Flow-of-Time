@@ -3,6 +3,7 @@ package com.huaguang.flowoftime.ui.components.event_input
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.ItemType
@@ -89,6 +90,7 @@ class EventInputViewModel @Inject constructor(
             }
 
             viewModelScope.launch {
+                RDALogger.info("eventId = ${eventId.value}, text = $text")
                 repository.updateEventName(eventId.value, text)
             }
         }
@@ -100,7 +102,6 @@ class EventInputViewModel @Inject constructor(
             show.value = true
             newName.value = event.name
             intent.value = InputIntent.MODIFY
-            type.value =  itemType// 用于判断是否需要更新当前项的 name 值
         }
 
         initialName = event.name // 传出，给更新数据用

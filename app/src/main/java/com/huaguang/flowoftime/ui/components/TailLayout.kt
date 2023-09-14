@@ -2,28 +2,22 @@ package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.ItemType
-import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.LocalButtonsStateControl
-import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 
 /**
@@ -34,7 +28,7 @@ fun TailLayout(
     event: Event,
     viewModel: EventInputViewModel,
     itemType: ItemType = ItemType.DISPLAY,
-    content: @Composable (type: EventType) -> Unit
+    content: @Composable RowScope.(type: EventType) -> Unit
 ) {
     val selectedTime = LocalSelectedTime.current
 
@@ -45,9 +39,6 @@ fun TailLayout(
     val fontWeight = if (event.type == EventType.SUBJECT) FontWeight.Bold else {
         if (itemType == ItemType.DISPLAY) FontWeight.Light else FontWeight.Normal
     }
-
-    val allowShow = itemType == ItemType.RECORD && event.type == EventType.SUBJECT && event.name.isNotEmpty() && // 标配判断
-            viewModel.sharedState.cursorType.value == EventType.SUBJECT // 关键判断
 
     Layout(
         content = {
@@ -71,25 +62,7 @@ fun TailLayout(
             ) {
                 content(event.type)
 
-                if (allowShow) { // 后来添加
-                    val eventControl = LocalEventControl.current
-                    val buttonsStateControl = LocalButtonsStateControl.current
 
-                    OutlinedIconButton(
-                        onClick = { viewModel.onStepButtonClick(eventControl, buttonsStateControl) },
-                        modifier = Modifier
-                            .padding(start = 5.dp)
-                            .size(24.dp),
-                        enabled = !viewModel.inputState.show.value
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.step),
-                            contentDescription = null,
-                            tint = Color.Black,
-                            modifier = Modifier.size(12.dp)
-                        )
-                    }
-                }
             }
         }
     ) { measurables, constraints ->

@@ -27,6 +27,7 @@ fun EventButtons(
     viewModel: EventButtonsViewModel,
     modifier: Modifier = Modifier
 ) {
+    if (viewModel.inputState.show.value) return // 输入框弹起，就不显示
 
     val eventControl = LocalEventControl.current
     val selectedTime = LocalSelectedTime.current
@@ -95,8 +96,6 @@ fun ButtonsRow(
     checked: MutableLiveData<Boolean>,
     modifier: Modifier = Modifier
 ) {
-    if (viewModel.inputState.show.value) return // 输入框弹起，就不显示
-
     Row(
         modifier = modifier
     ) {

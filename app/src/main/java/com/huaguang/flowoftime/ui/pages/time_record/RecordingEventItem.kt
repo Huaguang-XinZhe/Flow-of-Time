@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,8 +27,10 @@ import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.EventInfo
+import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.ui.components.TailLayout
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import kotlinx.coroutines.delay
 
 @Composable
 fun RecordingEventItem(
@@ -38,31 +41,6 @@ fun RecordingEventItem(
 ) {
     val event = combinedEvent?.event ?: return
     val expandState = remember { mutableStateOf(false) }
-    val startCustomTime =
-        CustomTime(
-            eventInfo = EventInfo(
-               id = event.id,
-               isTiming = event.endTime == null,
-               parentId = event.parentEventId,
-               eventType = event.type,
-            ),
-            type = TimeType.START,
-            initialTime = event.startTime, // 把 remember 调整到这里是非常重要的一处改变，这使得 initialTime 的值是动态的！
-            timeState = remember { mutableStateOf(null) }
-        )
-
-    val endCustomTime =
-        CustomTime(
-            eventInfo = EventInfo(
-                id = event.id,
-                isTiming = false,
-                parentId = event.parentEventId,
-                eventType = event.type,
-            ),
-            type = TimeType.END,
-            initialTime = event.endTime, // 重新组合的时候这个状态会被记住，但值会改变
-            timeState = remember { mutableStateOf(null) } // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
-        )
 
     LaunchedEffect(event.withContent) { // 副作用初始化的时候都会执行一次！！！
         expandState.value = event.withContent
@@ -82,32 +60,18 @@ fun RecordingEventItem(
                 Spacer(modifier = Modifier.size(24.dp)) // 占位用的
             }
 
-            TimeLabel(
-                customTime = startCustomTime,
-                customTimeState = customTimeState,
-                modifier = Modifier.padding(end = 5.dp)
-            )
+            TimeLabelStart(event = event, customTimeState = customTimeState)
 
             FlagText(type = event.type)
 
-            TailLayout(
+            RecordingTailLayout(
                 event = event,
                 viewModel = viewModel,
-                itemType = ItemType.RECORD,
-            ) {
-                if (event.endTime == null) {
-                    Text(text = "……")
-                } else {
-                    TimeLabel(
-                        customTime = endCustomTime,
-                        customTimeState = customTimeState
-                    )
-                }
-            }
+                customTimeState = customTimeState
+            )
 
         }
 
-//        RDALogger.info("eventId = ${event.id}, expandState.value = ${expandState.value}")
         if (expandState.value) {
             val indentModifier = Modifier.padding(start = 30.dp) // 添加缩进
 
@@ -122,6 +86,98 @@ fun RecordingEventItem(
             }
 
         }
+    }
+}
+
+
+@Composable
+fun TimeLabelStart(
+    event: Event,
+    customTimeState: MutableState<CustomTime?>,
+) {
+    val startCustomTime =
+        CustomTime(
+            eventInfo = EventInfo(
+                id = event.id,
+                isTiming = event.endTime == null,
+                parentId = event.parentEventId,
+                eventType = event.type,
+            ),
+            type = TimeType.START,
+            initialTime = event.startTime, // 把 remember 调整到这里是非常重要的一处改变，这使得 initialTime 的值是动态的！
+            timeState = remember { mutableStateOf(null) }
+        )
+
+    TimeLabel(
+        customTime = startCustomTime,
+        customTimeState = customTimeState,
+        modifier = Modifier.padding(end = 5.dp)
+    )
+}
+
+@Composable
+fun RecordingTailLayout(
+    event: Event,
+    viewModel: EventInputViewModel,
+    customTimeState: MutableState<CustomTime?>,
+) {
+    val endCustomTime =
+        CustomTime(
+            eventInfo = EventInfo(
+                id = event.id,
+                isTiming = false,
+                parentId = event.parentEventId,
+                eventType = event.type,
+            ),
+            type = TimeType.END,
+            initialTime = event.endTime, // 重新组合的时候这个状态会被记住，但值会改变
+            timeState = remember { mutableStateOf(null) } // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
+        )
+    val allowShow = event.type == EventType.SUBJECT && event.name.isNotEmpty() && // 标配判断
+            viewModel.sharedState.cursorType.value == EventType.SUBJECT // 关键判断
+
+    val showState = remember { mutableStateOf(false) }
+
+    LaunchedEffect(allowShow) {
+        if (allowShow) delay(50) // 延迟一会儿再显示（放频闪），变为不显示的时候就不要延迟了
+        showState.value = allowShow
+    }
+
+    TailLayout(
+        event = event,
+        viewModel = viewModel,
+        itemType = ItemType.RECORD,
+    ) {
+        // 二选其一，一定有一项
+        if (event.endTime == null) {
+            Text(text = "……")
+        } else {
+            TimeLabel(
+                customTime = endCustomTime,
+                customTimeState = customTimeState
+            )
+        }
+
+        if (showState.value) { // 后来添加
+            val eventControl = LocalEventControl.current
+            val buttonsStateControl = LocalButtonsStateControl.current
+
+            OutlinedIconButton(
+                onClick = { viewModel.onStepButtonClick(eventControl, buttonsStateControl) },
+                modifier = Modifier
+                    .padding(start = 5.dp)
+                    .size(24.dp),
+                enabled = !viewModel.inputState.show.value
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.step),
+                    contentDescription = null,
+                    tint = Color.Black,
+                    modifier = Modifier.size(12.dp)
+                )
+            }
+        }
+
     }
 }
 
@@ -161,4 +217,6 @@ fun ExpandIcon(expandState: MutableState<Boolean>) {
         )
     }
 }
+
+
 
