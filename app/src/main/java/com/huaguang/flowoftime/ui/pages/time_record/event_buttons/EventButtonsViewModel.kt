@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.ItemType
@@ -50,6 +51,13 @@ class EventButtonsViewModel @Inject constructor(
 
         override fun stepTiming() {
             toStepTimingState()
+        }
+
+        override fun resetItemState(
+            displayItemState: MutableState<ItemType>,
+            recordingItemState: MutableState<ItemType>,
+        ) {
+            resetDRItemState(displayItemState, recordingItemState)
         }
     }
 
@@ -117,7 +125,7 @@ class EventButtonsViewModel @Inject constructor(
     }
 
     fun onSubButtonClick(params: ButtonActionParams) {
-        clearState(params, fromSub = true)
+        clearState(params, resetDRItemState = false)
 
         viewModelScope.launch {
             params.eventControl.apply {
@@ -164,9 +172,14 @@ class EventButtonsViewModel @Inject constructor(
         sharedState.toastMessage.value = "全部结束！"
     }
 
-    fun onUndoButtonClick(checked: MutableLiveData<Boolean>) {
+    fun onUndoButtonClick(
+        checked: MutableLiveData<Boolean>,
+        recordingItemState: MutableState<ItemType>
+    ) {
         val operation = undoStack.undo() ?: return // 其实不大可能为空，栈里要真为空的话，那撤销按钮根本就不会显示
         pauseRecovery(checked) // 恢复暂停按钮状态
+        recordingItemState.value = ItemType.RECORD // 恢复到记录状态
+        RDALogger.info("撤销执行！recordingItemState.value = ${recordingItemState.value}")
 
         viewModelScope.launch {
             operation.apply {
@@ -211,11 +224,11 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    private fun clearState(params: ButtonActionParams, fromSub: Boolean = false) {
+    private fun clearState(params: ButtonActionParams, resetDRItemState: Boolean = true) {
         unCheck(params.selectedTime)
         pauseRecovery(params.checked)
 
-        if (!fromSub) { // 如果子按钮点击或长按，就不需要重置 Item 状态了。
+        if (resetDRItemState) { // 如果子按钮点击或长按，就不需要重置 Item 状态了。
             resetDRItemState(params.displayItemState, params.recordingItemState)
         }
     }

@@ -72,8 +72,10 @@ fun UnDoButton(
 ) {
     if (!viewModel.undoStack.undoShow) return
 
+    val recordingItemState = LocalRecordingItemState.current
+
     IconButton(
-        onClick = { viewModel.onUndoButtonClick(checked) },
+        onClick = { viewModel.onUndoButtonClick(checked, recordingItemState) },
         modifier = modifier
     ) {
         Icon(

@@ -39,6 +39,8 @@ fun InputAlertDialog(
     val focusRequester = remember { FocusRequester() }
     val eventControl = LocalEventControl.current
     val buttonsStateControl = LocalButtonsStateControl.current
+    val displayItemState = LocalDisplayItemState.current
+    val recordingItemState = LocalRecordingItemState.current
 
     LaunchedEffect(Unit) {
         delay(100)
@@ -78,6 +80,8 @@ fun InputAlertDialog(
                     newText = textFieldValue.value.text,
                     eventControl = eventControl,
                     buttonsStateControl = buttonsStateControl,
+                    displayItemState = displayItemState,
+                    recordingItemState = recordingItemState,
                 )
             }) {
                 Text("确认")

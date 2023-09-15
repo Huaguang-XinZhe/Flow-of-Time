@@ -40,7 +40,7 @@ class EventInputViewModel @Inject constructor(
     private var initialName = ""
     private var endTime: LocalDateTime? = null
     var coreName = ""
-    var confirmThenStart = false
+    private var confirmThenStart = false
     val scrollTrigger = mutableStateOf(false)
     val scrollOffset = mutableStateOf(0f)
 
@@ -65,10 +65,16 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
-    fun onToggleButtonClick(itemState: MutableState<ItemType>) {
-        RDALogger.info("itemState = $itemState")
-        itemState.value = if (itemState.value == ItemType.DISPLAY) ItemType.RECORD else ItemType.DISPLAY // 反转类型
-        RDALogger.info("itemState.value = ${itemState.value}")
+    fun onDisplayItemDoubleClick(itemState: MutableState<ItemType>) {
+        itemState.value = ItemType.RECORD
+    }
+
+    fun onRecordingItemDoubleClick(itemState: MutableState<ItemType>) {
+        if (sharedState.cursorType.value == null) { // 事件已经终结的时候才能进行切换否则提示
+            itemState.value = ItemType.DISPLAY
+        } else {
+            sharedState.toastMessage.value = "事项终结后才能切换哦😉"
+        }
     }
 
     fun coreButtonNotShow(): Boolean{
@@ -152,6 +158,8 @@ class EventInputViewModel @Inject constructor(
     fun onCoreFloatingButtonClick(
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
+        displayItemState: MutableState<ItemType>,
+        recordingItemState: MutableState<ItemType>,
     ) {
         viewModelScope.launch {
             coreName = spHelper.getCurrentCoreEventName(coreName)
@@ -177,6 +185,7 @@ class EventInputViewModel @Inject constructor(
                 buttonsStateControl.followTiming() // 切换到 ”伴随结束“ 的按钮状态
             } else {
                 buttonsStateControl.subjectTiming() // 切换到 “主题结束” 的按钮状态
+                buttonsStateControl.resetItemState(displayItemState, recordingItemState)
             }
         }
     }
@@ -193,7 +202,9 @@ class EventInputViewModel @Inject constructor(
     fun onDialogConfirm(
         newText: String,
         eventControl: EventControl,
-        buttonsStateControl: ButtonsStateControl
+        buttonsStateControl: ButtonsStateControl,
+        displayItemState: MutableState<ItemType>,
+        recordingItemState: MutableState<ItemType>
     ) {
         onDialogDismiss()
         if (newText.isEmpty() && newText == coreName) return
@@ -202,7 +213,12 @@ class EventInputViewModel @Inject constructor(
         spHelper.saveCurrentCoreEventName(newText)
 
         if (confirmThenStart) { // 最开始的时候，设置完就开启新事件
-            onCoreFloatingButtonClick(eventControl, buttonsStateControl)
+            onCoreFloatingButtonClick(
+                eventControl,
+                buttonsStateControl,
+                displayItemState,
+                recordingItemState
+            )
             confirmThenStart = false // 重置，以防止在本次应用周期内的下次修改再次开启
         }
     }
@@ -221,7 +237,6 @@ class EventInputViewModel @Inject constructor(
 
 
     private fun hasSubjectExist() = sharedState.cursorType.value != null
-
 
 }
 

@@ -3,10 +3,8 @@ package com.huaguang.flowoftime.ui.pages.time_record
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
@@ -35,7 +33,7 @@ fun DisplayAndRecordingItemColumn(
     val displayItemState = LocalDisplayItemState.current
     val recordingItemState = LocalRecordingItemState.current
 
-        LaunchedEffect(viewModel.scrollTrigger.value) {
+    LaunchedEffect(viewModel.scrollTrigger.value) {
         val offset = viewModel.scrollOffset.value
 //        RDALogger.info("offset = $offset")
         if (offset == 0f) return@LaunchedEffect // 初始化的时候不需要滑动
@@ -77,28 +75,19 @@ fun DRToggleItem(
     combinedEvent: CombinedEvent?,
     customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
-    modifier: Modifier = Modifier
 ) {
     if (itemState.value == ItemType.DISPLAY) {
         DisplayEventItem(
             combinedEvent = combinedEvent,
             viewModel = viewModel,
             itemState = itemState,
-            modifier = modifier,
         )
     } else {
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 5.dp, vertical = 10.dp)
-        ) {
-            RecordingEventItem(
-                combinedEvent = combinedEvent,
-                customTimeState = customTimeState,
-                viewModel = viewModel,
-                itemState = itemState,
-                modifier = modifier.padding(5.dp),
-            )
-        }
+        RecordingEventItem(
+            combinedEvent = combinedEvent,
+            customTimeState = customTimeState,
+            viewModel = viewModel,
+            itemState = itemState
+        )
     }
 }

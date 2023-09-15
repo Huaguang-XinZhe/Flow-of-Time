@@ -1,18 +1,25 @@
 package com.huaguang.flowoftime.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -36,20 +43,28 @@ import com.huaguang.flowoftime.ui.widget.TagsRow
 import com.huaguang.flowoftime.utils.formatDurationInText
 import java.time.Duration
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayEventItem(
     combinedEvent: CombinedEvent?,
     viewModel: EventInputViewModel,
     itemState: MutableState<ItemType>,
-    modifier: Modifier = Modifier
 ) {
     val event = combinedEvent?.event ?: return
     if (event.duration == null) return // 不显示没有间隔的事件
 
     Card(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(5.dp),
+            .padding(5.dp)
+            .shadow(3.dp, CardDefaults.shape) // 必须放在 clip 之前，放在之后没有效果
+            .clip(CardDefaults.shape) // 加上这一句虽然解决了波纹范围非圆角的问题，但也把阴影弄没了
+            .combinedClickable(
+                onClick = {},
+                onDoubleClick = { viewModel.onDisplayItemDoubleClick(itemState) },
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true)
+            ),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
         ),
@@ -70,7 +85,6 @@ fun DisplayEventItem(
             TailLayout(
                 event = event,
                 viewModel = viewModel,
-                itemState = itemState,
             ) {// 首个一定是主题事件
                 DurationText(duration = event.duration!!, type = it)
             }
@@ -162,7 +176,6 @@ fun ContentRowList(
             TailLayout(
                 event = son,
                 viewModel = inputViewModel,
-                itemState = itemState,
             ) {
                 DurationText(duration = son.duration!!, type = it)
             }

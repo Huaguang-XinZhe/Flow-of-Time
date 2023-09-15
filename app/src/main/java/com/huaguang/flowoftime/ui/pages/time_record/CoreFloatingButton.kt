@@ -21,10 +21,17 @@ fun CoreFloatingButton(
 
     val eventControl = LocalEventControl.current
     val buttonsStateControl = LocalButtonsStateControl.current
+    val displayItemState = LocalDisplayItemState.current
+    val recordingItemState = LocalRecordingItemState.current
 
     LongPressFloatingActionButton(
         onClick = {
-            viewModel.onCoreFloatingButtonClick(eventControl, buttonsStateControl)
+            viewModel.onCoreFloatingButtonClick(
+                eventControl,
+                buttonsStateControl,
+                displayItemState,
+                recordingItemState,
+            )
         },
         onLongClick = { viewModel.onCoreFloatingButtonLongClick() },
         modifier = modifier.size(48.dp) // 新的按钮大小会覆盖先前默认的设置

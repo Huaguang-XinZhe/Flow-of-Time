@@ -1,12 +1,19 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.ripple.rememberRipple
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -15,6 +22,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -32,8 +40,39 @@ import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.widget.LongPressOutlinedIconButton
 import kotlinx.coroutines.delay
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RecordingEventItem(
+    combinedEvent: CombinedEvent?,
+    customTimeState: MutableState<CustomTime?>,
+    viewModel: EventInputViewModel,
+    itemState: MutableState<ItemType>,
+) {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 5.dp, vertical = 10.dp)
+            .clip(CardDefaults.outlinedShape)
+            .combinedClickable(
+                onClick = {},
+                onDoubleClick = { viewModel.onRecordingItemDoubleClick(itemState) },
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = true)
+            ),
+    ) {
+        RecordingEventTree(
+            combinedEvent = combinedEvent,
+            customTimeState = customTimeState,
+            viewModel = viewModel,
+            itemState = itemState,
+            modifier = Modifier.padding(5.dp),
+        )
+    }
+
+}
+
+@Composable
+fun RecordingEventTree(
     combinedEvent: CombinedEvent?,
     customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
@@ -69,7 +108,6 @@ fun RecordingEventItem(
                 event = event,
                 viewModel = viewModel,
                 customTimeState = customTimeState,
-                itemState = itemState,
             )
 
         }
@@ -79,7 +117,7 @@ fun RecordingEventItem(
 
             Column(modifier = indentModifier) {
                 combinedEvent.contentEvents.forEach { childCombinedEvent ->
-                    RecordingEventItem( // 递归调用以显示子事件
+                    RecordingEventTree( // 递归调用以显示子事件
                         combinedEvent = childCombinedEvent,
                         customTimeState = customTimeState,
                         viewModel = viewModel,
@@ -123,7 +161,6 @@ fun RecordingTailLayout(
     event: Event,
     viewModel: EventInputViewModel,
     customTimeState: MutableState<CustomTime?>,
-    itemState: MutableState<ItemType>,
 ) {
     val endCustomTime =
         CustomTime(
@@ -152,7 +189,6 @@ fun RecordingTailLayout(
         event = event,
         viewModel = viewModel,
         itemType = ItemType.RECORD,
-        itemState = itemState,
     ) {
         // 二选其一，一定有一项
         if (event.endTime == null) {
