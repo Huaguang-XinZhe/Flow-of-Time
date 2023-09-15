@@ -125,16 +125,13 @@ class TimeRegulatorViewModel @Inject constructor(
     }
 
     private suspend fun updateCurrentOrParentEvent(newCustomTime: CustomTime) {
-        val pair = calNewDurationPair(newCustomTime)
+        val (newDuration, durationMap) = calNewDurationPair(newCustomTime)
 
-        repository.updateTimeAndDuration(newCustomTime, pair.first) // 更新数据库的开始、结束时间，同时更新 duration
+        repository.updateTimeAndDuration(newCustomTime, newDuration) // 更新数据库的开始、结束时间，同时更新 duration
 
-        if (pair.second != null) {
-            val map = pair.second!!
-            repository.updateDuration(map.keys.first(), map.values.first()) // 更新父事件（可能是步骤，也可能是主题）
-
-            if (map.size == 2) { // 更新主题事件（一定是主题，如果这个更新了，那上面那个一定是步骤）
-                repository.updateDuration(map.keys.last(), map.values.last())
+        durationMap?.let { map ->
+            for ((id, duration) in map) {
+                repository.updateDuration(id, duration) // 更新父事件和可能的主题事件的 duration
             }
         }
     }
@@ -150,41 +147,40 @@ class TimeRegulatorViewModel @Inject constructor(
             if (type == TimeType.START && eventInfo.isTiming) return null to null
 
             val deltaDuration = ChronoUnit.MINUTES.between(initialTime, timeState.value).toDuration()
+            val originalDuration = repository.getDurationById(eventInfo.id)
+            val newDuration = calNewDurationWithCurrent(type, originalDuration, deltaDuration)
 
-            with(eventInfo) {
-                val originalDuration = repository.getDurationById(id)
+            if (!eventInfo.eventType.isInsert() || eventInfo.isTiming) return newDuration to null
 
-                val newDuration = if (type == TimeType.START) {
-                    originalDuration - deltaDuration
-                } else {
-                    originalDuration + deltaDuration
-                }
+            val insertParent = repository.getInsertParentById(eventInfo.parentId!!)
+            if (insertParent.endTime == null) return newDuration to null
 
-                if (eventType.isInsert() && !isTiming) { // 实践标签所在事件是否为插入事件，并且已经结束
-                    val insertParent = repository.getInsertParentById(parentId!!)
-                    if (insertParent.endTime != null) { // 父事件已经结束（一定要更新父事件了）
-                        val newParentDuration = calNewDurationWithSuper(type, insertParent.duration!!, deltaDuration)
+            val newParentDuration = calNewDurationWithSuper(type, insertParent.duration!!, deltaDuration)
+            val durationMap = mutableMapOf(eventInfo.parentId to newParentDuration)
 
-                        // 步骤插入，且主题事件已经结束，那么就得同时更新主题事件和步骤事件（父事件）的 duration 了。
-                        if (eventType == EventType.STEP_INSERT && sharedState.cursorType.value == null) {
-                            val subjectId = idState.subject.value
-                            val subjectDuration = repository.getDurationById(subjectId)
-                            val newSubjectDuration = calNewDurationWithSuper(type, subjectDuration, deltaDuration)
-
-                            return newDuration to mapOf(
-                                parentId to newParentDuration, // 步骤事件
-                                subjectId to newSubjectDuration, // 主题事件
-                            )
-                        }
-
-                        return newDuration to mapOf(parentId to newParentDuration)
-
-                    }
-                }
-
-                return newDuration to null
+            if (eventInfo.eventType == EventType.STEP_INSERT && sharedState.cursorType.value == null) {
+                val subjectId = idState.subject.value
+                val subjectDuration = repository.getDurationById(subjectId)
+                val newSubjectDuration = calNewDurationWithSuper(type, subjectDuration, deltaDuration)
+                durationMap[subjectId] = newSubjectDuration
             }
+
+            return newDuration to durationMap
         }
+    }
+
+    /**
+     * 计算当前调整项的新时长
+     * start 反，end 同
+     */
+    private fun calNewDurationWithCurrent(
+        type: TimeType,
+        originalDuration: Duration,
+        deltaDuration: Duration
+    ) = if (type == TimeType.START) {
+        originalDuration - deltaDuration
+    } else {
+        originalDuration + deltaDuration
     }
 
     /**
@@ -195,9 +191,9 @@ class TimeRegulatorViewModel @Inject constructor(
         parentDuration: Duration,
         deltaDuration: Duration,
     ) = if (type == TimeType.START) {
-        parentDuration + deltaDuration // start 同向变化（父）
+        parentDuration + deltaDuration // start 同向变化
     } else {
-        parentDuration - deltaDuration // end 反向变化（父）
+        parentDuration - deltaDuration // end 反向变化
     }
 
     private fun Long.toDuration(): Duration {
