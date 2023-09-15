@@ -57,4 +57,10 @@ enum class Mode {
     RECORD,
 }
 
+enum class CategoryType {
+    ADD,
+    CHANGE,
+}
+
+
 

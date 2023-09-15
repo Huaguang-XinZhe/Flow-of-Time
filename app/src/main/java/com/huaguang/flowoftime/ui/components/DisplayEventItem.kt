@@ -36,8 +36,7 @@ import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.state.ItemState
-import com.huaguang.flowoftime.ui.widget.CategoryLabel
-import com.huaguang.flowoftime.ui.widget.LabelType
+import com.huaguang.flowoftime.ui.widget.Category
 import com.huaguang.flowoftime.ui.widget.TagsRow
 import com.huaguang.flowoftime.utils.formatDurationInText
 import java.time.Duration
@@ -100,9 +99,8 @@ fun DisplayEventItem(
             )
 
             event.category?.let {
-                CategoryLabel(
-                    text = "@$it",
-                    labelType = LabelType.CATEGORY,
+                Category(
+                    name = it,
                     modifier = Modifier.padding(vertical = 5.dp)
                 ) {
                     // TODO:
