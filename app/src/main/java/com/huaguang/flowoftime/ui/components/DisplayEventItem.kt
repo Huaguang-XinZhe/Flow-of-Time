@@ -14,7 +14,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,11 +31,11 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.CategoryLabel
 import com.huaguang.flowoftime.ui.widget.LabelType
 import com.huaguang.flowoftime.ui.widget.TagsRow
@@ -48,7 +47,7 @@ import java.time.Duration
 fun DisplayEventItem(
     combinedEvent: CombinedEvent?,
     viewModel: EventInputViewModel,
-    itemState: MutableState<ItemType>,
+    itemState: ItemState,
 ) {
     val event = combinedEvent?.event ?: return
     if (event.duration == null) return // 不显示没有间隔的事件
@@ -160,7 +159,7 @@ fun CategoryIconButton(
 fun ContentRowList(
     combinedEvent: CombinedEvent,
     inputViewModel: EventInputViewModel,
-    itemState: MutableState<ItemType>,
+    itemState: ItemState,
     indent: Dp = 0.dp,
 ) {
 

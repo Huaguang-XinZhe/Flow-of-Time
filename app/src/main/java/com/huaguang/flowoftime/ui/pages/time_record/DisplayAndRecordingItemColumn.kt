@@ -7,22 +7,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.data.models.CombinedEvent
-import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.ui.components.DisplayEventItem
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.state.ItemState
 import kotlinx.coroutines.delay
 
 @Composable
 fun DisplayAndRecordingItemColumn(
     viewModel: EventInputViewModel,
-    customTimeState: MutableState<CustomTime?>,
     modifier: Modifier = Modifier
 ) {
     val secondLatestCombinedEvent by viewModel.secondLatestCombinedEventFlow.collectAsState(null)
@@ -52,7 +50,6 @@ fun DisplayAndRecordingItemColumn(
             DRToggleItem(
                 itemState = displayItemState,
                 combinedEvent = secondLatestCombinedEvent,
-                customTimeState = customTimeState,
                 viewModel = viewModel
             )
         }
@@ -61,7 +58,7 @@ fun DisplayAndRecordingItemColumn(
             DRToggleItem(
                 itemState = recordingItemState,
                 combinedEvent = combinedEvent,
-                customTimeState = customTimeState, // TODO: 这个似乎可以优化
+                // TODO: 这个似乎可以优化
                 viewModel = viewModel
             )
         }
@@ -71,12 +68,11 @@ fun DisplayAndRecordingItemColumn(
 
 @Composable
 fun DRToggleItem(
-    itemState: MutableState<ItemType>,
+    itemState: ItemState,
     combinedEvent: CombinedEvent?,
-    customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
 ) {
-    if (itemState.value == ItemType.DISPLAY) {
+    if (itemState.mode.value == Mode.DISPLAY) {
         DisplayEventItem(
             combinedEvent = combinedEvent,
             viewModel = viewModel,
@@ -85,7 +81,6 @@ fun DRToggleItem(
     } else {
         RecordingEventItem(
             combinedEvent = combinedEvent,
-            customTimeState = customTimeState,
             viewModel = viewModel,
             itemState = itemState
         )

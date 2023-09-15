@@ -14,7 +14,7 @@ data class CustomTime(
 
 data class EventInfo(
     val id: Long,
-    val isTiming: Boolean,
+    val isTiming: Boolean, // 选中的 TimeLabel 所在的事件是否正在进行
     val parentId: Long?,
     val eventType: EventType,
 )

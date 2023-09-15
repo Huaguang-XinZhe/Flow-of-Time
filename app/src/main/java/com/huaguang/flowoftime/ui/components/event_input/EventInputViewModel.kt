@@ -1,13 +1,12 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.BlockType
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
-import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -17,6 +16,7 @@ import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -65,13 +65,14 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
-    fun onDisplayItemDoubleClick(itemState: MutableState<ItemType>) {
-        itemState.value = ItemType.RECORD
+    fun onDisplayItemDoubleClick(itemState: ItemState) {
+        itemState.mode.value = Mode.RECORD
     }
 
-    fun onRecordingItemDoubleClick(itemState: MutableState<ItemType>) {
-        if (sharedState.cursorType.value == null) { // 事件已经终结的时候才能进行切换否则提示
-            itemState.value = ItemType.DISPLAY
+    fun onRecordingItemDoubleClick(itemState: ItemState) {
+        // 事件已经终结的时候才能进行切换否则提示（展示区块或者终结的记录块，都可以切换展示）
+        if (itemState.block == BlockType.DISPLAY || sharedState.cursorType.value == null) { // cursorType 只有记录块有
+            itemState.mode.value = Mode.DISPLAY
         } else {
             sharedState.toastMessage.value = "事项终结后才能切换哦😉"
         }
@@ -103,13 +104,12 @@ class EventInputViewModel @Inject constructor(
             }
 
             viewModelScope.launch {
-                RDALogger.info("eventId = ${eventId.value}, text = $text")
                 repository.updateEventName(eventId.value, text)
             }
         }
     }
 
-    fun onNameClick(event: Event, itemType: ItemType) {
+    fun onNameClick(event: Event, mode: Mode) {
         inputState.apply {
             if (show.value) return // 如果输入框已经弹出的话，就不允许在修改其他事项的名称
 
@@ -123,7 +123,7 @@ class EventInputViewModel @Inject constructor(
         endTime = event.endTime // 传出，用于判断事件是否正在进行
 
         val diff = event.id - idState.subject.value
-        if (itemType == ItemType.RECORD && diff > 0) { // 触发滚动
+        if (mode == Mode.RECORD && diff > 0) { // 触发滚动
             scrollTrigger.value = !scrollTrigger.value
             scrollOffset.value = diff * 25f
         }
@@ -158,8 +158,8 @@ class EventInputViewModel @Inject constructor(
     fun onCoreFloatingButtonClick(
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
-        displayItemState: MutableState<ItemType>,
-        recordingItemState: MutableState<ItemType>,
+        displayItemState: ItemState,
+        recordingItemState: ItemState,
     ) {
         viewModelScope.launch {
             coreName = spHelper.getCurrentCoreEventName(coreName)
@@ -203,8 +203,8 @@ class EventInputViewModel @Inject constructor(
         newText: String,
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
-        displayItemState: MutableState<ItemType>,
-        recordingItemState: MutableState<ItemType>
+        displayItemState: ItemState,
+        recordingItemState: ItemState
     ) {
         onDialogDismiss()
         if (newText.isEmpty() && newText == coreName) return

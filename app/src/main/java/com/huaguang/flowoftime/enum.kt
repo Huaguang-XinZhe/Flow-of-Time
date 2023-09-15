@@ -47,8 +47,14 @@ enum class InputIntent {
     MODIFY,
 }
 
-enum class ItemType {
+enum class BlockType {
+    RECORDING,
+    DISPLAY,
+}
+
+enum class Mode {
     DISPLAY,
     RECORD,
 }
+
 

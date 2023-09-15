@@ -11,13 +11,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
-import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtons
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulator
+import com.huaguang.flowoftime.ui.state.ItemState
 import java.time.LocalDateTime
 
 val LocalEventControl = compositionLocalOf<EventControl> { error("没有提供实现 EventControl 接口的对象！") }
@@ -26,8 +26,9 @@ val LocalButtonsStateControl = compositionLocalOf<ButtonsStateControl> {
 }
 val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
 val LocalCheckedLiveData = compositionLocalOf { MutableLiveData(true) }
-val LocalDisplayItemState = compositionLocalOf { mutableStateOf(ItemType.DISPLAY) }
-val LocalRecordingItemState = compositionLocalOf { mutableStateOf(ItemType.RECORD) }
+val LocalDisplayItemState = compositionLocalOf { ItemState.initialDisplay() }
+val LocalRecordingItemState = compositionLocalOf { ItemState.initialRecording() }
+val LocalCustomTimeState = compositionLocalOf { mutableStateOf<CustomTime?>(null) }
 
 @Composable
 fun TimeRecordPage(
@@ -35,8 +36,8 @@ fun TimeRecordPage(
 ) {
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
-    val displayItemState = remember { mutableStateOf(ItemType.DISPLAY) } // 内有默认值，决定它们第一次展示什么
-    val recordingItemState = remember { mutableStateOf(ItemType.RECORD) }
+    val displayItemState = remember { ItemState.initialDisplay() } // 内有默认值，决定它们第一次展示什么
+    val recordingItemState = remember { ItemState.initialRecording() }
 
     ConstraintLayout(
         modifier = Modifier.padding(vertical = 10.dp)
@@ -55,12 +56,12 @@ fun TimeRecordPage(
             LocalEventControl provides pageViewModel.eventControl,
             LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl,
             LocalCheckedLiveData provides pageViewModel.timeRegulatorViewModel.checkedLiveData,
+            LocalCustomTimeState provides customTimeState,
             LocalDisplayItemState provides displayItemState,
             LocalRecordingItemState provides recordingItemState,
         ) {
             DisplayAndRecordingItemColumn(
                 viewModel = pageViewModel.eventInputViewModel,
-                customTimeState = customTimeState,
                 modifier = Modifier.constrainAs(itemColumn) {
                     top.linkTo(topBar.bottom, 5.dp)
                     start.linkTo(parent.start)
@@ -76,7 +77,6 @@ fun TimeRecordPage(
             )
 
             TimeRegulator(
-                customTimeState = customTimeState,
                 viewModel = pageViewModel.timeRegulatorViewModel,
                 modifier = Modifier.constrainAs(timeRegulator) {
                     bottom.linkTo(eventButtons.top, 10.dp)

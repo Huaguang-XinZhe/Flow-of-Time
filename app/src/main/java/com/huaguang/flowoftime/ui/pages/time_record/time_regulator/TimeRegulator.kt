@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
@@ -22,34 +21,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.data.models.CustomTime
+import com.huaguang.flowoftime.ui.pages.time_record.LocalCustomTimeState
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 
 @Composable
 fun TimeRegulator(
-    customTimeState: MutableState<CustomTime?>, // 这个值在选中 TimeLabel 的时候才会传递过来，否则为 null
+    // 这个值在选中 TimeLabel 的时候才会传递过来，否则为 null
     viewModel: TimeRegulatorViewModel,
     modifier: Modifier = Modifier
 ) {
     if (viewModel.inputState.show.value) return
 
     val selectedTime = LocalSelectedTime.current
+    val customTimeState = LocalCustomTimeState.current
     viewModel.selectedTime = selectedTime
-
-    fun onClick(value: Long) {
-        viewModel.onClick(value, customTimeState)
-    }
+    viewModel.customTimeState = customTimeState
 
     @Composable
     fun TimeAdjustButton(value: Long, label: String) {
-        TextButton(onClick = { onClick(value) }) {
+        TextButton(onClick = { viewModel.onClick(value) }) {
             Text(label)
         }
     }
 
     @Composable
     fun TimeAdjustIconButton(value: Long, iconRes: Int) {
-        IconButton(onClick = { onClick(value) }) {
+        IconButton(onClick = { viewModel.onClick(value) }) {
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,

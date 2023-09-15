@@ -43,9 +43,11 @@ interface EventDao {
     @Query("SELECT startTime FROM events WHERE id = :id")
     suspend fun getStartTimeById(id: Long): LocalDateTime
 
-    @Query("SELECT duration FROM events WHERE parentEventId = :id AND type IN (:eventTypes)")
-    suspend fun getSubInsertDurationList(id: Long, eventTypes: List<EventType>): List<Duration>
+    @Query("SELECT duration FROM events WHERE parentEventId = :id AND type = :eventType")
+    suspend fun getStepInsertDurationList(id: Long, eventType: EventType): List<Duration>
 
+    @Query("SELECT duration FROM events WHERE parentEventId = :id AND type IN (:eventTypes)")
+    suspend fun getSubjectInsertDurationList(id: Long, eventTypes: List<EventType>): List<Duration>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: Event): Long

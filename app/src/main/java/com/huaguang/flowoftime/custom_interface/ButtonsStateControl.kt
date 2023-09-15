@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.custom_interface
 
-import androidx.compose.runtime.MutableState
-import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.ui.state.ItemState
 
 interface ButtonsStateControl {
     fun subjectTiming()
@@ -11,7 +10,7 @@ interface ButtonsStateControl {
     fun stepTiming()
 
     fun resetItemState(
-        displayItemState: MutableState<ItemType>,
-        recordingItemState: MutableState<ItemType>,
+        displayItemState: ItemState,
+        recordingItemState: ItemState,
     )
 }

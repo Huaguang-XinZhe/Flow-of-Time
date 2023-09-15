@@ -1,13 +1,13 @@
 package com.huaguang.flowoftime.ui.pages.time_record.event_buttons
 
+
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
@@ -17,6 +17,7 @@ import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -54,8 +55,8 @@ class EventButtonsViewModel @Inject constructor(
         }
 
         override fun resetItemState(
-            displayItemState: MutableState<ItemType>,
-            recordingItemState: MutableState<ItemType>,
+            displayItemState: ItemState,
+            recordingItemState: ItemState,
         ) {
             resetDRItemState(displayItemState, recordingItemState)
         }
@@ -174,12 +175,11 @@ class EventButtonsViewModel @Inject constructor(
 
     fun onUndoButtonClick(
         checked: MutableLiveData<Boolean>,
-        recordingItemState: MutableState<ItemType>
+        recordingItemState: ItemState
     ) {
         val operation = undoStack.undo() ?: return // 其实不大可能为空，栈里要真为空的话，那撤销按钮根本就不会显示
         pauseRecovery(checked) // 恢复暂停按钮状态
-        recordingItemState.value = ItemType.RECORD // 恢复到记录状态
-        RDALogger.info("撤销执行！recordingItemState.value = ${recordingItemState.value}")
+        recordingItemState.mode.value = Mode.RECORD // 恢复到记录状态
 
         viewModelScope.launch {
             operation.apply {
@@ -234,11 +234,11 @@ class EventButtonsViewModel @Inject constructor(
     }
 
     private fun resetDRItemState(
-        displayItemState: MutableState<ItemType>,
-        recordingItemState: MutableState<ItemType>
+        displayItemState: ItemState,
+        recordingItemState: ItemState
     ) {
-        displayItemState.value = ItemType.DISPLAY
-        recordingItemState.value = ItemType.RECORD
+        displayItemState.mode.value = Mode.DISPLAY
+        recordingItemState.mode.value = Mode.RECORD
     }
 
     /**

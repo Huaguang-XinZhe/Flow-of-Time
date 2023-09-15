@@ -28,7 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -37,6 +37,7 @@ import com.huaguang.flowoftime.data.models.EventInfo
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.ui.components.TailLayout
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.LongPressOutlinedIconButton
 import kotlinx.coroutines.delay
 
@@ -44,9 +45,8 @@ import kotlinx.coroutines.delay
 @Composable
 fun RecordingEventItem(
     combinedEvent: CombinedEvent?,
-    customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
-    itemState: MutableState<ItemType>,
+    itemState: ItemState,
 ) {
     OutlinedCard(
         modifier = Modifier
@@ -62,7 +62,6 @@ fun RecordingEventItem(
     ) {
         RecordingEventTree(
             combinedEvent = combinedEvent,
-            customTimeState = customTimeState,
             viewModel = viewModel,
             itemState = itemState,
             modifier = Modifier.padding(5.dp),
@@ -74,13 +73,13 @@ fun RecordingEventItem(
 @Composable
 fun RecordingEventTree(
     combinedEvent: CombinedEvent?,
-    customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
-    itemState: MutableState<ItemType>,
+    itemState: ItemState,
     modifier: Modifier = Modifier
 ) {
     val event = combinedEvent?.event ?: return
-    val expandState = remember { mutableStateOf(false) }
+    val expandState = remember { mutableStateOf(event.withContent) } // 看来，什么作为初始值还真不是随随便便的。
+    val customTimeState = LocalCustomTimeState.current
 
     LaunchedEffect(event.withContent) { // 副作用初始化的时候都会执行一次！！！
         expandState.value = event.withContent
@@ -112,6 +111,9 @@ fun RecordingEventTree(
 
         }
 
+        // 在这里把 expandState.value 改为 event.withContent，可以解决加载快闪的问题。
+        // 直接，不通过副作用，但也就不能通过 expandState 改变展开状态了。
+        // 通过将 event.withContent 作为状态初始值，可以解决这个问题。mutableStateOf(event.withContent)
         if (expandState.value) {
             val indentModifier = Modifier.padding(start = 30.dp) // 添加缩进
 
@@ -119,7 +121,6 @@ fun RecordingEventTree(
                 combinedEvent.contentEvents.forEach { childCombinedEvent ->
                     RecordingEventTree( // 递归调用以显示子事件
                         combinedEvent = childCombinedEvent,
-                        customTimeState = customTimeState,
                         viewModel = viewModel,
                         itemState = itemState,
                     )
@@ -188,7 +189,7 @@ fun RecordingTailLayout(
     TailLayout(
         event = event,
         viewModel = viewModel,
-        itemType = ItemType.RECORD,
+        mode = Mode.RECORD,
     ) {
         // 二选其一，一定有一项
         if (event.endTime == null) {

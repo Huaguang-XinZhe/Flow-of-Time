@@ -106,7 +106,12 @@ class TimeRecordPageViewModel(
                 eventId = pair.first
                 pauseInterval = pair.second
             }
-            duration = calEventDuration(eventId, repository.getStartTimeById(eventId))
+            duration = calEventDuration(
+                eventId = eventId,
+                eventType = eventType,
+                startTime = repository.getStartTimeById(eventId),
+                pauseIntervalLong = pauseInterval.toLong()
+            )
         } else { // 更新没有下级的当前项
             eventId = idState.current.value
             pauseInterval = if (eventType.isInsert()) 0 else pauseAcc // 插入事项不允许有暂停间隔
@@ -147,13 +152,18 @@ class TimeRecordPageViewModel(
      * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
      * @param eventId 它就是那个含有下级事项的父事项 id
      */
-    private suspend fun calEventDuration(eventId: Long, startTime: LocalDateTime): Duration {
-        val pauseIntervalDuration = Duration.ofMinutes(pauseState.subjectAcc.value.toLong())
-//        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
-        val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId)
-//        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
+    private suspend fun calEventDuration(
+        eventId: Long,
+        eventType: EventType,
+        startTime: LocalDateTime,
+        pauseIntervalLong: Long
+    ): Duration {
+        val pauseIntervalDuration = Duration.ofMinutes(pauseIntervalLong)
+        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
+        val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId, eventType)
+        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         val standardDuration = Duration.between(startTime, LocalDateTime.now())
-//        RDALogger.info("standardDuration = $standardDuration")
+        RDALogger.info("standardDuration = $standardDuration")
 
         return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
     }
