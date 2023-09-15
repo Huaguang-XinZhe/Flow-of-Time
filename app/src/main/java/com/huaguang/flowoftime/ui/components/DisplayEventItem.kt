@@ -10,6 +10,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +25,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
@@ -38,6 +40,7 @@ import java.time.Duration
 fun DisplayEventItem(
     combinedEvent: CombinedEvent?,
     viewModel: EventInputViewModel,
+    itemState: MutableState<ItemType>,
     modifier: Modifier = Modifier
 ) {
     val event = combinedEvent?.event ?: return
@@ -67,6 +70,7 @@ fun DisplayEventItem(
             TailLayout(
                 event = event,
                 viewModel = viewModel,
+                itemState = itemState,
             ) {// 首个一定是主题事件
                 DurationText(duration = event.duration!!, type = it)
             }
@@ -79,6 +83,7 @@ fun DisplayEventItem(
             ContentRowList(
                 combinedEvent = combinedEvent,
                 inputViewModel = viewModel,
+                itemState = itemState,
             )
 
             event.category?.let {
@@ -141,6 +146,7 @@ fun CategoryIconButton(
 fun ContentRowList(
     combinedEvent: CombinedEvent,
     inputViewModel: EventInputViewModel,
+    itemState: MutableState<ItemType>,
     indent: Dp = 0.dp,
 ) {
 
@@ -156,6 +162,7 @@ fun ContentRowList(
             TailLayout(
                 event = son,
                 viewModel = inputViewModel,
+                itemState = itemState,
             ) {
                 DurationText(duration = son.duration!!, type = it)
             }
@@ -165,7 +172,8 @@ fun ContentRowList(
         ContentRowList(
             combinedEvent = childCombinedEvent,
             inputViewModel = inputViewModel,
-            indent = 24.dp
+            itemState = itemState,
+            indent = 24.dp,
         )
     }
 
@@ -195,7 +203,7 @@ fun DurationText(duration: Duration, type: EventType) {
         fontSize = if (type == EventType.SUBJECT) 18.sp else 12.sp,
         fontWeight = FontWeight.ExtraBold,
         fontStyle = FontStyle.Italic,
-        modifier = Modifier.padding(start = 5.dp, end = 10.dp),
+        modifier = Modifier.padding(horizontal = 5.dp),
     )
 }
 

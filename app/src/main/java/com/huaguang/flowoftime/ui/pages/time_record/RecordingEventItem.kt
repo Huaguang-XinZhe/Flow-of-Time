@@ -37,6 +37,7 @@ fun RecordingEventItem(
     combinedEvent: CombinedEvent?,
     customTimeState: MutableState<CustomTime?>,
     viewModel: EventInputViewModel,
+    itemState: MutableState<ItemType>,
     modifier: Modifier = Modifier
 ) {
     val event = combinedEvent?.event ?: return
@@ -67,7 +68,8 @@ fun RecordingEventItem(
             RecordingTailLayout(
                 event = event,
                 viewModel = viewModel,
-                customTimeState = customTimeState
+                customTimeState = customTimeState,
+                itemState = itemState,
             )
 
         }
@@ -81,6 +83,7 @@ fun RecordingEventItem(
                         combinedEvent = childCombinedEvent,
                         customTimeState = customTimeState,
                         viewModel = viewModel,
+                        itemState = itemState,
                     )
                 }
             }
@@ -120,6 +123,7 @@ fun RecordingTailLayout(
     event: Event,
     viewModel: EventInputViewModel,
     customTimeState: MutableState<CustomTime?>,
+    itemState: MutableState<ItemType>,
 ) {
     val endCustomTime =
         CustomTime(
@@ -133,7 +137,8 @@ fun RecordingTailLayout(
             initialTime = event.endTime, // 重新组合的时候这个状态会被记住，但值会改变
             timeState = remember { mutableStateOf(null) } // 开始时 endTime 为 null，但在显示尾部 TimeLabel 时就已经排除这种情况
         )
-    val allowShow = event.type == EventType.SUBJECT && event.name.isNotEmpty() && // 标配判断
+    // 正在进行的主题事项，其名称非空（上边的判断是对单条事项的，下边的是对整个 item 的，需要与其他条目交互。一个判断都不能少！）
+    val allowShow = event.type == EventType.SUBJECT && event.endTime == null && event.name.isNotEmpty() &&
             viewModel.sharedState.cursorType.value == EventType.SUBJECT // 关键判断
 
     val showState = remember { mutableStateOf(false) }
@@ -147,6 +152,7 @@ fun RecordingTailLayout(
         event = event,
         viewModel = viewModel,
         itemType = ItemType.RECORD,
+        itemState = itemState,
     ) {
         // 二选其一，一定有一项
         if (event.endTime == null) {

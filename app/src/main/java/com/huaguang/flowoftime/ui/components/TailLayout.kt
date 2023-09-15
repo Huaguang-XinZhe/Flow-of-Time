@@ -4,18 +4,24 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.ItemType
+import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
@@ -28,17 +34,21 @@ fun TailLayout(
     event: Event,
     viewModel: EventInputViewModel,
     itemType: ItemType = ItemType.DISPLAY,
-    content: @Composable RowScope.(type: EventType) -> Unit
+    itemState: MutableState<ItemType>,
+    content: @Composable (RowScope.(type: EventType) -> Unit)
 ) {
     val selectedTime = LocalSelectedTime.current
 
     val fontSize = if (event.type == EventType.SUBJECT) 20.sp else {
         if (itemType == ItemType.DISPLAY) 14.sp else 16.sp
     }
-
     val fontWeight = if (event.type == EventType.SUBJECT) FontWeight.Bold else {
         if (itemType == ItemType.DISPLAY) FontWeight.Light else FontWeight.Normal
     }
+    val iconTint = if (itemType == ItemType.DISPLAY) Color.LightGray else Color.Black
+    val startPadding = if (itemType == ItemType.DISPLAY) 0.dp else 7.dp
+
+    val toggleButtonShow = event.type == EventType.SUBJECT && event.endTime != null // 在主题事件结束时才能显示
 
     Layout(
         content = {
@@ -62,7 +72,18 @@ fun TailLayout(
             ) {
                 content(event.type)
 
-
+                if (toggleButtonShow) {
+                    IconButton(
+                        onClick = { viewModel.onToggleButtonClick(itemState) },
+                        modifier = Modifier.size(24.dp).padding(start = startPadding)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.toggle),
+                            contentDescription = null,
+                            tint = iconTint,
+                        )
+                    }
+                }
             }
         }
     ) { measurables, constraints ->

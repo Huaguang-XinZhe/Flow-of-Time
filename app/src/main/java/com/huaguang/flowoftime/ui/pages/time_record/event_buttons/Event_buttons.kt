@@ -7,20 +7,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.ButtonActionParams
 import com.huaguang.flowoftime.ui.pages.time_record.LocalCheckedLiveData
+import com.huaguang.flowoftime.ui.pages.time_record.LocalDisplayItemState
 import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
+import com.huaguang.flowoftime.ui.pages.time_record.LocalRecordingItemState
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 import com.huaguang.flowoftime.ui.widget.LongPressButton
 import com.huaguang.flowoftime.ui.widget.LongPressTextButton
-import java.time.LocalDateTime
 
 @Composable
 fun EventButtons(
@@ -29,8 +29,6 @@ fun EventButtons(
 ) {
     if (viewModel.inputState.show.value) return // 输入框弹起，就不显示
 
-    val eventControl = LocalEventControl.current
-    val selectedTime = LocalSelectedTime.current
     val checked = LocalCheckedLiveData.current
 
     ConstraintLayout (
@@ -53,8 +51,6 @@ fun EventButtons(
 
         ButtonsRow(
             viewModel = viewModel,
-            eventControl = eventControl,
-            selectedTime = selectedTime,
             checked = checked,
             modifier = Modifier.constrainAs(buttonRowRef) {
                 start.linkTo(parent.start)
@@ -91,11 +87,19 @@ fun UnDoButton(
 @Composable
 fun ButtonsRow(
     viewModel: EventButtonsViewModel,
-    eventControl: EventControl,
-    selectedTime: MutableState<LocalDateTime?>?,
     checked: MutableLiveData<Boolean>,
     modifier: Modifier = Modifier
 ) {
+
+    val eventControl = LocalEventControl.current
+    val params = ButtonActionParams(
+        eventControl = eventControl,
+        selectedTime = LocalSelectedTime.current,
+        checked = checked,
+        displayItemState = LocalDisplayItemState.current,
+        recordingItemState = LocalRecordingItemState.current
+    )
+
     Row(
         modifier = modifier
     ) {
@@ -103,8 +107,12 @@ fun ButtonsRow(
             if (mainShow.value) {
                 LongPressButton(
                     text = mainText.value,
-                    onClick = { viewModel.onMainButtonClick(eventControl, selectedTime, checked) },
-                    onLongClick = { viewModel.onMainButtonLongClick(eventControl) },
+                    onClick = {
+                        viewModel.onMainButtonClick(params)
+                    },
+                    onLongClick = {
+                        viewModel.onMainButtonLongClick(params)
+                    },
                 )
             }
 
@@ -112,7 +120,7 @@ fun ButtonsRow(
                 LongPressTextButton(
 //                    text = viewModel.getDisplayTextForSub(subText.value),
                     text = subText.value,
-                    onClick = { viewModel.onSubButtonClick(eventControl, selectedTime, checked) },
+                    onClick = { viewModel.onSubButtonClick(params) },
                     onLongClick = { viewModel.onSubButtonLongClick(eventControl) },
                     modifier = Modifier.padding(start = 5.dp)
                 )

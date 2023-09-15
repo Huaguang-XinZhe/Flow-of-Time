@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -64,6 +65,12 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
+    fun onToggleButtonClick(itemState: MutableState<ItemType>) {
+        RDALogger.info("itemState = $itemState")
+        itemState.value = if (itemState.value == ItemType.DISPLAY) ItemType.RECORD else ItemType.DISPLAY // 反转类型
+        RDALogger.info("itemState.value = ${itemState.value}")
+    }
+
     fun coreButtonNotShow(): Boolean{
         val subTiming = sharedState.cursorType.value?.let {
             it != EventType.SUBJECT
@@ -98,6 +105,8 @@ class EventInputViewModel @Inject constructor(
 
     fun onNameClick(event: Event, itemType: ItemType) {
         inputState.apply {
+            if (show.value) return // 如果输入框已经弹出的话，就不允许在修改其他事项的名称
+
             eventId.value = event.id
             show.value = true
             newName.value = event.name

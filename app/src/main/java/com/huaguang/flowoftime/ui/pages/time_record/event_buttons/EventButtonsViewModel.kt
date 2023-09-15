@@ -6,9 +6,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.ButtonActionParams
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.ButtonsState
@@ -70,15 +72,11 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    fun onMainButtonClick(
-        eventControl: EventControl,
-        selectedTime: MutableState<LocalDateTime?>?,
-        checked: MutableLiveData<Boolean>
-    ) {
-        clearState(checked, selectedTime)
+    fun onMainButtonClick(params: ButtonActionParams) {
+        clearState(params)
 
         viewModelScope.launch {
-            eventControl.apply {
+            params.eventControl.apply {
                 when (buttonsState.mainText.value) {
                     "开始" -> {
                         startEvent(eventType = EventType.SUBJECT)
@@ -98,8 +96,10 @@ class EventButtonsViewModel @Inject constructor(
     }
 
 
-    fun onMainButtonLongClick(eventControl: EventControl) {
+    fun onMainButtonLongClick(params: ButtonActionParams) {
         if (buttonsState.mainText.value != "开始") return
+
+        clearState(params)
 
         // ButtonText 的值除了结束就是开始了，不可能为 null
         viewModelScope.launch {
@@ -110,21 +110,17 @@ class EventButtonsViewModel @Inject constructor(
                 return@launch
             }
 
-            eventControl.startEvent(startTime = startTime, eventType = EventType.SUBJECT)
+            params.eventControl.startEvent(startTime = startTime, eventType = EventType.SUBJECT)
             toSubjectTimingState()
             sharedState.toastMessage.value = "开始补计……"
         }
     }
 
-    fun onSubButtonClick(
-        eventControl: EventControl,
-        selectedTime: MutableState<LocalDateTime?>?,
-        checked: MutableLiveData<Boolean>
-    ) {
-        clearState(checked, selectedTime)
+    fun onSubButtonClick(params: ButtonActionParams) {
+        clearState(params, fromSub = true)
 
         viewModelScope.launch {
-            eventControl.apply {
+            params.eventControl.apply {
                 when (buttonsState.subText.value) {
                     "插入" -> {
                         startEvent(eventType = EventType.SUBJECT_INSERT)
@@ -215,12 +211,21 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
-    private fun clearState(
-        checked: MutableLiveData<Boolean>,
-        selectedTime: MutableState<LocalDateTime?>?,
+    private fun clearState(params: ButtonActionParams, fromSub: Boolean = false) {
+        unCheck(params.selectedTime)
+        pauseRecovery(params.checked)
+
+        if (!fromSub) { // 如果子按钮点击或长按，就不需要重置 Item 状态了。
+            resetDRItemState(params.displayItemState, params.recordingItemState)
+        }
+    }
+
+    private fun resetDRItemState(
+        displayItemState: MutableState<ItemType>,
+        recordingItemState: MutableState<ItemType>
     ) {
-        unCheck(selectedTime)
-        pauseRecovery(checked)
+        displayItemState.value = ItemType.DISPLAY
+        recordingItemState.value = ItemType.RECORD
     }
 
     /**

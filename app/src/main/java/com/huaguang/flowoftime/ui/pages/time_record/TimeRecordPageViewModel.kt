@@ -5,7 +5,6 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
-import com.huaguang.flowoftime.ItemType
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.ImmutableIdState
 import com.huaguang.flowoftime.data.models.Operation
@@ -73,7 +72,6 @@ class TimeRecordPageViewModel(
             show.value = name.isEmpty() // 不传 name 就不弹输入框，必须放在前边
             newName.value = ""
             intent.value = InputIntent.RECORD
-            type.value = ItemType.RECORD
             val id = updateDB(name) // 插入更新数据库，计算 Id 的方法，这么做是为了代码简洁美观的同时，保证输入框的快速弹起
             eventId.value = id
 
