@@ -3,6 +3,7 @@ package com.huaguang.flowoftime.ui.components.event_input
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.BlockType
 import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.EventType
@@ -203,10 +204,13 @@ class EventInputViewModel @Inject constructor(
     }
 
     fun onClassNameDialogConfirm(eventId: Long, type: DashType, newText: String) {
-        if (newText.trim().isEmpty()) return
+        if (newText.trim().isEmpty()) {
+            sharedState.toastMessage.value = "类属不能为空哦😊"
+            return
+        }
 
         var hasLongString = false
-        val labels = newText
+        val labels = newText // 如果 labels 只有一个元素，没有逗号分隔，那么将会返回只有这个元素的集合，不会出错
             .split("，", ",")
             .map { it.trim() } // 使用 map 函数来应用 trim 函数到每一个元素
             .filterNot {
@@ -233,10 +237,14 @@ class EventInputViewModel @Inject constructor(
                 }
                 DashType.MIXED_ADD -> {
                     // 第一个作为类属，其余作为标签
+                    val category = labels.first()
+                    val remain = labels.apply { removeFirst() }
+                    val tags = if (remain.isEmpty()) null else remain
+                    RDALogger.info("tags = $tags")
                     repository.updateClassName(
                         id = eventId,
-                        category = labels.first(),
-                        tags = labels.apply { removeFirst() }
+                        category = category,
+                        tags = tags
                     )
                 }
             }

@@ -46,8 +46,8 @@ interface EventDao {
     @Query("SELECT duration FROM events WHERE parentEventId = :id AND type = :eventType")
     suspend fun getStepInsertDurationList(id: Long, eventType: EventType): List<Duration>
 
-    @Query("SELECT duration FROM events WHERE parentEventId = :id AND type IN (:eventTypes)")
-    suspend fun getSubjectInsertDurationList(id: Long, eventTypes: List<EventType>): List<Duration>
+    @Query("SELECT duration FROM events WHERE id > :id AND type IN (:eventTypes)") // 只能应用于当前项，应用于非当前项会出错
+    suspend fun getItemInsertDurationList(id: Long, eventTypes: List<EventType>): List<Duration>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: Event): Long
@@ -216,7 +216,7 @@ interface EventDao {
     suspend fun updateCategory(id: Long, category: String)
 
     @Query("UPDATE events SET category = :category, tags = :tags WHERE id = :id")
-    suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>)
+    suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>?)
 
 
 }

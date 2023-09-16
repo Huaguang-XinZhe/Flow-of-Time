@@ -129,7 +129,6 @@ fun LabelRow(
         CategoryRow(
             category = category!!
         ) { name, type ->
-            RDALogger.info("categoryName = $name")
             viewModel.onClassNameClick(id, name, type, listOf(category))
         }
 
@@ -137,7 +136,6 @@ fun LabelRow(
             tags = tags, // 就算 category 不为 null，tags 依然可能为 null
             modifier = Modifier.padding(bottom = 10.dp)
         ) { name ->
-            RDALogger.info("tagName = $name")
             viewModel.onClassNameClick(id, name, DashType.TAG, tags)
         }
     }

@@ -160,8 +160,10 @@ class TimeRegulatorViewModel @Inject constructor(
 
             if (eventInfo.eventType == EventType.STEP_INSERT && sharedState.cursorType.value == null) {
                 val subjectId = idState.subject.value
+//                RDALogger.info("进一步计算，获取主事件的 id = $subjectId")
                 val subjectDuration = repository.getDurationById(subjectId)
                 val newSubjectDuration = calNewDurationWithSuper(type, subjectDuration, deltaDuration)
+//                RDALogger.info("newSubjectDuration = $newSubjectDuration")
                 durationMap[subjectId] = newSubjectDuration
             }
 

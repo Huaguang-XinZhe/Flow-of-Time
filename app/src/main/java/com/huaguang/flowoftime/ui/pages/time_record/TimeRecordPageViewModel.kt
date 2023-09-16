@@ -159,11 +159,11 @@ class TimeRecordPageViewModel(
         pauseIntervalLong: Long
     ): Duration {
         val pauseIntervalDuration = Duration.ofMinutes(pauseIntervalLong)
-        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
+//        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
         val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId, eventType)
-        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
+//        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         val standardDuration = Duration.between(startTime, LocalDateTime.now())
-        RDALogger.info("standardDuration = $standardDuration")
+//        RDALogger.info("standardDuration = $standardDuration")
 
         return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
     }

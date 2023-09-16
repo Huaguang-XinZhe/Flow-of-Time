@@ -1,7 +1,5 @@
 package com.huaguang.flowoftime.data.repositories
 
-import com.ardakaplan.rdalogger.RDALogger
-
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.coreEventKeyWords
@@ -192,12 +190,9 @@ class EventRepository(
         val newTime = newCustomTime.timeState.value!!
 
         withContext(Dispatchers.IO) {
-            // TODO: 这里根据开始或结束时间来更新事件可能会出现问题
             if (newCustomTime.type == TimeType.START) {
-                RDALogger.info("更新开始时间！")
                 eventDao.updateStartTimeAndDurationById(eventId, newTime, newDuration)
             } else {
-                RDALogger.info("更新结束时间！")
                 eventDao.updateEndTimeAndDurationById(eventId, newTime, newDuration!!) // 调整结束时间时的新 duration 绝不为 0！
             }
         }
@@ -283,7 +278,7 @@ class EventRepository(
         val insertDurationList = withContext(Dispatchers.IO) {
             if (eventType == EventType.SUBJECT) {
                 val eventTypes = listOf(EventType.SUBJECT_INSERT, EventType.STEP_INSERT)
-                eventDao.getSubjectInsertDurationList(id, eventTypes)
+                eventDao.getItemInsertDurationList(id, eventTypes)
             } else { // 也只能是步骤了（结束）
                 eventDao.getStepInsertDurationList(id, EventType.STEP_INSERT)
             }
@@ -339,7 +334,7 @@ class EventRepository(
         }
     }
 
-    suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>) {
+    suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>?) {
         withContext(Dispatchers.IO) {
             eventDao.updateClassName(id, category, tags)
         }
