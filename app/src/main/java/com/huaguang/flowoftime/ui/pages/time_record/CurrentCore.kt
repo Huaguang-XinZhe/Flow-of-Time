@@ -6,9 +6,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.widget.InputAlertDialog
 import com.huaguang.flowoftime.ui.widget.LongPressFloatingActionButton
 
 @Composable
@@ -44,4 +47,36 @@ fun CoreFloatingButton(
 
         )
     }
+}
+
+@Composable
+fun CoreNameInputAlertDialog(viewModel: EventInputViewModel) {
+
+    val initialValue = TextFieldValue(
+        text = viewModel.coreName,
+        selection = TextRange(0, viewModel.coreName.length)
+    )
+    val eventControl = LocalEventControl.current
+    val buttonsStateControl = LocalButtonsStateControl.current
+    val displayItemState = LocalDisplayItemState.current
+    val recordingItemState = LocalRecordingItemState.current
+
+    InputAlertDialog(
+        show = viewModel.sharedState.coreInputShow.value,
+        title = "「当前核心」事项",
+        initialValue = initialValue,
+        onDismiss = { viewModel.onCoreNameDialogDismiss() },
+        onConfirm = { newText ->
+            viewModel.onCoreNameDialogConfirm(
+                newText = newText,
+                eventControl = eventControl,
+                buttonsStateControl = buttonsStateControl,
+                displayItemState = displayItemState,
+                recordingItemState = recordingItemState,
+            )
+        },
+        iconRes = R.drawable.current_core,
+        labelText = "设置/更新名称",
+    )
+
 }

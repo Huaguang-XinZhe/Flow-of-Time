@@ -327,5 +327,23 @@ class EventRepository(
         }
     }
 
+    suspend fun updateTags(id: Long, tags: MutableList<String>) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateTags(id, tags)
+        }
+    }
+
+    suspend fun updateCategory(id: Long, category: String) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateCategory(id, category)
+        }
+    }
+
+    suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>) {
+        withContext(Dispatchers.IO) {
+            eventDao.updateClassName(id, category, tags)
+        }
+    }
+
 
 }

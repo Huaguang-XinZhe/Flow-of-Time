@@ -18,7 +18,7 @@ class SharedState @Inject constructor(
     var eventCount = 0
 
     val toastMessage = MutableLiveData<String>()
-    val dialogShow = mutableStateOf(false)
+    val coreInputShow = mutableStateOf(false)
 
     // 指示当前最近的正在进行的事项的类型，null 代表当前没有事项正在进行
     val cursorType = spHelper.getCursorType()

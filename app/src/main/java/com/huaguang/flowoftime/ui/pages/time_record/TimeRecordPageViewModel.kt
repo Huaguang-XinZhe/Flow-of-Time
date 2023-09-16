@@ -201,9 +201,8 @@ class TimeRecordPageViewModel(
         eventDate = getEventDate(startTime),
         parentEventId = getParentEventId(type),
         type = type,
-        // TODO: 默认创建一些数据，以后要删除
         category = "阅读",
-        tags = listOf("休闲", "精进", "应用")
+        tags = mutableListOf("中国", "美国")
     )
 
 

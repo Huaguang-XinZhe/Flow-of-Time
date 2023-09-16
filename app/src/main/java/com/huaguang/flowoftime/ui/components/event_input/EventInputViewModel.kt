@@ -4,6 +4,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.BlockType
+import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.Mode
@@ -17,6 +18,7 @@ import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.ItemState
+import com.huaguang.flowoftime.ui.state.LabelState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,6 +37,7 @@ class EventInputViewModel @Inject constructor(
     private val idState: IdState,
     val sharedState: SharedState,
     val inputState: InputState,
+    val labelState: LabelState,
 ) : ViewModel() {
 
     private var initialName = ""
@@ -166,7 +169,7 @@ class EventInputViewModel @Inject constructor(
 
             if (coreName.isEmpty()) { // 在最开始的时候，SP 中没有值，coreName 仍有可能为空，这是就弹窗请用户设置，然后再开始事件
                 sharedState.apply {
-                    dialogShow.value = true
+                    coreInputShow.value = true
                     toastMessage.value = "请预先设置当前核心（名称）"
                 }
                 confirmThenStart = true // 设置好点击确认就马上开启一个新事件
@@ -192,21 +195,68 @@ class EventInputViewModel @Inject constructor(
 
     fun onCoreFloatingButtonLongClick() {
         coreName = spHelper.getCurrentCoreEventName(coreName)
-        sharedState.dialogShow.value = true // 显示名称输入 Dialog
+        sharedState.coreInputShow.value = true // 显示名称输入 Dialog
     }
 
-    fun onDialogDismiss() {
-        sharedState.dialogShow.value = false
+    fun onClassNameDialogDismiss() {
+        labelState.show.value = false
     }
 
-    fun onDialogConfirm(
+    fun onClassNameDialogConfirm(eventId: Long, type: DashType, newText: String) {
+        if (newText.trim().isEmpty()) return
+
+        var hasLongString = false
+        val labels = newText
+            .split("，", ",")
+            .map { it.trim() } // 使用 map 函数来应用 trim 函数到每一个元素
+            .filterNot {
+                if (it.length > 15) {
+                    hasLongString = true
+                }
+                it.isEmpty() || it.length > 15 // 使用 filterNot 函数来排除所有空字符串和长串
+            }
+            .toMutableList() // 转换结果为可变列表
+
+        if (hasLongString) {
+            sharedState.toastMessage.value = "太长的话，就删了哦🙃"
+        }
+
+        viewModelScope.launch {
+            when(type) {
+                DashType.TAG -> {
+                    // 全是标签，存入数据库
+                    repository.updateTags(eventId, labels)
+                }
+                DashType.CATEGORY_ADD, DashType.CATEGORY_CHANGE -> {
+                    // 只取第一个作为类属，其余无视
+                    repository.updateCategory(eventId, labels.first())
+                }
+                DashType.MIXED_ADD -> {
+                    // 第一个作为类属，其余作为标签
+                    repository.updateClassName(
+                        id = eventId,
+                        category = labels.first(),
+                        tags = labels.apply { removeFirst() }
+                    )
+                }
+            }
+        }
+
+        onClassNameDialogDismiss()
+    }
+
+    fun onCoreNameDialogDismiss() {
+        sharedState.coreInputShow.value = false
+    }
+
+    fun onCoreNameDialogConfirm(
         newText: String,
         eventControl: EventControl,
         buttonsStateControl: ButtonsStateControl,
         displayItemState: ItemState,
         recordingItemState: ItemState
     ) {
-        onDialogDismiss()
+        onCoreNameDialogDismiss()
         if (newText.isEmpty() && newText == coreName) return
 
         coreName = newText // 必须同时更新内存中的 coreName
@@ -220,6 +270,26 @@ class EventInputViewModel @Inject constructor(
                 recordingItemState
             )
             confirmThenStart = false // 重置，以防止在本次应用周期内的下次修改再次开启
+        }
+    }
+
+    fun onClassNameClick(
+        id: Long,
+        name: String,
+        type: DashType,
+        names: List<String>? = null
+    ) {
+        if (name.isEmpty()) { // 没有指定 name（数据库的类属为 null 才不指定 name），即为 + 或 *
+            labelState.apply {
+                eventId.value = id
+                show.value = true
+                this.name.value = name
+                this.type.value = type
+                this.names = names
+            }
+        } else {
+            // 打开搜索页，进行搜索
+            sharedState.toastMessage.value = "打开搜索页，进行搜索"
         }
     }
 
@@ -237,6 +307,8 @@ class EventInputViewModel @Inject constructor(
 
 
     private fun hasSubjectExist() = sharedState.cursorType.value != null
+
+
 
 }
 

@@ -57,9 +57,18 @@ enum class Mode {
     RECORD,
 }
 
-enum class CategoryType {
-    ADD,
-    CHANGE,
+
+enum class DashType {
+    TAG,
+    CATEGORY_ADD,
+    CATEGORY_CHANGE,
+    MIXED_ADD;
+
+    fun isTag() = this == TAG
+
+    fun isAdd() = this == CATEGORY_ADD || this == MIXED_ADD
+
+    fun isCategory() = this == CATEGORY_ADD || this == CATEGORY_CHANGE
 }
 
 

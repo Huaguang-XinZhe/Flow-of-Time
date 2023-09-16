@@ -25,7 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.ui.widget.TagGroup
+import com.huaguang.flowoftime.test.TagGroup
 
 @Composable
 fun HeaderRow(viewModel: HeaderViewModel) {

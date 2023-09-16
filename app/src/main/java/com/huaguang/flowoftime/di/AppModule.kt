@@ -18,6 +18,7 @@ import com.huaguang.flowoftime.other.LocalDateTimeSerializer
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.LabelState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.Module
@@ -141,6 +142,12 @@ object AppModule {
     @Provides
     fun provideUndoStack(): UndoStack {
         return UndoStack()
+    }
+
+    @Singleton
+    @Provides
+    fun provideLabelState(): LabelState {
+        return LabelState.initialValue()
     }
 
 }

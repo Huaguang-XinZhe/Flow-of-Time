@@ -209,5 +209,14 @@ interface EventDao {
     @Query("SELECT endTime FROM events WHERE id = :id")
     suspend fun getEndTimeById(id: Long): LocalDateTime
 
+    @Query("UPDATE events SET tags = :tags WHERE id = :id")
+    suspend fun updateTags(id: Long, tags: MutableList<String>)
+
+    @Query("UPDATE events SET category = :category WHERE id = :id")
+    suspend fun updateCategory(id: Long, category: String)
+
+    @Query("UPDATE events SET category = :category, tags = :tags WHERE id = :id")
+    suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>)
+
 
 }

@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.widget
+package com.huaguang.flowoftime.test
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable

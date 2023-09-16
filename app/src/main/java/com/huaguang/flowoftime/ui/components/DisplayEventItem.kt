@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -37,6 +38,7 @@ import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.Category
+import com.huaguang.flowoftime.ui.widget.CategoryRow
 import com.huaguang.flowoftime.ui.widget.TagsRow
 import com.huaguang.flowoftime.utils.formatDurationInText
 import java.time.Duration
@@ -98,23 +100,44 @@ fun DisplayEventItem(
                 itemState = itemState,
             )
 
-            event.category?.let {
-                Category(
-                    name = it,
-                    modifier = Modifier.padding(vertical = 5.dp)
-                ) {
-                    // TODO:
-                }
-            }
+            LabelRow(
+                id = event.id,
+                category = event.category,
+                tags = event.tags,
+                viewModel = viewModel
+            )
+        }
+    }
+}
 
-            event.tags?.let {
-                TagsRow(
-                    tags = it,
-                    modifier = Modifier.padding(bottom = 10.dp)
-                ) { // 已经加了 # 号
-                    // TODO:
-                }
-            }
+@Composable
+fun LabelRow(
+    id: Long,
+    category: String?,
+    tags: MutableList<String>?,
+    viewModel: EventInputViewModel,
+) {
+    if (category == null && tags == null) {
+        Category(
+            onClick = { _, type ->
+                viewModel.onClassNameClick(id, "", type)
+            },
+            modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+        )
+    } else { // 若 category 为 null（tags 也一定为 null）就一定会走上面的设置，所以下边的一定为非 null
+        CategoryRow(
+            category = category!!
+        ) { name, type ->
+            RDALogger.info("categoryName = $name")
+            viewModel.onClassNameClick(id, name, type, listOf(category))
+        }
+
+        TagsRow(
+            tags = tags, // 就算 category 不为 null，tags 依然可能为 null
+            modifier = Modifier.padding(bottom = 10.dp)
+        ) { name ->
+            RDALogger.info("tagName = $name")
+            viewModel.onClassNameClick(id, name, DashType.TAG, tags)
         }
     }
 }

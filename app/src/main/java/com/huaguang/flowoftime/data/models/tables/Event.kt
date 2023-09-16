@@ -26,7 +26,7 @@ data class Event(
 
     var category: String? = null, // 除主题事件外无类属
 
-    val tags: List<String>? = null, // 除主题事件外无标签
+    val tags: MutableList<String>? = null, // 除主题事件外无标签
 
     // 为了辅助查询————————————————————————————————————————————
     var eventDate: LocalDate? = null, // 用于存储事件发生的日期

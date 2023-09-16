@@ -100,7 +100,15 @@ fun TimeRecordPage(
                 }
             )
 
-            InputAlertDialog(viewModel = pageViewModel.eventInputViewModel)
+            CoreNameInputAlertDialog(
+                viewModel = pageViewModel.eventInputViewModel
+            )
+
+//            RDALogger.info("viewModel.labelInfo = ${pageViewModel.eventInputViewModel.labelInfo}")
+            // 这里必须把 labelInfo 变为状态的封装，要不然不会触发重组。
+            ClassNameInputAlertDialog(
+                viewModel = pageViewModel.eventInputViewModel
+            )
         }
     }
 }
