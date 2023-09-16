@@ -9,6 +9,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -91,13 +92,18 @@ class TimeRecordFragment : Fragment() {
                     RDALogger.info("监听 acc = ${pauseState.acc.value}")
 
                     if (newValue) { // 只有恢复原先状态的时候才会执行。
-                        pageViewModel.pauseAcc = pauseState.acc.value // 记录此时 acc 的值
-
-                        RDALogger.info("重置 pauseState 的状态")
                         pauseState.apply {
+                            when(sharedState.cursorType.value) {
+                                EventType.SUBJECT -> subjectAcc.value = acc.value
+                                EventType.STEP -> stepAcc.value = acc.value
+                                else -> currentAcc.value = acc.value // else 包括 null，但没事，null 下根本不会执行到这里
+                            }
+
+                            RDALogger.info("重置 pauseState 的状态")
                             start.value = null
                             acc.value = 0
                         }
+
                     }
                 }
 

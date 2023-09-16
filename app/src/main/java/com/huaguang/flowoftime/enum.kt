@@ -13,11 +13,9 @@ enum class EventType {
     fun isInsert() = this == SUBJECT_INSERT || this == STEP_INSERT
 
     /**
-     * 只允许主题插入和步骤插入调用此方法，这是在编码是调用的，一般不会出错，即结果不会是空字符串。
+     * 没有下级的事件，于暂停的计算而言，直接使用 currentAcc 就可以了
      */
-    fun endName(): String {
-        return if (this == SUBJECT_INSERT) "插入结束" else if (this == STEP_INSERT) "step 插入结束" else ""
-    }
+    fun isCurrent() = this == FOLLOW || this == SUBJECT_INSERT || this == STEP_INSERT
 }
 
 enum class Action(val value: Int) {

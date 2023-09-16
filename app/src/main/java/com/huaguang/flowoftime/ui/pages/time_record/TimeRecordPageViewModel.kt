@@ -35,8 +35,6 @@ class TimeRecordPageViewModel(
     private val dndManager: DNDManager,
 ) : ViewModel() {
 
-    var pauseAcc = 0 // 临时变量，不需要保存，只在结束那一瞬起作用
-
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
             val autoId = updateInputState(name) { // 这个 it 就是 name
@@ -114,7 +112,8 @@ class TimeRecordPageViewModel(
             )
         } else { // 更新没有下级的当前项
             eventId = idState.current.value
-            pauseInterval = if (eventType.isInsert()) 0 else pauseAcc // 插入事项不允许有暂停间隔
+            pauseInterval = if (eventType.isInsert()) 0 else pauseState.currentAcc.value // 插入事项不允许有暂停间隔
+            RDALogger.info("没有下级的事件结束：pauseInterval = $pauseInterval")
             duration = repository.getStartTimeById(eventId).let {
                 Duration.between(it, LocalDateTime.now())
                     .minus(Duration.ofMinutes(pauseInterval.toLong()))
@@ -137,10 +136,12 @@ class TimeRecordPageViewModel(
             if (eventType == EventType.SUBJECT) {
                 eventId = idState.subject.value
                 totalPauseInterval = subjectAcc.value
+                RDALogger.info("结束主题事件：subjectAcc.value = ${subjectAcc.value}")
                 subjectAcc.value = 0 // 重置
             } else { // else 只可能是步骤事项了
                 eventId = idState.step.value
                 totalPauseInterval = stepAcc.value
+                RDALogger.info("结束步骤事件：stepAcc.value = ${stepAcc.value}")
                 stepAcc.value = 0 // 重置
             }
         }
@@ -159,7 +160,7 @@ class TimeRecordPageViewModel(
         pauseIntervalLong: Long
     ): Duration {
         val pauseIntervalDuration = Duration.ofMinutes(pauseIntervalLong)
-//        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
+        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
         val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId, eventType)
 //        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         val standardDuration = Duration.between(startTime, LocalDateTime.now())

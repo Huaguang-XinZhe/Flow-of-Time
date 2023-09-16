@@ -49,7 +49,8 @@ class SPHelper private constructor(context: Context) {
             start = mutableStateOf(start),
             acc = mutableStateOf(sp.getInt("acc", 0)),
             subjectAcc = mutableStateOf(sp.getInt("subject_acc", 0)),
-            stepAcc = mutableStateOf(sp.getInt("step_acc", 0))
+            stepAcc = mutableStateOf(sp.getInt("step_acc", 0)),
+            currentAcc = mutableStateOf(sp.getInt("current_acc", 0))
         )
     }
 
@@ -134,6 +135,7 @@ class SPHelper private constructor(context: Context) {
             putInt("acc", pauseState.acc.value)
             putInt("subject_acc", pauseState.subjectAcc.value)
             putInt("step_acc", pauseState.stepAcc.value)
+            putInt("current_acc", pauseState.currentAcc.value)
         }
     }
 
