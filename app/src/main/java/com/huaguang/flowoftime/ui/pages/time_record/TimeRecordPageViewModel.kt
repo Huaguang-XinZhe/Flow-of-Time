@@ -201,8 +201,6 @@ class TimeRecordPageViewModel(
         eventDate = getEventDate(startTime),
         parentEventId = getParentEventId(type),
         type = type,
-        category = "阅读",
-        tags = mutableListOf("中国", "美国")
     )
 
 

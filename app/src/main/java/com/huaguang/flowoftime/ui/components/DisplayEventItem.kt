@@ -104,6 +104,7 @@ fun DisplayEventItem(
                 id = event.id,
                 category = event.category,
                 tags = event.tags,
+//                tags = event.tags?.apply { add("") }, // 加一个虚框添加按钮，也不能在这里加，会频闪！
                 viewModel = viewModel
             )
         }
