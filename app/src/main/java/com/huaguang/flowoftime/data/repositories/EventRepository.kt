@@ -198,9 +198,9 @@ class EventRepository(
         }
     }
 
-    suspend fun updateEventName(id: Long, newName: String) {
+    suspend fun updateNameAndCategory(id: Long, newName: String, newCategory: String?) {
         withContext(Dispatchers.IO) {
-            eventDao.updateEventName(id, newName)
+            eventDao.updateNameAndCategoryById(id, newName, newCategory)
         }
     }
 

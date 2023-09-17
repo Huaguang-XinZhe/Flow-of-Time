@@ -107,8 +107,12 @@ class EventInputViewModel @Inject constructor(
                 handleRecordIntent()
             }
 
+            val category = if (eventType.value == EventType.SUBJECT) { // 类属
+                sharedState.classify(text) // 这里的类属不成功也会返回 null
+            } else null
+
             viewModelScope.launch {
-                repository.updateEventName(eventId.value, text)
+                repository.updateNameAndCategory(eventId.value, text, category)
             }
         }
     }

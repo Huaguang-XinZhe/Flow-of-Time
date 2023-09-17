@@ -37,8 +37,8 @@ class TimeRecordPageViewModel(
 
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
-            val autoId = updateInputState(name) { // 这个 it 就是 name
-                updateDBOnStart(startTime, it, eventType)
+            val autoId = updateInputState(name, eventType) {
+                updateDBOnStart(startTime, name, eventType)
             }
 
             addOperationToUndoStack(
@@ -64,13 +64,15 @@ class TimeRecordPageViewModel(
 
     private suspend fun updateInputState(
         name: String,
-        updateDB: suspend (name: String) -> Long
+        eventType: EventType,
+        updateDB: suspend () -> Long
     ): Long {
         eventInputViewModel.inputState.apply {
             show.value = name.isEmpty() // 不传 name 就不弹输入框，必须放在前边
             newName.value = ""
             intent.value = InputIntent.RECORD
-            val id = updateDB(name) // 插入更新数据库，计算 Id 的方法，这么做是为了代码简洁美观的同时，保证输入框的快速弹起
+            this.eventType.value = eventType
+            val id = updateDB() // 插入更新数据库，计算 Id 的方法，这么做是为了代码简洁美观的同时，保证输入框的快速弹起
             eventId.value = id
 
             return id

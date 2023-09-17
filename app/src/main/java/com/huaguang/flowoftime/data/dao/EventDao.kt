@@ -182,8 +182,12 @@ interface EventDao {
         now: LocalDateTime = LocalDateTime.now()
     ): List<EventTimes>
 
-    @Query("UPDATE events SET name = :newName WHERE id = :id")
-    suspend fun updateEventName(id: Long, newName: String)
+    @Query("UPDATE events SET name = :newName, category = :newCategory WHERE id = :id")
+    suspend fun updateNameAndCategoryById(
+        id: Long,
+        newName: String,
+        newCategory: String?
+    )
 
     @Query("SELECT type FROM events WHERE id = :id")
     suspend fun getEventTypeById(id: Long): EventType
