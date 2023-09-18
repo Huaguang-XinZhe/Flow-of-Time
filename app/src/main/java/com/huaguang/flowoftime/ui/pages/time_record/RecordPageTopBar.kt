@@ -28,7 +28,7 @@ fun RecordPageTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = { viewModel.onGotoDisplayListButtonClick() }
+                onClick = { viewModel.gotoDisplayListPage() }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,

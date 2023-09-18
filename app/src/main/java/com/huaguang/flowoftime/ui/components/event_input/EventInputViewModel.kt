@@ -134,6 +134,7 @@ class EventInputViewModel @Inject constructor(
         initialName = event.name // 传出，给更新数据用
         endTime = event.endTime // 传出，用于判断事件是否正在进行
 
+        // TODO: 触发滚动的方法应该根据页面类型进行定制
         val diff = event.id - idState.subject.value
         if (mode == Mode.RECORD && diff > 0) { // 触发滚动
             scrollTrigger.value = !scrollTrigger.value

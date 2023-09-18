@@ -71,7 +71,7 @@ class TimeRecordPageViewModel(
     /**
      * 跳转到展示页（通过 Fragment 切换实现）
      */
-    fun onGotoDisplayListButtonClick() {
+    fun gotoDisplayListPage() {
         parentFragmentManager?.let {
             it.beginTransaction()
                 .replace(containerId, DisplayListFragment())
