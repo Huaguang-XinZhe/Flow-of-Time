@@ -33,8 +33,6 @@ import com.huaguang.flowoftime.ui.theme.DeepRed
 fun DisplayPageTopBar(viewModel: DisplayListPageViewModel) {
     val intervalDays by viewModel.latestXXXIntervalDaysFlow.collectAsState()
 
-    if (intervalDays == 0) return // 如果是 0 的话，那就不需要显示了
-
     TopAppBar(
         title = {
             Text(
@@ -70,6 +68,8 @@ fun NumberCircle(
     number: Int,
     onClick: () -> Unit
 ) {
+    if (number == 0) return // 如果是 0，就不需要显示了
+
     val bgColor = if (number <= 7) DeepRed else Color.DarkGray
 
     Box(

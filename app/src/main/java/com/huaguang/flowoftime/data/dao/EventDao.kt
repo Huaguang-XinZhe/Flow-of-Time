@@ -227,7 +227,7 @@ interface EventDao {
     suspend fun updateClassName(id: Long, category: String, tags: MutableList<String>?)
 
     @Query("SELECT eventDate FROM events WHERE category = :category ORDER BY startTime DESC LIMIT 1")
-    fun getLatestXXXDate(category: String = "xxx"): Flow<LocalDate>
+    fun getLatestXXXDate(category: String = "xxx"): Flow<LocalDate?>
 
 
 }

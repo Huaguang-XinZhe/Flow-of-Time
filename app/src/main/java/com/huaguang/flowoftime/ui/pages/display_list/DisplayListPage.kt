@@ -104,6 +104,7 @@ fun DateItem(date: LocalDate) {
     ) {
         Text(
             text = date.toString(),
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             fontStyle = FontStyle.Italic,
