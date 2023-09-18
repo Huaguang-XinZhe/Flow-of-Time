@@ -1,21 +1,30 @@
 package com.huaguang.flowoftime.ui.pages.display_list
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import com.huaguang.flowoftime.ui.pages.time_record.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.state.ItemState
+import java.time.LocalDate
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayListPage(
     viewModel: DisplayListPageViewModel,
@@ -25,22 +34,38 @@ fun DisplayListPage(
 
     // 为避免设值时触发重组，不能使用 MutableStateMapOf，只能使用普通的可变 Map。
     val toggleMap = remember { mutableMapOf<Long, ItemState>() } // Map 必须放在外边，如果放在 items 块内，对于每个 item 就都会创建一个 map
+    val groupedEvents = recentTwoDaysCombinedEvents.groupBy { combinedEvent ->
+        combinedEvent?.event?.eventDate ?: LocalDate.now()
+    } // 先分组，后遍历
 
     LazyColumn(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        items(recentTwoDaysCombinedEvents) { item: CombinedEvent? ->
-            val eventId = item!!.event.id
-            if (toggleMap[eventId] == null) { // items 块会多次执行（列表滑动引起），为保证状态实例的唯一性，必须进行 null 检查，只有为 null 时才重新创建
-                toggleMap[eventId] = ItemState.initialDisplay()
+        groupedEvents.forEach { (date, events) ->
+            stickyHeader {
+                DateItem(date = date)
             }
 
-            DRToggleItem(
-                itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
-                combinedEvent = item,
-                viewModel = viewModel.inputViewModel
-            )
+            items(events) { item: CombinedEvent? ->
+                val eventId = item!!.event.id
+                if (toggleMap[eventId] == null) { // items 块会多次执行（列表滑动引起），为保证状态实例的唯一性，必须进行 null 检查，只有为 null 时才重新创建
+                    toggleMap[eventId] = ItemState.initialDisplay()
+                }
 
+                DRToggleItem(
+                    itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
+                    combinedEvent = item,
+                    viewModel = viewModel.inputViewModel
+                )
+            }
+        }
+
+        item {// 尾部 Item
+            Text(
+                text = "~~ 到底了哦 ~~",
+                modifier = Modifier.padding(20.dp)
+            )
         }
     }
 
@@ -53,4 +78,20 @@ fun DisplayListPage(
         viewModel = viewModel.inputViewModel
     )
 
+}
+
+@Composable
+fun DateItem(date: LocalDate) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = date.toString(),
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(vertical = 5.dp)
+        )
+    }
 }
