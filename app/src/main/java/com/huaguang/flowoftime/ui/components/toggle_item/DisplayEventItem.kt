@@ -49,12 +49,13 @@ fun DisplayEventItem(
     combinedEvent: CombinedEvent?,
     viewModel: EventInputViewModel,
     itemState: ItemState,
+    modifier: Modifier = Modifier
 ) {
     val event = combinedEvent?.event ?: return
     if (event.duration == null) return // 不显示没有间隔的事件
 
     Card(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(5.dp)
             .shadow(3.dp, CardDefaults.shape) // 必须放在 clip 之前，放在之后没有效果

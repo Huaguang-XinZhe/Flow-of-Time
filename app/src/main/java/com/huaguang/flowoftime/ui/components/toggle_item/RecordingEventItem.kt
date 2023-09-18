@@ -49,9 +49,10 @@ fun RecordingEventItem(
     combinedEvent: CombinedEvent?,
     viewModel: EventInputViewModel,
     itemState: ItemState,
+    modifier: Modifier = Modifier
 ) {
     OutlinedCard(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 5.dp, vertical = 10.dp)
             .clip(CardDefaults.outlinedShape)

@@ -3,7 +3,7 @@ package com.huaguang.flowoftime
 import com.huaguang.flowoftime.test.TrieNode
 
 class KeywordClassifier {
-    val root = TrieNode()
+    private val root = TrieNode()
 
     fun insert(keywords: List<String>, category: String) {
         keywords.forEach { keyword ->

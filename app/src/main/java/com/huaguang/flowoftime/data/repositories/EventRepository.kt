@@ -22,6 +22,7 @@ import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class EventRepository(
     private val eventDao: EventDao,
@@ -69,6 +70,16 @@ class EventRepository(
         ).map { recentTwoDaysEvents -> // 这个 map 的作用是把 List<Event> 对象转换成 List<CombinedEvent> 对象
             val eventsMap = recentTwoDaysEvents.associateBy { it.id } // 为所有查询到的事件建立映射（用事件的 id 映射事件本身）
             buildCombinedEvents(eventsMap, null) // 这个函数会得到一个复合事件的列表
+        }
+    }
+
+    /**
+     * 获取上次性泄和今天间隔的天数的 Flow（转换而成）
+     */
+    fun getLatestXXXIntervalDaysFlow(): Flow<Int> {
+        val customToday = getAdjustedEventDate()
+        return eventDao.getLatestXXXDate().map { date -> // date 是上次性泄的日期
+            ChronoUnit.DAYS.between(date, customToday).toInt()
         }
     }
 

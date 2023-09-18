@@ -110,8 +110,9 @@ class TimeStreamApplication @Inject constructor() : Application() {
         val core = listOf("阅读", "总结", "时光流", "应用", "输出", "初阅", "阅", "搭建个人网站", "渐构",
             "前端学习", "修bug", "HTML和CSS基础学习")
         val fallow = listOf("散步", "打字", "抽烟", "吹风", "休闲")
-        val breach = listOf("xxx", "泄", "淫", "躺刷", "贪刷", "朋友圈", "刷视频", "QQ空间", "Q朋抖",
+        val breach = listOf("躺刷", "贪刷", "朋友圈", "刷视频", "QQ空间", "Q朋抖",
             "刷手机", "躺思", "刷抖音", "动态", "贪观")
+        val masturbation = listOf("xxx", "泄", "淫",)
         val getUp = listOf("起床")
         val entertainment = listOf("看电影")
 
@@ -127,6 +128,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
             insert(fallow, "休闲")
             insert(getUp, "起床")
             insert(breach, "违破")
+            insert(masturbation, "xxx")
             insert(entertainment, "娱乐")
         }
 
