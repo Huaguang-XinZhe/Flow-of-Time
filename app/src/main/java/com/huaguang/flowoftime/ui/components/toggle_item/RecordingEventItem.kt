@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.pages.time_record
+package com.huaguang.flowoftime.ui.components.toggle_item
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -35,8 +35,10 @@ import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.EventInfo
 import com.huaguang.flowoftime.data.models.tables.Event
-import com.huaguang.flowoftime.ui.components.TailLayout
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.pages.time_record.LocalButtonsStateControl
+import com.huaguang.flowoftime.ui.pages.time_record.LocalCustomTimeState
+import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.LongPressOutlinedIconButton
 import kotlinx.coroutines.delay

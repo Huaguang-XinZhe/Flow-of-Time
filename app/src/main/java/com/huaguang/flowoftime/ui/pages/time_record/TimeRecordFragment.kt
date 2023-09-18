@@ -4,12 +4,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.MainActivity
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -47,7 +47,6 @@ class TimeRecordFragment : Fragment() {
     private val eventInputViewModel: EventInputViewModel by viewModels()
 
     private lateinit var pageViewModel: TimeRecordPageViewModel
-
     private var initialized = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -111,9 +110,10 @@ class TimeRecordFragment : Fragment() {
             }
         }
 
-        sharedState.toastMessage.observe(viewLifecycleOwner) { toastMessage ->
-            Toast.makeText(requireContext(), toastMessage, Toast.LENGTH_SHORT).show()
-        }
+
+        // 给 pageViewModel 传入切换 Fragment 必要的依赖（一直占着内存）
+        pageViewModel.containerId = (requireActivity() as MainActivity).fragmentContainer.id
+        pageViewModel.parentFragmentManager = parentFragmentManager
 
     }
 

@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components
+package com.huaguang.flowoftime.ui.components.toggle_item
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row

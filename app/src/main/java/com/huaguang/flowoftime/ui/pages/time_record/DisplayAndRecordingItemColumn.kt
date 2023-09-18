@@ -11,11 +11,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.Mode
-import com.huaguang.flowoftime.data.models.CombinedEvent
-import com.huaguang.flowoftime.ui.components.DisplayEventItem
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.state.ItemState
+import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import kotlinx.coroutines.delay
 
 @Composable
@@ -63,26 +60,5 @@ fun DisplayAndRecordingItemColumn(
             )
         }
 
-    }
-}
-
-@Composable
-fun DRToggleItem(
-    itemState: ItemState,
-    combinedEvent: CombinedEvent?,
-    viewModel: EventInputViewModel,
-) {
-    if (itemState.mode.value == Mode.DISPLAY) {
-        DisplayEventItem(
-            combinedEvent = combinedEvent,
-            viewModel = viewModel,
-            itemState = itemState,
-        )
-    } else {
-        RecordingEventItem(
-            combinedEvent = combinedEvent,
-            viewModel = viewModel,
-            itemState = itemState
-        )
     }
 }

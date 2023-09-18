@@ -61,6 +61,24 @@ class EventRepository(
         return eventDao.getEventsWithSubEvents(customToday.minusDays(1), customToday)
     }
 
+    fun getRecentTwoDaysCombinedEventsFlow(): Flow<List<CombinedEvent?>> {
+        val customToday = getAdjustedEventDate()
+        return eventDao.getWithinRangeEvents(
+            startDate = customToday.minusDays(1),
+            endDate = customToday,
+        ).map { recentTwoDaysEvents -> // 这个 map 的作用是把 List<Event> 对象转换成 List<CombinedEvent> 对象
+            val eventsMap = recentTwoDaysEvents.associateBy { it.id } // 为所有查询到的事件建立映射（用事件的 id 映射事件本身）
+            buildCombinedEvents(eventsMap, null) // 这个函数会得到一个复合事件的列表
+        }
+    }
+
+    suspend fun getCombinedEvents(): List<CombinedEvent> {
+        val allEventsMap = withContext(Dispatchers.IO) {
+            eventDao.getAllEvents().associateBy { it.id }
+        }
+        return buildCombinedEvents(allEventsMap, null)
+    }
+
     fun getCustomTodayEvents(): Flow<List<EventWithSubEvents>> {
         return eventDao.getEventsWithSubEvents(getAdjustedEventDate())
     }
@@ -174,16 +192,6 @@ class EventRepository(
             eventDao.getLastMainEvent()
         }
 
-    suspend fun getLastEvent() =
-        withContext(Dispatchers.IO) {
-            eventDao.getLastEvent()
-        }
-
-    suspend fun getCurrentEvent() =
-        withContext(Dispatchers.IO) {
-            eventDao.getCurrentEvent()
-        }
-
 
     suspend fun updateTimeAndDuration(newCustomTime: CustomTime, newDuration: Duration?) {
         val eventId = newCustomTime.eventInfo.id
@@ -202,13 +210,6 @@ class EventRepository(
         withContext(Dispatchers.IO) {
             eventDao.updateNameAndCategoryById(id, newName, newCategory)
         }
-    }
-
-    suspend fun getCombinedEvents(): List<CombinedEvent> {
-        val allEventsMap = withContext(Dispatchers.IO) {
-            eventDao.getAllEvents().associateBy { it.id }
-        }
-        return buildCombinedEvents(allEventsMap, null)
     }
 
     fun getCurrentCombinedEventFlow(): Flow<CombinedEvent?> { // 当数据库中没有数据的时候，将发射 null

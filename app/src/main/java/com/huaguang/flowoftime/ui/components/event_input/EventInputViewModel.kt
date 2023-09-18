@@ -111,6 +111,10 @@ class EventInputViewModel @Inject constructor(
                 sharedState.classify(text) // 这里的类属不成功也会返回 null
             } else null
 
+            category?.let {
+                sharedState.toastMessage.value = "成功类属为：$category"
+            }
+
             viewModelScope.launch {
                 repository.updateNameAndCategory(eventId.value, text, category)
             }

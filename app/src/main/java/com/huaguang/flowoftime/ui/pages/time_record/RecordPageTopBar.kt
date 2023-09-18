@@ -14,7 +14,10 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecordPageTopBar(modifier: Modifier = Modifier) {
+fun RecordPageTopBar(
+    modifier: Modifier = Modifier,
+    viewModel: TimeRecordPageViewModel,
+) {
     TopAppBar(
         title = {
             Text(
@@ -25,7 +28,7 @@ fun RecordPageTopBar(modifier: Modifier = Modifier) {
         },
         navigationIcon = {
             IconButton(
-                onClick = { /*TODO*/ }
+                onClick = { viewModel.onGotoDisplayListButtonClick() }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,

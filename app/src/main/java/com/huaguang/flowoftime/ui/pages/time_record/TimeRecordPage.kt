@@ -46,10 +46,13 @@ fun TimeRecordPage(
         val (topBar, itemColumn, timeRegulator,
             eventButtons, eventInput, floatingButton) = createRefs()
 
-        RecordPageTopBar(modifier = Modifier.constrainAs(topBar) {
-            top.linkTo(parent.top)
-            start.linkTo(parent.start)
-        }) // 完全独立，不需要和其他组件交互
+        RecordPageTopBar(
+            viewModel = pageViewModel,
+            modifier = Modifier.constrainAs(topBar) {
+                top.linkTo(parent.top)
+                start.linkTo(parent.start)
+            }
+        ) // 完全独立，不需要和其他组件交互
 
         CompositionLocalProvider(
             LocalSelectedTime provides selectedTime,

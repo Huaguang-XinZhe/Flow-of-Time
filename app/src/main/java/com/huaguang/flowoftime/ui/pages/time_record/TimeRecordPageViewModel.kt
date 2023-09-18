@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
+import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModel
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
@@ -11,6 +12,7 @@ import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.pages.display_list.DisplayListFragment
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.state.IdState
@@ -34,6 +36,10 @@ class TimeRecordPageViewModel(
     private val pauseState: PauseState,
     private val dndManager: DNDManager,
 ) : ViewModel() {
+
+    // 切换 Fragment 所需，由 Fragment 初始化时传来（一直占在内存里）
+    var containerId = 0
+    var parentFragmentManager: FragmentManager? = null
 
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
@@ -59,6 +65,18 @@ class TimeRecordPageViewModel(
                 pauseInterval = pauseInterval,
             ))
 //            dndManager.closeDND() // 如果之前开启了免打扰的话，现在关闭
+        }
+    }
+
+    /**
+     * 跳转到展示页（通过 Fragment 切换实现）
+     */
+    fun onGotoDisplayListButtonClick() {
+        parentFragmentManager?.let {
+            it.beginTransaction()
+                .replace(containerId, DisplayListFragment())
+                .addToBackStack(null)
+                .commit()
         }
     }
 
@@ -276,6 +294,5 @@ class TimeRecordPageViewModel(
             EventType.FOLLOW -> Action.FOLLOW_END
         }
     }
-
 
 }

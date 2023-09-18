@@ -242,6 +242,21 @@ fun printTrie(node: TrieNode, childPrefix: String = "") {
     }
 }
 
+fun extractCommonKeywords(category: String, historyNames: List<String>): List<String> {
+    val wordFrequency = mutableMapOf<String, Int>()
+
+    historyNames.forEach { name ->
+        name.split(" ").forEach { word ->
+            wordFrequency[word] = wordFrequency.getOrDefault(word, 0) + 1
+        }
+    }
+
+    // 提取出现次数最多的词作为关键词
+    return wordFrequency.entries
+        .sortedByDescending { it.value }
+        .take(3)  // 取前3个最常见的词
+        .map { it.key }
+}
 
 
 fun main() {
