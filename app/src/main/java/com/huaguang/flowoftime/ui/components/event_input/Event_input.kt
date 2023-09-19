@@ -18,12 +18,13 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventInputField(
-    viewModel: EventInputViewModel,
     modifier: Modifier = Modifier,
+    viewModel: EventInputViewModel = viewModel(),
 ) {
     if (!viewModel.inputState.show.value) return // 为 false 不显示
 

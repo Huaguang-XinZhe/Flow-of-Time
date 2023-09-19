@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.ui.pages.time_record.LocalCustomTimeState
 import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
@@ -27,8 +28,8 @@ import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 @Composable
 fun TimeRegulator(
     // 这个值在选中 TimeLabel 的时候才会传递过来，否则为 null
-    viewModel: TimeRegulatorViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: TimeRegulatorViewModel = viewModel()
 ) {
     if (viewModel.inputState.show.value) return
 

@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
+import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import com.huaguang.flowoftime.ui.pages.time_record.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.state.ItemState
@@ -33,7 +34,7 @@ import java.time.LocalDate
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayListPage(
-    viewModel: DisplayListPageViewModel,
+    viewModel: EventInputViewModel,
 ) {
     val recentTwoDaysCombinedEvents by viewModel.recentTwoDaysCombinedEventsFlow.collectAsState()
     if (recentTwoDaysCombinedEvents.contains(null)) return // 列表中含有空值就返回，不显示 UI
@@ -68,7 +69,7 @@ fun DisplayListPage(
                     DRToggleItem(
                         itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
                         combinedEvent = item,
-                        viewModel = viewModel.inputViewModel,
+                        viewModel = viewModel,
                         modifier = Modifier.padding(bottom = 5.dp)
                     )
                 }
@@ -84,12 +85,12 @@ fun DisplayListPage(
     }
 
     EventInputField(
-        viewModel = viewModel.inputViewModel,
-        modifier = Modifier.padding(top = 300.dp)
+        modifier = Modifier.padding(top = 300.dp),
+        viewModel = viewModel
     )
 
     ClassNameInputAlertDialog(
-        viewModel = viewModel.inputViewModel
+        viewModel = viewModel
     )
 
 }

@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModel
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
@@ -10,15 +9,10 @@ import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.ImmutableIdState
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
-import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.display_list.DisplayListFragment
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.state.IdState
-import com.huaguang.flowoftime.ui.state.PauseState
-import com.huaguang.flowoftime.ui.state.SharedState
-import com.huaguang.flowoftime.utils.DNDManager
 import com.huaguang.flowoftime.utils.getEventDate
 import java.time.Duration
 import java.time.LocalDateTime
@@ -27,19 +21,18 @@ import java.time.LocalDateTime
  * 页面 ViewModel，用于协调当前页面内各个组件的交互，并存储 TimeRecordPage UI 页面的数据，作为其唯一依赖
  */
 class TimeRecordPageViewModel(
-    val eventButtonsViewModel: EventButtonsViewModel,
-    val timeRegulatorViewModel: TimeRegulatorViewModel,
-    val eventInputViewModel: EventInputViewModel,
-    val repository: EventRepository,
-    private val idState: IdState,
-    val sharedState: SharedState,
-    private val pauseState: PauseState,
-    private val dndManager: DNDManager,
+    val buttonsViewModel: EventButtonsViewModel,
+    val regulatorViewModel: TimeRegulatorViewModel,
+    inputViewModel: EventInputViewModel,
+//    private val dndManager: DNDManager,
 ) : ViewModel() {
 
-    // 切换 Fragment 所需，由 Fragment 初始化时传来（一直占在内存里）
-    var containerId = 0
-    var parentFragmentManager: FragmentManager? = null
+    val inputState = inputViewModel.inputState
+    val undoStack = buttonsViewModel.undoStack
+    val sharedState = inputViewModel.sharedState
+    val repository = inputViewModel.repository
+    private val pauseState = buttonsViewModel.pauseState
+    val idState = inputViewModel.idState
 
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
@@ -59,7 +52,7 @@ class TimeRecordPageViewModel(
         override suspend fun stopEvent(eventType: EventType) {
             val (eventId, pauseInterval) = updateDBOnStop(eventType)
 
-            eventButtonsViewModel.undoStack.addState(Operation( // 结束后添加到撤销栈
+            undoStack.addState(Operation( // 结束后添加到撤销栈
                 action = getActionByTypeOnStop(eventType),
                 eventId = eventId,
                 pauseInterval = pauseInterval,
@@ -68,24 +61,12 @@ class TimeRecordPageViewModel(
         }
     }
 
-    /**
-     * 跳转到展示页（通过 Fragment 切换实现）
-     */
-    fun gotoDisplayListPage() {
-        parentFragmentManager?.let {
-            it.beginTransaction()
-                .replace(containerId, DisplayListFragment())
-                .addToBackStack(null)
-                .commit()
-        }
-    }
-
     private suspend fun updateInputState(
         name: String,
         eventType: EventType,
         updateDB: suspend () -> Long
     ): Long {
-        eventInputViewModel.inputState.apply {
+        inputState.apply {
             show.value = name.isEmpty() // 不传 name 就不弹输入框，必须放在前边
             newName.value = ""
             intent.value = InputIntent.RECORD
@@ -266,7 +247,7 @@ class TimeRecordPageViewModel(
             step = idState.step.value,
         )
 
-        eventButtonsViewModel.undoStack.addState(
+        undoStack.addState(
             Operation(
                 action = action,
                 eventId = eventId,

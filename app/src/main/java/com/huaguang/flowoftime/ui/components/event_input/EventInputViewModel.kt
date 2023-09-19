@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -35,7 +36,7 @@ class EventInputViewModel @Inject constructor(
     val repository: EventRepository,
     val iconRepository: IconMappingRepository,
     private val spHelper: SPHelper,
-    private val idState: IdState,
+    val idState: IdState,
     val sharedState: SharedState,
     val inputState: InputState,
     val labelState: LabelState,
@@ -46,12 +47,17 @@ class EventInputViewModel @Inject constructor(
     var coreName = ""
     private var confirmThenStart = false
     val scrollTrigger = mutableStateOf(false)
-    val scrollOffset = mutableStateOf(0f)
+    val scrollOffset = mutableFloatStateOf(0f)
 
     private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
     val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
     private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
     val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
+    private val _recentTwoDaysCombinedEventsFlow = MutableStateFlow<List<CombinedEvent?>>(listOf(null)) // 最开始什么都没有就为空值
+    val recentTwoDaysCombinedEventsFlow: StateFlow<List<CombinedEvent?>>
+        get() = _recentTwoDaysCombinedEventsFlow.asStateFlow() // TODO: 这里用 getter 和不用 getter 有什么区别？
+    private val _latestXXXIntervalDaysFlow = MutableStateFlow(0)
+    val latestXXXIntervalDaysFlow: StateFlow<Int> = _latestXXXIntervalDaysFlow.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -66,6 +72,22 @@ class EventInputViewModel @Inject constructor(
             repository.getSecondLatestCombinedEventFlow().filterNotNull().collect { combinedEvent ->
                 _secondLatestCombinedEventFlow.value = combinedEvent // 传给 UI
             }
+        }
+
+        // TODO: 这些 Flow 观察似乎不应该放在一起，这个 InputViewModel 应该重新设计
+
+        viewModelScope.launch {
+            // 这里可以用 filterNotNull 筛除 null 值，使数据库为空时 UI 观察不到，不需要观察到。
+            repository.getRecentTwoDaysCombinedEventsFlow().filterNotNull().collect { recentTwoDaysCombinedEvents ->
+                _recentTwoDaysCombinedEventsFlow.value = recentTwoDaysCombinedEvents
+            }
+        }
+
+        viewModelScope.launch {  // 必须分开进行，因为收集会挂起协程，如果放在一起，后边的代码不会执行
+            repository.getLatestXXXIntervalDaysFlow().filterNotNull().collect { intervalDays -> // 筛除空值
+                _latestXXXIntervalDaysFlow.value = intervalDays
+            }
+
         }
     }
 

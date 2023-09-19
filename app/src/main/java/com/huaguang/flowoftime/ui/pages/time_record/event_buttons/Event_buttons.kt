@@ -12,6 +12,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.ButtonActionParams
 import com.huaguang.flowoftime.ui.pages.time_record.LocalCheckedLiveData
@@ -24,8 +25,8 @@ import com.huaguang.flowoftime.ui.widget.LongPressTextButton
 
 @Composable
 fun EventButtons(
-    viewModel: EventButtonsViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: EventButtonsViewModel = viewModel()
 ) {
     if (viewModel.inputState.show.value) return // 输入框弹起，就不显示
 

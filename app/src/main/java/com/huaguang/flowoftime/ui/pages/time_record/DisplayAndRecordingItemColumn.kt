@@ -11,14 +11,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import kotlinx.coroutines.delay
 
 @Composable
 fun DisplayAndRecordingItemColumn(
-    viewModel: EventInputViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: EventInputViewModel = viewModel()
 ) {
     val secondLatestCombinedEvent by viewModel.secondLatestCombinedEventFlow.collectAsState(null)
     // 已经过滤空值，event 接受到 Flow 的值后将始终为非空。尽管如此，初始值还是空的，这意味着最初的显示 event 为 null。
@@ -29,7 +30,7 @@ fun DisplayAndRecordingItemColumn(
     val recordingItemState = LocalRecordingItemState.current
 
     LaunchedEffect(viewModel.scrollTrigger.value) {
-        val offset = viewModel.scrollOffset.value
+        val offset = viewModel.scrollOffset.floatValue
 //        RDALogger.info("offset = $offset")
         if (offset == 0f) return@LaunchedEffect // 初始化的时候不需要滑动
 

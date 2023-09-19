@@ -9,7 +9,6 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.MainActivity
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
@@ -57,11 +56,8 @@ class TimeRecordFragment : Fragment() {
             eventButtonsViewModel,
             timeRegulatorViewModel,
             eventInputViewModel,
-            eventRepository,
-            idState,
-            sharedState,
-            pauseState,
-            dndManager,
+
+//            dndManager,
 
         )
     }
@@ -73,7 +69,7 @@ class TimeRecordFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                TimeRecordPage(pageViewModel = pageViewModel)
+                TimeRecordPage(viewModel = pageViewModel)
             }
         }
 
@@ -109,11 +105,6 @@ class TimeRecordFragment : Fragment() {
                 initialized = true // 必须放在 if 块外，如果直接 return，那就相当于放在块内了。
             }
         }
-
-
-        // 给 pageViewModel 传入切换 Fragment 必要的依赖（一直占着内存）
-        pageViewModel.containerId = (requireActivity() as MainActivity).fragmentContainer.id
-        pageViewModel.parentFragmentManager = parentFragmentManager
 
     }
 

@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RecordPageTopBar(
     modifier: Modifier = Modifier,
-    viewModel: TimeRecordPageViewModel,
 ) {
     TopAppBar(
         title = {
@@ -28,7 +27,7 @@ fun RecordPageTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = { viewModel.gotoDisplayListPage() }
+                onClick = {  }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,

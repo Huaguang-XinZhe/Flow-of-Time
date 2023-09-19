@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
@@ -32,7 +31,7 @@ val LocalCustomTimeState = compositionLocalOf { mutableStateOf<CustomTime?>(null
 
 @Composable
 fun TimeRecordPage(
-    pageViewModel: TimeRecordPageViewModel,
+    viewModel: TimeRecordPageViewModel,
 ) {
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
@@ -40,14 +39,13 @@ fun TimeRecordPage(
     val recordingItemState = remember { ItemState.initialRecording() }
 
     ConstraintLayout(
-        modifier = Modifier.padding(vertical = 10.dp)
+//        modifier = Modifier.padding(vertical = 10.dp)
     ) {
 
         val (topBar, itemColumn, timeRegulator,
             eventButtons, eventInput, floatingButton) = createRefs()
 
         RecordPageTopBar(
-            viewModel = pageViewModel,
             modifier = Modifier.constrainAs(topBar) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
@@ -56,15 +54,14 @@ fun TimeRecordPage(
 
         CompositionLocalProvider(
             LocalSelectedTime provides selectedTime,
-            LocalEventControl provides pageViewModel.eventControl,
-            LocalButtonsStateControl provides pageViewModel.eventButtonsViewModel.buttonsStateControl,
-            LocalCheckedLiveData provides pageViewModel.timeRegulatorViewModel.checkedLiveData,
+            LocalEventControl provides viewModel.eventControl,
+            LocalButtonsStateControl provides viewModel.buttonsViewModel.buttonsStateControl,
+            LocalCheckedLiveData provides viewModel.regulatorViewModel.checkedLiveData,
             LocalCustomTimeState provides customTimeState,
             LocalDisplayItemState provides displayItemState,
             LocalRecordingItemState provides recordingItemState,
         ) {
             DisplayAndRecordingItemColumn(
-                viewModel = pageViewModel.eventInputViewModel,
                 modifier = Modifier.constrainAs(itemColumn) {
                     top.linkTo(topBar.bottom, 5.dp)
                     start.linkTo(parent.start)
@@ -72,23 +69,20 @@ fun TimeRecordPage(
             )
 
             EventButtons(
-                viewModel = pageViewModel.eventButtonsViewModel,
                 modifier = Modifier.constrainAs(eventButtons) {
                     bottom.linkTo(parent.bottom)
                     start.linkTo(parent.start)
-                }
+                },
             )
 
             TimeRegulator(
-                viewModel = pageViewModel.timeRegulatorViewModel,
                 modifier = Modifier.constrainAs(timeRegulator) {
                     bottom.linkTo(eventButtons.top, 10.dp)
                     start.linkTo(parent.start)
-                }
+                },
             )
 
             CoreFloatingButton(
-                viewModel = pageViewModel.eventInputViewModel,
                 modifier = Modifier.constrainAs(floatingButton) {
                     bottom.linkTo(timeRegulator.top, 20.dp)
                     end.linkTo(parent.end, 16.dp)
@@ -96,22 +90,17 @@ fun TimeRecordPage(
             )
 
             EventInputField(
-                viewModel = pageViewModel.eventInputViewModel,
                 modifier = Modifier.constrainAs(eventInput) {
-                    bottom.linkTo(parent.bottom, 200.dp)
+                    bottom.linkTo(parent.bottom)
                     start.linkTo(parent.start)
-                }
+                },
             )
 
-            CoreNameInputAlertDialog(
-                viewModel = pageViewModel.eventInputViewModel
-            )
+            CoreNameInputAlertDialog()
 
 //            RDALogger.info("viewModel.labelInfo = ${pageViewModel.eventInputViewModel.labelInfo}")
             // 这里必须把 labelInfo 变为状态的封装，要不然不会触发重组。
-            ClassNameInputAlertDialog(
-                viewModel = pageViewModel.eventInputViewModel
-            )
+            ClassNameInputAlertDialog()
         }
     }
 }

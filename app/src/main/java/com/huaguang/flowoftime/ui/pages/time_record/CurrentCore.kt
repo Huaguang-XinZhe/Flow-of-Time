@@ -9,6 +9,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.widget.InputAlertDialog
@@ -16,8 +17,8 @@ import com.huaguang.flowoftime.ui.widget.LongPressFloatingActionButton
 
 @Composable
 fun CoreFloatingButton(
-    viewModel: EventInputViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: EventInputViewModel = viewModel()
 ) {
 
     if (viewModel.coreButtonNotShow()) return
@@ -50,7 +51,7 @@ fun CoreFloatingButton(
 }
 
 @Composable
-fun CoreNameInputAlertDialog(viewModel: EventInputViewModel) {
+fun CoreNameInputAlertDialog(viewModel: EventInputViewModel = viewModel()) {
 
     val initialValue = TextFieldValue(
         text = viewModel.coreName,
