@@ -53,8 +53,6 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
-
-
     fun onConfirmButtonClick(text: String) {
         inputState.apply {
             newName.value = text // 把输入完成的值赋给 newName

@@ -23,10 +23,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CombinedEvent
-import com.huaguang.flowoftime.ui.components.ClassNameInputAlertDialog
-import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.theme.PurpleWhite
@@ -37,8 +34,6 @@ import java.time.LocalDate
 fun DisplayListPage(
     viewModel: DRListViewModel = viewModel(),
 ) {
-    RDALogger.info("展示页重新组合")
-
     val recentTwoDaysCombinedEvents by viewModel.recentTwoDaysCombinedEventsFlow.collectAsState()
     if (recentTwoDaysCombinedEvents.contains(null)) return // 列表中含有空值就返回，不显示 UI
 
@@ -51,7 +46,6 @@ fun DisplayListPage(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-
         DisplayPageTopBar()
 
         LazyColumn(
@@ -85,12 +79,6 @@ fun DisplayListPage(
             }
         }
     }
-
-    EventInputField(
-        modifier = Modifier.padding(top = 300.dp),
-    )
-
-    ClassNameInputAlertDialog()
 
 }
 

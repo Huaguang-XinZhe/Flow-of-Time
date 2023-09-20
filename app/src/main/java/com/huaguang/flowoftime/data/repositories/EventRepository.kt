@@ -64,7 +64,7 @@ class EventRepository(
 
     fun getRecentTwoDaysCombinedEventsFlow(): Flow<List<CombinedEvent?>> {
         val customToday = getAdjustedEventDate()
-        return eventDao.getWithinRangeEvents(
+        return eventDao.getAllWithinRangeEvents(
             startDate = customToday.minusDays(1),
             endDate = customToday,
         ).map { recentTwoDaysEvents -> // 这个 map 的作用是把 List<Event> 对象转换成 List<CombinedEvent> 对象

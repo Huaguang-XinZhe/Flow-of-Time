@@ -13,12 +13,9 @@ import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CustomTime
-import com.huaguang.flowoftime.ui.components.ClassNameInputAlertDialog
-import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.time_record.core_fab.CoreFloatingButton
 import com.huaguang.flowoftime.ui.pages.time_record.core_fab.CoreNameInputAlertDialog
 import com.huaguang.flowoftime.ui.pages.time_record.dr_column.DRColumn
@@ -53,8 +50,6 @@ fun TimeRecordPage(
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
     val displayItemState = remember { ItemState.initialDisplay() } // 内有默认值，决定它们第一次展示什么
     val recordingItemState = remember { ItemState.initialRecording() }
-
-    RDALogger.info("Record 页重新组合")
 
     ConstraintLayout(
         modifier = Modifier
@@ -110,16 +105,14 @@ fun TimeRecordPage(
                 }
             )
 
-            EventInputField(
-                modifier = Modifier.constrainAs(eventInput) {
-                    bottom.linkTo(parent.bottom, 200.dp) // 必须指定一个值，这样软键盘在弹出时就不会把整个窗口往上推的过高！
-                    start.linkTo(parent.start)
-                },
-            )
+//            EventInputField(
+//                modifier = Modifier.constrainAs(eventInput) {
+//                    bottom.linkTo(parent.bottom, 200.dp) // 必须指定一个值，这样软键盘在弹出时就不会把整个窗口往上推的过高！
+//                    start.linkTo(parent.start)
+//                },
+//            )
 
             CoreNameInputAlertDialog()
-
-            ClassNameInputAlertDialog()
         }
     }
 }

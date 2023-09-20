@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.huaguang.flowoftime.test.CategoryPage
 import com.huaguang.flowoftime.test.StatisticPage
+import com.huaguang.flowoftime.ui.components.ClassNameInputAlertDialog
+import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
 import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
 
@@ -36,7 +38,8 @@ fun MyApp(appViewModels: AppViewModels) {
         bottomBar = { BottomBar(selectedTab) },
     ) { paddingValues ->
         Box(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
             val navController = rememberNavController()
@@ -58,7 +61,19 @@ fun MyApp(appViewModels: AppViewModels) {
                     Page.Category -> CategoryPage()
                 }
             }
+
         }
+
+        val topPadding = when(selectedTab.value) {
+            Page.Record -> 450.dp
+            Page.List -> 600.dp
+            else -> 500.dp
+        }
+        EventInputField(
+            modifier = Modifier.padding(top = topPadding)
+        )
+
+        ClassNameInputAlertDialog()
     }
 }
 
