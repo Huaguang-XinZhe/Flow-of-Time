@@ -72,8 +72,9 @@ class TimeStreamApplication @Inject constructor() : Application() {
 
         // Step 3: Initialize Room database
         _iconDB = Room.databaseBuilder(
-            this,
-            IconDatabase::class.java, "icon_mapping.db"
+            context = this,
+            klass = IconDatabase::class.java,
+            name = "icon_mapping.db"
         ).build()
     }
 

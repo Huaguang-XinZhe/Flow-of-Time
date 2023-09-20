@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
@@ -167,12 +166,10 @@ fun CategoryIconButton(
                 .build(),
             contentDescription = null,
             error = painterResource(id = errorRes),
-            onSuccess = {
-                RDALogger.info("加载成功了！")
-            },
             modifier = Modifier
                 .size(24.dp)
-                .padding(2.dp)
+                .padding(2.dp),
+//            colorFilter = ColorFilter.tint(Color.DarkGray) // 更改所加载图片的颜色，不太好用，有些图标会出现覆盖的情况
         )
     }
 }

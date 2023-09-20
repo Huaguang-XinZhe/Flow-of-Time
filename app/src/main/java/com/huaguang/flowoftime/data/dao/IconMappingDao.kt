@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface IconMappingDao {
 
-    @Query("SELECT * FROM iconMapping WHERE category IS NOT NULL AND category = :className")
+    @Query("SELECT * FROM iconMapping WHERE category = :className")
     fun getMappingForClass(className: String): Flow<IconMapping>
 
     @Query("SELECT * FROM iconMapping WHERE category IS NOT NULL")

@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.pages.time_record.EventControlViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
@@ -30,6 +31,8 @@ class MainActivity : FragmentActivity() {
     lateinit var buttonsState: ButtonsState
     @Inject
     lateinit var pauseState: PauseState
+    @Inject
+    lateinit var iconRepository: IconMappingRepository
 
     private val eventControlViewModel: EventControlViewModel by viewModels()
     private val buttonsViewModel: EventButtonsViewModel by viewModels()
@@ -37,6 +40,8 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        iconRepository.preloadData() // 从数据库预加载映射数据到内存中
 
         val appViewModels = AppViewModels(
             eventControlViewModel, buttonsViewModel, regulatorViewModel
