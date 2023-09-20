@@ -21,6 +21,7 @@ import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.LabelState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
+import com.huaguang.flowoftime.utils.DNDManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -148,6 +149,12 @@ object AppModule {
     @Provides
     fun provideLabelState(): LabelState {
         return LabelState.initialValue()
+    }
+
+    @Singleton
+    @Provides
+    fun provideDNDManager(application: Application): DNDManager {
+        return DNDManager(application)
     }
 
 }

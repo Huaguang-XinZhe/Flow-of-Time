@@ -7,8 +7,7 @@ import androidx.activity.viewModels
 import androidx.fragment.app.FragmentActivity
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.sources.SPHelper
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPageViewModel
+import com.huaguang.flowoftime.ui.pages.time_record.EventControlViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.state.ButtonsState
@@ -32,23 +31,19 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var pauseState: PauseState
 
-    private val  inputViewModel: EventInputViewModel by viewModels()
+    private val eventControlViewModel: EventControlViewModel by viewModels()
     private val buttonsViewModel: EventButtonsViewModel by viewModels()
     private val regulatorViewModel: TimeRegulatorViewModel by viewModels()
-
-    private lateinit var timeRecordPageViewModel: TimeRecordPageViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        timeRecordPageViewModel = TimeRecordPageViewModel(
-            buttonsViewModel,
-            regulatorViewModel,
-            inputViewModel
+        val appViewModels = AppViewModels(
+            eventControlViewModel, buttonsViewModel, regulatorViewModel
         )
         
         setContent {
-            MyApp(timeRecordPageViewModel)
+            MyApp(appViewModels)
         }
 
         sharedState.toastMessage.observe(this) { toastMessage ->

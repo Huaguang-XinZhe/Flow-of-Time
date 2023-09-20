@@ -27,6 +27,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.ardakaplan.rdalogger.RDALogger
@@ -46,10 +47,10 @@ import java.time.Duration
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayEventItem(
+    modifier: Modifier = Modifier,
     combinedEvent: CombinedEvent?,
-    viewModel: EventInputViewModel,
     itemState: ItemState,
-    modifier: Modifier = Modifier
+    viewModel: EventInputViewModel = viewModel()
 ) {
     val event = combinedEvent?.event ?: return
     if (event.duration == null) return // 不显示没有间隔的事件
@@ -85,7 +86,6 @@ fun DisplayEventItem(
 
             TailLayout(
                 event = event,
-                viewModel = viewModel,
             ) {// 首个一定是主题事件
                 DurationText(duration = event.duration!!, type = it)
             }
@@ -97,7 +97,6 @@ fun DisplayEventItem(
         ) {
             ContentRowList(
                 combinedEvent = combinedEvent,
-                inputViewModel = viewModel,
                 itemState = itemState,
             )
 
@@ -106,7 +105,6 @@ fun DisplayEventItem(
                 category = event.category,
                 tags = event.tags,
 //                tags = event.tags?.apply { add("") }, // 加一个虚框添加按钮，也不能在这里加，会频闪！
-                viewModel = viewModel
             )
         }
     }
@@ -117,7 +115,7 @@ fun LabelRow(
     id: Long,
     category: String?,
     tags: MutableList<String>?,
-    viewModel: EventInputViewModel,
+    viewModel: EventInputViewModel = viewModel(),
 ) {
     if (category == null && tags == null) {
         Category(
@@ -179,7 +177,6 @@ fun CategoryIconButton(
 @Composable
 fun ContentRowList(
     combinedEvent: CombinedEvent,
-    inputViewModel: EventInputViewModel,
     itemState: ItemState,
     indent: Dp = 0.dp,
 ) {
@@ -195,7 +192,6 @@ fun ContentRowList(
 
             TailLayout(
                 event = son,
-                viewModel = inputViewModel,
             ) {
                 DurationText(duration = son.duration!!, type = it)
             }
@@ -204,7 +200,6 @@ fun ContentRowList(
         // 递归调用 ContentRowList
         ContentRowList(
             combinedEvent = childCombinedEvent,
-            inputViewModel = inputViewModel,
             itemState = itemState,
             indent = 24.dp,
         )

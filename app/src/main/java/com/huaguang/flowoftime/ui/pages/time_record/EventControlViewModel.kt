@@ -5,34 +5,35 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
+import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.ImmutableIdState
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.IdState
+import com.huaguang.flowoftime.ui.state.InputState
+import com.huaguang.flowoftime.ui.state.PauseState
+import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.getEventDate
+import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Duration
 import java.time.LocalDateTime
+import javax.inject.Inject
 
 /**
  * 页面 ViewModel，用于协调当前页面内各个组件的交互，并存储 TimeRecordPage UI 页面的数据，作为其唯一依赖
  */
-class TimeRecordPageViewModel(
-    val buttonsViewModel: EventButtonsViewModel,
-    val regulatorViewModel: TimeRegulatorViewModel,
-    val inputViewModel: EventInputViewModel,
+@HiltViewModel
+class EventControlViewModel @Inject constructor(
+    val inputState: InputState,
+    val sharedState: SharedState,
+    val undoStack: UndoStack,
+    val repository: EventRepository,
+    private val pauseState: PauseState,
+    val idState: IdState,
 //    private val dndManager: DNDManager,
 ) : ViewModel() {
-
-    val inputState = inputViewModel.inputState
-    val undoStack = buttonsViewModel.undoStack
-    val sharedState = inputViewModel.sharedState
-    val repository = inputViewModel.repository
-    private val pauseState = buttonsViewModel.pauseState
-    val idState = inputViewModel.idState
 
     val eventControl = object : EventControl {
         override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {

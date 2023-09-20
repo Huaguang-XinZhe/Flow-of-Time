@@ -12,7 +12,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -28,11 +27,6 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.Page
 import com.huaguang.flowoftime.tabs
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
-import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
-import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPageViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
-import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,27 +42,26 @@ fun APP2() {
             startDestination = Page.Record.route,
             modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            composable(Page.Record.route) {
-                val buttonsViewModel = hiltViewModel<EventButtonsViewModel>()
-                val inputViewModel = hiltViewModel<EventInputViewModel>()
-                val regulatorViewModel = hiltViewModel<TimeRegulatorViewModel>()
-
-                val timeRecordPageViewModel = remember {
-                    TimeRecordPageViewModel(buttonsViewModel, regulatorViewModel, inputViewModel)
-                } // 防止切回记录页时重新创建 ViewModel 实例
-
-                RDALogger.info("记录页 composable")
-                TimeRecordPage(
-                    viewModel = timeRecordPageViewModel,
-                    onNavigation = { route ->
-                        navController.navigate(route)
-                    }
-                )
-            }
+//            composable(Page.Record.route) {
+//                val buttonsViewModel = hiltViewModel<EventButtonsViewModel>()
+//                val inputViewModel = hiltViewModel<EventInputViewModel>()
+//                val regulatorViewModel = hiltViewModel<TimeRegulatorViewModel>()
+//
+//                val eventControlViewModel = remember {
+//                    EventControlViewModel(buttonsViewModel, regulatorViewModel, inputViewModel)
+//                } // 防止切回记录页时重新创建 ViewModel 实例
+//
+//                RDALogger.info("记录页 composable")
+//                TimeRecordPage(
+//                    eventControlViewModel = eventControlViewModel
+//                ) { route ->
+//                    navController.navigate(route)
+//                }
+//            }
             composable(Page.List.route) {
                 val inputViewModel = hiltViewModel<EventInputViewModel>()
                 RDALogger.info("展示页 composable")
-                DisplayListPage(viewModel = inputViewModel)
+//                DisplayListPage(viewModel = inputViewModel)
                 RDALogger.info("页面显示：${System.currentTimeMillis()}")
             }
             composable(Page.Statistic.route) {

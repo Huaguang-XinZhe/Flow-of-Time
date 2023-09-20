@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.pages.time_record
+package com.huaguang.flowoftime.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextRange

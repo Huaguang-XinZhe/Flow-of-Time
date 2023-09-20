@@ -1,7 +1,5 @@
 package com.huaguang.flowoftime.ui.components.event_input
 
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
@@ -12,21 +10,15 @@ import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
-import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
-import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.state.LabelState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -35,7 +27,6 @@ import javax.inject.Inject
 class EventInputViewModel @Inject constructor(
     val repository: EventRepository,
     val iconRepository: IconMappingRepository,
-    private val spHelper: SPHelper,
     val idState: IdState,
     val sharedState: SharedState,
     val inputState: InputState,
@@ -44,52 +35,10 @@ class EventInputViewModel @Inject constructor(
 
     private var initialName = ""
     private var endTime: LocalDateTime? = null
-    var coreName = ""
-    private var confirmThenStart = false
-    val scrollTrigger = mutableStateOf(false)
-    val scrollOffset = mutableFloatStateOf(0f)
 
-    private val _currentCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
-    val currentCombinedEventFlow: StateFlow<CombinedEvent?> = _currentCombinedEventFlow.asStateFlow()
-    private val _secondLatestCombinedEventFlow = MutableStateFlow<CombinedEvent?>(null)
-    val secondLatestCombinedEventFlow: StateFlow<CombinedEvent?> = _secondLatestCombinedEventFlow.asStateFlow()
-    private val _recentTwoDaysCombinedEventsFlow = MutableStateFlow<List<CombinedEvent?>>(listOf(null)) // 最开始什么都没有就为空值
-    val recentTwoDaysCombinedEventsFlow: StateFlow<List<CombinedEvent?>>
-        get() = _recentTwoDaysCombinedEventsFlow.asStateFlow() // TODO: 这里用 getter 和不用 getter 有什么区别？
-    private val _latestXXXIntervalDaysFlow = MutableStateFlow(0)
-    val latestXXXIntervalDaysFlow: StateFlow<Int> = _latestXXXIntervalDaysFlow.asStateFlow()
-
-    init {
-        viewModelScope.launch {
-            // 去掉 filterNotNull，在数据库为空时将发射 null，否则不会发射值，也就不会通知 UI 变化
-            repository.getCurrentCombinedEventFlow().collect { combinedEvent ->
-//                RDALogger.info("currentCombinedEvent = $combinedEvent")
-                _currentCombinedEventFlow.value = combinedEvent // 传给 UI
-            }
-        }
-
-        viewModelScope.launch {
-            repository.getSecondLatestCombinedEventFlow().filterNotNull().collect { combinedEvent ->
-                _secondLatestCombinedEventFlow.value = combinedEvent // 传给 UI
-            }
-        }
-
-        // TODO: 这些 Flow 观察似乎不应该放在一起，这个 InputViewModel 应该重新设计
-
-        viewModelScope.launch {
-            // 这里可以用 filterNotNull 筛除 null 值，使数据库为空时 UI 观察不到，不需要观察到。
-            repository.getRecentTwoDaysCombinedEventsFlow().filterNotNull().collect { recentTwoDaysCombinedEvents ->
-                _recentTwoDaysCombinedEventsFlow.value = recentTwoDaysCombinedEvents
-            }
-        }
-
-        viewModelScope.launch {  // 必须分开进行，因为收集会挂起协程，如果放在一起，后边的代码不会执行
-            repository.getLatestXXXIntervalDaysFlow().filterNotNull().collect { intervalDays -> // 筛除空值
-                _latestXXXIntervalDaysFlow.value = intervalDays
-            }
-
-        }
-    }
+//    val scrollTrigger = mutableStateOf(false)
+//    val scrollOffset = mutableFloatStateOf(0f)
+    // TODO: 输入框弹起时可能需要列表滚动，待日后集中处理
 
     fun onDisplayItemDoubleClick(itemState: ItemState) {
         itemState.mode.value = Mode.RECORD
@@ -104,13 +53,7 @@ class EventInputViewModel @Inject constructor(
         }
     }
 
-    fun coreButtonNotShow(): Boolean{
-        val subTiming = sharedState.cursorType.value?.let {
-            it != EventType.SUBJECT
-        } ?: false // 没有事件正在计时，也就意味着没有子项正在计时，为 false
 
-        return inputState.show.value || subTiming
-    }
 
     fun onConfirmButtonClick(text: String) {
         inputState.apply {
@@ -157,11 +100,11 @@ class EventInputViewModel @Inject constructor(
         endTime = event.endTime // 传出，用于判断事件是否正在进行
 
         // TODO: 触发滚动的方法应该根据页面类型进行定制
-        val diff = event.id - idState.subject.value
-        if (mode == Mode.RECORD && diff > 0) { // 触发滚动
-            scrollTrigger.value = !scrollTrigger.value
-            scrollOffset.value = diff * 25f
-        }
+//        val diff = event.id - idState.subject.value
+//        if (mode == Mode.RECORD && diff > 0) { // 触发滚动
+//            scrollTrigger.value = !scrollTrigger.value
+//            scrollOffset.value = diff * 25f
+//        }
     }
 
     fun onStepButtonClick(
@@ -188,46 +131,6 @@ class EventInputViewModel @Inject constructor(
             buttonsStateControl.stepTiming()
             sharedState.toastMessage.value = "step 补计……"
         }
-    }
-
-    fun onCoreFloatingButtonClick(
-        eventControl: EventControl,
-        buttonsStateControl: ButtonsStateControl,
-        displayItemState: ItemState,
-        recordingItemState: ItemState,
-    ) {
-        viewModelScope.launch {
-            coreName = spHelper.getCurrentCoreEventName(coreName)
-
-            if (coreName.isEmpty()) { // 在最开始的时候，SP 中没有值，coreName 仍有可能为空，这是就弹窗请用户设置，然后再开始事件
-                sharedState.apply {
-                    coreInputShow.value = true
-                    toastMessage.value = "请预先设置当前核心（名称）"
-                }
-                confirmThenStart = true // 设置好点击确认就马上开启一个新事件
-
-                return@launch
-            }
-
-            val type = if (hasSubjectExist()) EventType.FOLLOW else EventType.SUBJECT
-
-            eventControl.startEvent(
-                name = coreName,
-                eventType = type
-            )
-
-            if (hasSubjectExist()) {
-                buttonsStateControl.followTiming() // 切换到 ”伴随结束“ 的按钮状态
-            } else {
-                buttonsStateControl.subjectTiming() // 切换到 “主题结束” 的按钮状态
-                buttonsStateControl.resetItemState(displayItemState, recordingItemState)
-            }
-        }
-    }
-
-    fun onCoreFloatingButtonLongClick() {
-        coreName = spHelper.getCurrentCoreEventName(coreName)
-        sharedState.coreInputShow.value = true // 显示名称输入 Dialog
     }
 
     fun onClassNameDialogDismiss() {
@@ -284,34 +187,6 @@ class EventInputViewModel @Inject constructor(
         onClassNameDialogDismiss()
     }
 
-    fun onCoreNameDialogDismiss() {
-        sharedState.coreInputShow.value = false
-    }
-
-    fun onCoreNameDialogConfirm(
-        newText: String,
-        eventControl: EventControl,
-        buttonsStateControl: ButtonsStateControl,
-        displayItemState: ItemState,
-        recordingItemState: ItemState
-    ) {
-        onCoreNameDialogDismiss()
-        if (newText.isEmpty() && newText == coreName) return
-
-        coreName = newText // 必须同时更新内存中的 coreName
-        spHelper.saveCurrentCoreEventName(newText)
-
-        if (confirmThenStart) { // 最开始的时候，设置完就开启新事件
-            onCoreFloatingButtonClick(
-                eventControl,
-                buttonsStateControl,
-                displayItemState,
-                recordingItemState
-            )
-            confirmThenStart = false // 重置，以防止在本次应用周期内的下次修改再次开启
-        }
-    }
-
     fun onClassNameClick(
         id: Long,
         name: String,
@@ -343,10 +218,6 @@ class EventInputViewModel @Inject constructor(
             // TODO:
         }
     }
-
-
-    private fun hasSubjectExist() = sharedState.cursorType.value != null
-
 
 
 }

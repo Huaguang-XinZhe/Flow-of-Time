@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.pages.time_record
+package com.huaguang.flowoftime.ui.pages.time_record.core_fab
 
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -11,16 +11,18 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.R
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.pages.time_record.LocalButtonsStateControl
+import com.huaguang.flowoftime.ui.pages.time_record.LocalDisplayItemState
+import com.huaguang.flowoftime.ui.pages.time_record.LocalEventControl
+import com.huaguang.flowoftime.ui.pages.time_record.LocalRecordingItemState
 import com.huaguang.flowoftime.ui.widget.InputAlertDialog
 import com.huaguang.flowoftime.ui.widget.LongPressFloatingActionButton
 
 @Composable
 fun CoreFloatingButton(
     modifier: Modifier = Modifier,
-    viewModel: EventInputViewModel = viewModel()
+    viewModel: CurrentCoreViewModel = viewModel()
 ) {
-
     if (viewModel.coreButtonNotShow()) return
 
     val eventControl = LocalEventControl.current
@@ -51,7 +53,7 @@ fun CoreFloatingButton(
 }
 
 @Composable
-fun CoreNameInputAlertDialog(viewModel: EventInputViewModel = viewModel()) {
+fun CoreNameInputAlertDialog(viewModel: CurrentCoreViewModel = viewModel()) {
 
     val initialValue = TextFieldValue(
         text = viewModel.coreName,

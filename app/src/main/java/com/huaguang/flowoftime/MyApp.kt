@@ -24,12 +24,11 @@ import com.huaguang.flowoftime.test.CategoryPage
 import com.huaguang.flowoftime.test.StatisticPage
 import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
 import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
-import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPageViewModel
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyApp(viewModel: TimeRecordPageViewModel) {
+fun MyApp(appViewModels: AppViewModels) {
 //    val selectedTab = remember { mutableStateOf(tabs[0]) }
     val selectedTab = rememberSaveable { mutableStateOf(tabs[0]) } // 配置更改或被系统杀内存时将保存这个状态（里边类型需要 Parcelable）
 
@@ -43,21 +42,22 @@ fun MyApp(viewModel: TimeRecordPageViewModel) {
             val navController = rememberNavController()
 
             // 通过 when 切换会快一些，但每次切换还是会重新组合，页面并不能保持
-            when (selectedTab.value) { // 只有选中项的 Composable 会重新组合
-                Page.Record -> {
-                    TimeRecordPage(
-                        viewModel = viewModel,
-                        onNavigation = { route ->
+            appViewModels.apply {
+                when (selectedTab.value) { // 只有选中项的 Composable 会重新组合
+                    Page.Record -> {
+                        TimeRecordPage(
+                            eventControlViewModel = eventControlViewModel,
+                            buttonsViewModel = buttonsViewModel,
+                            regulatorViewModel = regulatorViewModel,
+                        ) { route ->
                             navController.navigate(route)
                         }
-                    )
+                    }
+                    Page.List -> DisplayListPage()
+                    Page.Statistic -> StatisticPage()
+                    Page.Category -> CategoryPage()
                 }
-                Page.List -> DisplayListPage(viewModel = viewModel.inputViewModel)
-                Page.Statistic -> StatisticPage()
-                Page.Category -> CategoryPage()
             }
-
-
         }
     }
 }

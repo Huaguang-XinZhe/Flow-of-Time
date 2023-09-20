@@ -1,25 +1,23 @@
-package com.huaguang.flowoftime.ui.pages.time_record
+package com.huaguang.flowoftime.ui.pages.time_record.dr_column
 
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
-import kotlinx.coroutines.delay
+import com.huaguang.flowoftime.ui.pages.time_record.LocalDisplayItemState
+import com.huaguang.flowoftime.ui.pages.time_record.LocalRecordingItemState
 
 @Composable
-fun DisplayAndRecordingItemColumn(
+fun DRColumn(
     modifier: Modifier = Modifier,
-    viewModel: EventInputViewModel = viewModel()
+    viewModel: DRColumnViewModel = viewModel()
 ) {
     val secondLatestCombinedEvent by viewModel.secondLatestCombinedEventFlow.collectAsState(null)
     // 已经过滤空值，event 接受到 Flow 的值后将始终为非空。尽管如此，初始值还是空的，这意味着最初的显示 event 为 null。
@@ -29,14 +27,14 @@ fun DisplayAndRecordingItemColumn(
     val displayItemState = LocalDisplayItemState.current
     val recordingItemState = LocalRecordingItemState.current
 
-    LaunchedEffect(viewModel.scrollTrigger.value) {
-        val offset = viewModel.scrollOffset.floatValue
-//        RDALogger.info("offset = $offset")
-        if (offset == 0f) return@LaunchedEffect // 初始化的时候不需要滑动
-
-        delay(100) // 先等软键盘弹上来
-        lazyColumnState.scrollBy(offset)
-    }
+//    LaunchedEffect(viewModel.scrollTrigger.value) {
+//        val offset = viewModel.scrollOffset.floatValue
+////        RDALogger.info("offset = $offset")
+//        if (offset == 0f) return@LaunchedEffect // 初始化的时候不需要滑动
+//
+//        delay(100) // 先等软键盘弹上来
+//        lazyColumnState.scrollBy(offset)
+//    }
 
     LazyColumn(
         state = lazyColumnState,
@@ -48,7 +46,6 @@ fun DisplayAndRecordingItemColumn(
             DRToggleItem(
                 itemState = displayItemState,
                 combinedEvent = secondLatestCombinedEvent,
-                viewModel = viewModel
             )
         }
 
@@ -56,8 +53,6 @@ fun DisplayAndRecordingItemColumn(
             DRToggleItem(
                 itemState = recordingItemState,
                 combinedEvent = combinedEvent,
-                // TODO: 这个似乎可以优化
-                viewModel = viewModel
             )
         }
 

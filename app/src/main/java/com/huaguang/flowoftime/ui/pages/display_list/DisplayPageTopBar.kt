@@ -26,12 +26,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.ui.theme.DeepRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DisplayPageTopBar(viewModel: EventInputViewModel) {
+fun DisplayPageTopBar(viewModel: DRListViewModel = viewModel()) {
     val intervalDays by viewModel.latestXXXIntervalDaysFlow.collectAsState()
 
     TopAppBar(

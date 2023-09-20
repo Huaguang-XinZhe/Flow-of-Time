@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.R
@@ -46,10 +47,10 @@ import kotlinx.coroutines.delay
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun RecordingEventItem(
+    modifier: Modifier = Modifier,
     combinedEvent: CombinedEvent?,
-    viewModel: EventInputViewModel,
-    itemState: ItemState,
-    modifier: Modifier = Modifier
+    viewModel: EventInputViewModel = viewModel(),
+    itemState: ItemState
 ) {
     OutlinedCard(
         modifier = modifier
@@ -64,10 +65,9 @@ fun RecordingEventItem(
             ),
     ) {
         RecordingEventTree(
-            combinedEvent = combinedEvent,
-            viewModel = viewModel,
-            itemState = itemState,
             modifier = Modifier.padding(5.dp),
+            combinedEvent = combinedEvent,
+            itemState = itemState,
         )
     }
 
@@ -75,10 +75,10 @@ fun RecordingEventItem(
 
 @Composable
 fun RecordingEventTree(
+    modifier: Modifier = Modifier,
     combinedEvent: CombinedEvent?,
-    viewModel: EventInputViewModel,
-    itemState: ItemState,
-    modifier: Modifier = Modifier
+    viewModel: EventInputViewModel = viewModel(),
+    itemState: ItemState
 ) {
     val event = combinedEvent?.event ?: return
     val expandState = remember { mutableStateOf(event.withContent) } // 看来，什么作为初始值还真不是随随便便的。
@@ -124,7 +124,6 @@ fun RecordingEventTree(
                 combinedEvent.contentEvents.forEach { childCombinedEvent ->
                     RecordingEventTree( // 递归调用以显示子事件
                         combinedEvent = childCombinedEvent,
-                        viewModel = viewModel,
                         itemState = itemState,
                     )
                 }
@@ -191,7 +190,6 @@ fun RecordingTailLayout(
 
     TailLayout(
         event = event,
-        viewModel = viewModel,
         mode = Mode.RECORD,
     ) {
         // 二选其一，一定有一项

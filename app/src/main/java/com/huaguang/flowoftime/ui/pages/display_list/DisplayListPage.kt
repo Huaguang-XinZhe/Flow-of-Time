@@ -22,12 +22,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CombinedEvent
+import com.huaguang.flowoftime.ui.components.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
-import com.huaguang.flowoftime.ui.pages.time_record.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.theme.PurpleWhite
 import java.time.LocalDate
@@ -35,7 +35,7 @@ import java.time.LocalDate
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayListPage(
-    viewModel: EventInputViewModel,
+    viewModel: DRListViewModel = viewModel(),
 ) {
     RDALogger.info("展示页重新组合")
 
@@ -52,7 +52,7 @@ fun DisplayListPage(
         modifier = Modifier.fillMaxSize()
     ) {
 
-        DisplayPageTopBar(viewModel = viewModel)
+        DisplayPageTopBar()
 
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
@@ -70,10 +70,9 @@ fun DisplayListPage(
                     }
 
                     DRToggleItem(
+                        modifier = Modifier.padding(bottom = 5.dp),
                         itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
                         combinedEvent = item,
-                        viewModel = viewModel,
-                        modifier = Modifier.padding(bottom = 5.dp)
                     )
                 }
             }
@@ -89,12 +88,9 @@ fun DisplayListPage(
 
     EventInputField(
         modifier = Modifier.padding(top = 300.dp),
-        viewModel = viewModel
     )
 
-    ClassNameInputAlertDialog(
-        viewModel = viewModel
-    )
+    ClassNameInputAlertDialog()
 
 }
 

@@ -12,13 +12,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CustomTime
+import com.huaguang.flowoftime.ui.components.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
+import com.huaguang.flowoftime.ui.pages.time_record.core_fab.CoreFloatingButton
+import com.huaguang.flowoftime.ui.pages.time_record.core_fab.CoreNameInputAlertDialog
+import com.huaguang.flowoftime.ui.pages.time_record.dr_column.DRColumn
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtons
+import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulator
+import com.huaguang.flowoftime.ui.pages.time_record.time_regulator.TimeRegulatorViewModel
 import com.huaguang.flowoftime.ui.state.ItemState
 import java.time.LocalDateTime
 
@@ -26,6 +33,8 @@ val LocalEventControl = compositionLocalOf<EventControl> { error("没有提供�
 val LocalButtonsStateControl = compositionLocalOf<ButtonsStateControl> {
     error("没有提供实现 ButtonsStateControl 接口的对象！")
 }
+
+// TODO: 这个似乎是全局的，有待优化
 val LocalSelectedTime = compositionLocalOf<MutableState<LocalDateTime?>?> { null }
 val LocalCheckedLiveData = compositionLocalOf { MutableLiveData(true) }
 val LocalDisplayItemState = compositionLocalOf { ItemState.initialDisplay() }
@@ -35,7 +44,9 @@ val LocalCustomTimeState = compositionLocalOf { mutableStateOf<CustomTime?>(null
 
 @Composable
 fun TimeRecordPage(
-    viewModel: TimeRecordPageViewModel,
+    eventControlViewModel: EventControlViewModel = viewModel(),
+    buttonsViewModel: EventButtonsViewModel = viewModel(),
+    regulatorViewModel: TimeRegulatorViewModel = viewModel(),
     onNavigation: (String) -> Unit
 ) {
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
@@ -64,14 +75,14 @@ fun TimeRecordPage(
 
         CompositionLocalProvider(
             LocalSelectedTime provides selectedTime,
-            LocalEventControl provides viewModel.eventControl,
-            LocalButtonsStateControl provides viewModel.buttonsViewModel.buttonsStateControl,
-            LocalCheckedLiveData provides viewModel.regulatorViewModel.checkedLiveData,
+            LocalEventControl provides eventControlViewModel.eventControl,
+            LocalButtonsStateControl provides buttonsViewModel.buttonsStateControl,
+            LocalCheckedLiveData provides regulatorViewModel.checkedLiveData,
             LocalCustomTimeState provides customTimeState,
             LocalDisplayItemState provides displayItemState,
             LocalRecordingItemState provides recordingItemState,
         ) {
-            DisplayAndRecordingItemColumn(
+            DRColumn(
                 modifier = Modifier.constrainAs(itemColumn) {
                     top.linkTo(topBar.bottom, 5.dp)
                     start.linkTo(parent.start)

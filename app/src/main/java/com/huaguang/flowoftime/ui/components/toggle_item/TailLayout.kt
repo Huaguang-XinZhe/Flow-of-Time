@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -26,7 +27,7 @@ import com.huaguang.flowoftime.ui.pages.time_record.LocalSelectedTime
 @Composable
 fun TailLayout(
     event: Event,
-    viewModel: EventInputViewModel,
+    viewModel: EventInputViewModel = viewModel(),
     mode: Mode = Mode.DISPLAY,
     content: @Composable (RowScope.(type: EventType) -> Unit)
 ) {
