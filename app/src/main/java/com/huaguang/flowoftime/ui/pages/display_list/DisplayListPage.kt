@@ -10,11 +10,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,6 +34,7 @@ import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.theme.PurpleWhite
 import java.time.LocalDate
 
+val LocalAddDashButton = compositionLocalOf { mutableStateOf(false) }
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayListPage(
@@ -42,40 +48,52 @@ fun DisplayListPage(
     val groupedEvents = recentTwoDaysCombinedEvents.groupBy { combinedEvent ->
         combinedEvent?.event?.eventDate ?: LocalDate.now()
     } // 先分组，后遍历
+    val listState = rememberLazyListState()
+    val addDashButton = remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) { // 只会在初次重组的时候执行（每次切换到展示页都是初次执行，之后留在页面内的其他重组不会执行）
+//        listState.animateScrollToItem(80) // 这里固定编码，不过没关系，一般两天的事件总数不会超过这个
+        listState.scrollToItem(80) // 立即滚动到底部，不需要动画
+    }
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        DisplayPageTopBar()
-
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        CompositionLocalProvider(
+            LocalAddDashButton provides addDashButton
         ) {
-            groupedEvents.forEach { (date, events) ->
-                stickyHeader {
-                    DateItem(date = date)
-                }
+            DisplayPageTopBar()
 
-                items(events) { item: CombinedEvent? ->
-                    val eventId = item!!.event.id
-                    if (toggleMap[eventId] == null) { // items 块会多次执行（列表滑动引起），为保证状态实例的唯一性，必须进行 null 检查，只有为 null 时才重新创建
-                        toggleMap[eventId] = ItemState.initialDisplay()
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                groupedEvents.forEach { (date, events) ->
+                    stickyHeader {
+                        DateItem(date = date)
                     }
 
-                    DRToggleItem(
-                        modifier = Modifier.padding(bottom = 5.dp),
-                        itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
-                        combinedEvent = item,
+                    items(events) { item: CombinedEvent? ->
+                        val eventId = item!!.event.id
+                        if (toggleMap[eventId] == null) { // items 块会多次执行（列表滑动引起），为保证状态实例的唯一性，必须进行 null 检查，只有为 null 时才重新创建
+                            toggleMap[eventId] = ItemState.initialDisplay()
+                        }
+
+                        DRToggleItem(
+                            modifier = Modifier.padding(bottom = 5.dp),
+                            itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
+                            combinedEvent = item,
+                        )
+                    }
+                }
+
+                item {// 尾部 Item
+                    Text(
+                        text = "~~ 到底了哦 ~~",
+                        modifier = Modifier.padding(20.dp)
                     )
                 }
-            }
-
-            item {// 尾部 Item
-                Text(
-                    text = "~~ 到底了哦 ~~",
-                    modifier = Modifier.padding(20.dp)
-                )
             }
         }
     }

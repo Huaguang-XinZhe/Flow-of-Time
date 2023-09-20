@@ -36,7 +36,9 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
+import com.huaguang.flowoftime.ui.components.category_dialog.CategoryViewModel
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
+import com.huaguang.flowoftime.ui.pages.display_list.LocalAddDashButton
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.Category
 import com.huaguang.flowoftime.ui.widget.CategoryRow
@@ -115,8 +117,10 @@ fun LabelRow(
     id: Long,
     category: String?,
     tags: MutableList<String>?,
-    viewModel: EventInputViewModel = viewModel(),
+    viewModel: CategoryViewModel = viewModel(),
 ) {
+    val addDashButton = LocalAddDashButton.current
+
     if (category == null && tags == null) {
         Category(
             onClick = { _, type ->
@@ -126,13 +130,15 @@ fun LabelRow(
         )
     } else { // 若 category 为 null（tags 也一定为 null）就一定会走上面的设置，所以下边的一定为非 null
         CategoryRow(
-            category = category!!
+            category = category!!,
+            addDashButton = addDashButton.value
         ) { name, type ->
             viewModel.onClassNameClick(id, name, type, listOf(category))
         }
 
         TagsRow(
             tags = tags, // 就算 category 不为 null，tags 依然可能为 null
+            addDashButton = addDashButton.value,
             modifier = Modifier.padding(bottom = 10.dp)
         ) { name ->
             viewModel.onClassNameClick(id, name, DashType.TAG, tags)

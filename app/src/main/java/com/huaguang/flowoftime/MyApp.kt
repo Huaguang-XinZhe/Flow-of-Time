@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
 import com.huaguang.flowoftime.test.CategoryPage
 import com.huaguang.flowoftime.test.StatisticPage
-import com.huaguang.flowoftime.ui.components.ClassNameInputAlertDialog
+import com.huaguang.flowoftime.ui.components.category_dialog.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
 import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage

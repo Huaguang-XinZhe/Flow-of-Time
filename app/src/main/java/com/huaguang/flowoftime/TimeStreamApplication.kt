@@ -108,7 +108,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
         val frame = listOf("财务", "收集库", "时间统计", "清整", "规划", "省思", "统析", "仓库", "预算",
             "纸上统计", "思考", "草思")
         val core = listOf("阅读", "总结", "时光流", "应用", "输出", "初阅", "阅", "搭建个人网站", "渐构",
-            "前端学习", "修bug", "HTML和CSS基础学习")
+            "前端学习", "修bug", "HTML和CSS基础学习", "代码")
         val fallow = listOf("散步", "打字", "抽烟", "吹风", "休闲")
         val breach = listOf("躺刷", "贪刷", "朋友圈", "刷视频", "QQ空间", "Q朋抖",
             "刷手机", "躺思", "刷抖音", "动态", "贪观")

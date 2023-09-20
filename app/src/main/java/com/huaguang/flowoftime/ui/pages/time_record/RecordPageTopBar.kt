@@ -1,7 +1,7 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,8 +32,8 @@ fun RecordPageTopBar(
                 onClick = { onNavigation(Page.List.route) }
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "go_list",
+                    imageVector = Icons.Default.Menu,
+                    contentDescription = null,
                 )
             }
         },

@@ -139,6 +139,7 @@ fun Tag(
 fun TagsRow(
     modifier: Modifier = Modifier,
     tags: MutableList<String>?,
+    addDashButton: Boolean,
     onClick: (String) -> Unit
 ) {
     FlowRow(
@@ -152,10 +153,12 @@ fun TagsRow(
             )
         }
 
-        Tag(
-            onClick = onClick,
-            modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
-        )
+        if (addDashButton) {
+            Tag(
+                onClick = onClick,
+                modifier = Modifier.padding(bottom = 5.dp, end = 5.dp)
+            )
+        }
     }
 }
 
@@ -163,6 +166,7 @@ fun TagsRow(
 @Composable
 fun CategoryRow(
     category: String, // 来自 event
+    addDashButton: Boolean,
     onClick: (String, DashType) -> Unit,
 ) {
     Row(
@@ -172,9 +176,11 @@ fun CategoryRow(
 
         Category(name = category, onClick = onClick)
 
-        Spacer(modifier = Modifier.width(5.dp))
+        if (addDashButton) {
+            Spacer(modifier = Modifier.width(5.dp))
 
-        Category(type = DashType.CATEGORY_CHANGE, onClick = onClick)
+            Category(type = DashType.CATEGORY_CHANGE, onClick = onClick)
+        }
     }
 
 }

@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.components
+package com.huaguang.flowoftime.ui.components.category_dialog
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.TextRange
@@ -6,11 +6,10 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.DashType
-import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.widget.InputAlertDialog
 
 @Composable
-fun ClassNameInputAlertDialog(viewModel: EventInputViewModel = viewModel()) {
+fun ClassNameInputAlertDialog(viewModel: CategoryViewModel = viewModel()) {
     val labelState = viewModel.labelState
     val type = labelState.type.value
     // 逗号分隔值（初始时会加载一次，这是 labelInfo 的 rowNames 为 null，故需指定初始值）
