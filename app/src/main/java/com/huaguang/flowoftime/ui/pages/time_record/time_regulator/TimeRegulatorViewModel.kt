@@ -4,6 +4,7 @@ package com.huaguang.flowoftime.ui.pages.time_record.time_regulator
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
@@ -30,7 +31,7 @@ class TimeRegulatorViewModel @Inject constructor(
     private val sharedState: SharedState,
     private val pauseState: PauseState,
     private val idState: IdState,
-    val inputState: InputState,
+    val inputState: InputState, // 必须加，为了防止软键盘弹出时组件被顶到屏幕上面去
 ) : ViewModel() {
 
     var selectedTime: MutableState<LocalDateTime?>? = null
@@ -41,11 +42,21 @@ class TimeRegulatorViewModel @Inject constructor(
     // 存储上次点击的时间戳
     private var lastClickTime: Long = 0
 
+
+    private var initialized = false
     val checkedLiveData = MutableLiveData(true) // 我需要的就是外界更改其值，所以就不保护了！
+    private val checkedLiveDataObserver = Observer<Boolean> { newValue ->
+        handleCheckedLiveDataChange(newValue)
+    }
+
+    init {
+        checkedLiveData.observeForever(checkedLiveDataObserver)
+    }
 
     override fun onCleared() {
         super.onCleared()
         updateJob?.cancel()
+        checkedLiveData.removeObserver(checkedLiveDataObserver)
     }
 
     fun toggleChecked(checked: Boolean) {
@@ -58,21 +69,6 @@ class TimeRegulatorViewModel @Inject constructor(
      * 只要当前有事件正在进行，且不为插入事件就可以了。
      */
     fun pauseButtonEnabled() = sharedState.cursorType.value.let { it != null && !it.isInsert() }
-
-    fun calPauseInterval(checked: Boolean?) { // checked 为 true 是继续（播放），表明当前事项正在计时……
-        pauseState.apply {
-            if (checked == false) { // 暂停
-                start.value = LocalDateTime.now()
-                RDALogger.info("暂停之后：start = ${start.value}")
-            } else { // 继续
-                RDALogger.info("恢复/继续！acc = ${acc.value}, start = ${start.value}")
-                val interval = if (start.value == null) 0 else {
-                    ChronoUnit.MINUTES.between(start.value, LocalDateTime.now()).toInt()
-                }
-                acc.value += interval
-            }
-        }
-    }
 
     fun onClick(value: Long, ) {
         if (customTimeState?.value == null) { // 非选中态
@@ -200,6 +196,49 @@ class TimeRegulatorViewModel @Inject constructor(
 
     private fun Long.toDuration(): Duration {
         return if (this == 0L) Duration.ZERO else Duration.ofMinutes(this)
+    }
+
+    private fun handleCheckedLiveDataChange(newValue: Boolean) {
+        // 防止初始化的时候执行
+        if (initialized) {
+            calPauseInterval(newValue) // 希望比副作用要快
+            RDALogger.info("监听 acc = ${pauseState.acc.value}")
+
+            if (newValue) { // 只有恢复原先状态的时候才会执行。
+                resetPauseState()
+            }
+        }
+
+        initialized = true // 必须放在 if 块外，如果直接 return，那就相当于放在块内了。
+    }
+
+    private fun calPauseInterval(checked: Boolean?) { // checked 为 true 是继续（播放），表明当前事项正在计时……
+        pauseState.apply {
+            if (checked == false) { // 暂停
+                start.value = LocalDateTime.now()
+                RDALogger.info("暂停之后：start = ${start.value}")
+            } else { // 继续
+                RDALogger.info("恢复/继续！acc = ${acc.value}, start = ${start.value}")
+                val interval = if (start.value == null) 0 else {
+                    ChronoUnit.MINUTES.between(start.value, LocalDateTime.now()).toInt()
+                }
+                acc.value += interval
+            }
+        }
+    }
+
+    private fun resetPauseState() {
+        pauseState.apply {
+            when(sharedState.cursorType.value) {
+                EventType.SUBJECT -> subjectAcc.value = acc.value
+                EventType.STEP -> stepAcc.value = acc.value
+                else -> currentAcc.value = acc.value // else 包括 null，但没事，null 下根本不会执行到这里
+            }
+
+            RDALogger.info("重置 pauseState 的状态")
+            start.value = null
+            acc.value = 0
+        }
     }
 
 

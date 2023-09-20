@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
@@ -36,6 +37,8 @@ import java.time.LocalDate
 fun DisplayListPage(
     viewModel: EventInputViewModel,
 ) {
+    RDALogger.info("展示页重新组合")
+
     val recentTwoDaysCombinedEvents by viewModel.recentTwoDaysCombinedEventsFlow.collectAsState()
     if (recentTwoDaysCombinedEvents.contains(null)) return // 列表中含有空值就返回，不显示 UI
 

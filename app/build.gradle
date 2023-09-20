@@ -6,6 +6,7 @@ plugins {
     id 'kotlin-kapt'
     id 'kotlinx-serialization'
     id 'com.google.dagger.hilt.android'
+    id 'kotlin-parcelize' // 保存和恢复状态所需
 }
 
 android {

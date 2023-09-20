@@ -1,5 +1,7 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.MutableState
@@ -10,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.MutableLiveData
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.CustomTime
@@ -29,17 +32,23 @@ val LocalDisplayItemState = compositionLocalOf { ItemState.initialDisplay() }
 val LocalRecordingItemState = compositionLocalOf { ItemState.initialRecording() }
 val LocalCustomTimeState = compositionLocalOf { mutableStateOf<CustomTime?>(null) }
 
+
 @Composable
 fun TimeRecordPage(
     viewModel: TimeRecordPageViewModel,
+    onNavigation: (String) -> Unit
 ) {
     val customTimeState = remember { mutableStateOf<CustomTime?>(null) }
     val selectedTime = remember { mutableStateOf<LocalDateTime?>(null) }
     val displayItemState = remember { ItemState.initialDisplay() } // 内有默认值，决定它们第一次展示什么
     val recordingItemState = remember { ItemState.initialRecording() }
 
+    RDALogger.info("Record 页重新组合")
+
     ConstraintLayout(
-//        modifier = Modifier.padding(vertical = 10.dp)
+        modifier = Modifier
+            .fillMaxSize() // 在放入脚手架的 content 中时，如果没有指定，那页面的高度就会默认包裹内容，所以必须指定！平常也最好指定。
+            .padding(vertical = 5.dp)
     ) {
 
         val (topBar, itemColumn, timeRegulator,
@@ -49,7 +58,8 @@ fun TimeRecordPage(
             modifier = Modifier.constrainAs(topBar) {
                 top.linkTo(parent.top)
                 start.linkTo(parent.start)
-            }
+            },
+            onNavigation = onNavigation
         ) // 完全独立，不需要和其他组件交互
 
         CompositionLocalProvider(
@@ -91,15 +101,13 @@ fun TimeRecordPage(
 
             EventInputField(
                 modifier = Modifier.constrainAs(eventInput) {
-                    bottom.linkTo(parent.bottom)
+                    bottom.linkTo(parent.bottom, 200.dp) // 必须指定一个值，这样软键盘在弹出时就不会把整个窗口往上推的过高！
                     start.linkTo(parent.start)
                 },
             )
 
             CoreNameInputAlertDialog()
 
-//            RDALogger.info("viewModel.labelInfo = ${pageViewModel.eventInputViewModel.labelInfo}")
-            // 这里必须把 labelInfo 变为状态的封装，要不然不会触发重组。
             ClassNameInputAlertDialog()
         }
     }

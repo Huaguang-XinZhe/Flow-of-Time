@@ -23,7 +23,7 @@ import java.time.LocalDateTime
 class TimeRecordPageViewModel(
     val buttonsViewModel: EventButtonsViewModel,
     val regulatorViewModel: TimeRegulatorViewModel,
-    inputViewModel: EventInputViewModel,
+    val inputViewModel: EventInputViewModel,
 //    private val dndManager: DNDManager,
 ) : ViewModel() {
 

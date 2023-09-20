@@ -11,11 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.huaguang.flowoftime.Page
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordPageTopBar(
     modifier: Modifier = Modifier,
+    onNavigation: (String) -> Unit
 ) {
     TopAppBar(
         title = {
@@ -27,7 +29,7 @@ fun RecordPageTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = {  }
+                onClick = { onNavigation(Page.List.route) }
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
