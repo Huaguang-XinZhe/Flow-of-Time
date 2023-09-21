@@ -47,7 +47,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
         super.onCreate()
 
         initializeIconDB()
-        createNotificationChannel()
+//        createNotificationChannel()
 
         RDALogger.start("打标签喽").enableLogging(true)
 

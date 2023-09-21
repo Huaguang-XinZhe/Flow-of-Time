@@ -2,11 +2,11 @@ package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.lifecycle.ViewModel
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.Action
 import com.huaguang.flowoftime.data.models.ImmutableIdState
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -275,6 +275,10 @@ class EventControlViewModel @Inject constructor(
             EventType.STEP_INSERT -> Action.STEP_INSERT_END
             EventType.FOLLOW -> Action.FOLLOW_END
         }
+    }
+
+    fun onIconClick() {
+
     }
 
 }

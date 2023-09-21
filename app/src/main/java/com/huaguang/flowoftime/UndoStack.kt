@@ -4,15 +4,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.huaguang.flowoftime.data.models.Operation
+import com.huaguang.flowoftime.data.sources.SPHelper
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
 import java.util.Stack
 
-class UndoStack {
+class UndoStack(spHelper: SPHelper) {
 
     private val undoStack = Stack<Operation>()
     private val maxUndoSteps = 3
 
     var undoShow by mutableStateOf(false)
         private set
+
+    init {
+        spHelper.getSerializedData()?.let { deserialize(it) }
+    }
 
     fun addState(state: Operation) {
         if (undoStack.size == maxUndoSteps) {
@@ -34,6 +41,15 @@ class UndoStack {
         }.also {
             setUndoShow()
         }
+    }
+
+    fun serialize(): String { // 必须使用 ListSerializer，否则要求 value 为 Operation 类型
+        return Json.encodeToString(ListSerializer(Operation.serializer()), undoStack.toList())
+    }
+
+    private fun deserialize(serializedData: String) {
+        undoStack.addAll(Json.decodeFromString<List<Operation>>(serializedData))
+        setUndoShow()
     }
 
     /**

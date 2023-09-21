@@ -11,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.huaguang.flowoftime.Page
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,7 +28,7 @@ fun RecordPageTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = { onNavigation(Page.List.route) }
+                onClick = {  }
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,

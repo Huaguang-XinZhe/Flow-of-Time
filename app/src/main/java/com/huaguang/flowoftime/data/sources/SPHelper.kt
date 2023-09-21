@@ -3,8 +3,11 @@ package com.huaguang.flowoftime.data.sources
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.PauseState
@@ -47,11 +50,15 @@ class SPHelper private constructor(context: Context) {
 
         return PauseState(
             start = mutableStateOf(start),
-            acc = mutableStateOf(sp.getInt("acc", 0)),
-            subjectAcc = mutableStateOf(sp.getInt("subject_acc", 0)),
-            stepAcc = mutableStateOf(sp.getInt("step_acc", 0)),
-            currentAcc = mutableStateOf(sp.getInt("current_acc", 0))
+            acc = mutableIntStateOf(sp.getInt("acc", 0)),
+            subjectAcc = mutableIntStateOf(sp.getInt("subject_acc", 0)),
+            stepAcc = mutableIntStateOf(sp.getInt("step_acc", 0)),
+            currentAcc = mutableIntStateOf(sp.getInt("current_acc", 0))
         )
+    }
+
+    fun getSerializedData(): String? {
+        return sp.getString("undo_stack", null) // 为 null 就不反序列化了
     }
 
     fun saveState(
@@ -59,17 +66,17 @@ class SPHelper private constructor(context: Context) {
         buttonsState: ButtonsState,
         pauseState: PauseState,
         cursorType: MutableState<EventType?>,
+        undoStack: UndoStack,
     ) {
         sp.edit().apply {
             saveIdState(idState)
             saveButtonsState(buttonsState)
             savePauseState(pauseState)
             saveCursorType(cursorType)
+            saveUndoStack(undoStack)
             apply()
         }
     }
-
-
 
     fun getButtonsState(): ButtonsState {
         return ButtonsState(
@@ -82,9 +89,9 @@ class SPHelper private constructor(context: Context) {
 
 
     fun getIdState() = IdState(
-        current = mutableStateOf(sp.getLong("current", 0L)),
-        subject = mutableStateOf(sp.getLong("subject", 0L)),
-        step = mutableStateOf(sp.getLong("step", 0L))
+        current = mutableLongStateOf(sp.getLong("current", 0L)),
+        subject = mutableLongStateOf(sp.getLong("subject", 0L)),
+        step = mutableLongStateOf(sp.getLong("step", 0L))
     )
 
     fun saveRingVolume(value: Int) {
@@ -111,6 +118,10 @@ class SPHelper private constructor(context: Context) {
             putLong("subject", idState.subject.value)
             putLong("step", idState.step.value)
         }
+    }
+
+    private fun SharedPreferences.Editor.saveUndoStack(undoStack: UndoStack) {
+        this.putString("undo_stack", undoStack.serialize())
     }
 
     private fun SharedPreferences.Editor.saveButtonsState(buttonsState: ButtonsState) {

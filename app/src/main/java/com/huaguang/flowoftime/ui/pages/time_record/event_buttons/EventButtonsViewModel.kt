@@ -5,12 +5,12 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.huaguang.flowoftime.Action
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.Action
 import com.huaguang.flowoftime.data.models.ButtonActionParams
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -18,7 +18,6 @@ import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.ItemState
-import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -30,7 +29,6 @@ class EventButtonsViewModel @Inject constructor(
     private val repository: EventRepository,
     private val sharedState: SharedState,
     val buttonsState: ButtonsState,
-    val pauseState: PauseState,
     val inputState: InputState,
     val undoStack: UndoStack,
     private val idState: IdState,
@@ -319,5 +317,7 @@ class EventButtonsViewModel @Inject constructor(
             mainShow.value = false
         }
     }
+
+
 
 }

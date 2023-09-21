@@ -141,8 +141,8 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideUndoStack(): UndoStack {
-        return UndoStack()
+    fun provideUndoStack(spHelper: SPHelper): UndoStack {
+        return UndoStack(spHelper)
     }
 
     @Singleton

@@ -11,9 +11,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -91,16 +93,20 @@ fun NumberCircle(
     onClick: () -> Unit
 ) {
     if (number == 0) {
-        IconButton(
+        FilledIconButton(
             onClick = onClick,
             modifier = Modifier
                 .padding(5.dp)
-                .size(24.dp)
+                .size(24.dp),
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = DeepRed,
+                contentColor = Color.White
+            )
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.skull),
                 contentDescription = null,
-                tint = DeepRed
+                modifier = Modifier.size(14.dp)
             )
         }
         return // 是 0 的话，显示完骷髅头后就返回
