@@ -2,9 +2,9 @@ package com.huaguang.flowoftime
 
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.fragment.app.FragmentActivity
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.pages.time_record.EventControlViewModel
@@ -18,7 +18,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : FragmentActivity() {
+class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var sharedState: SharedState // Activity 和 Fragment 各自注入，也不会出问题！
@@ -62,7 +62,7 @@ class MainActivity : FragmentActivity() {
         super.onStop()
         RDALogger.info("回调 onStop()")
 
-        spHelper.saveState(idState, buttonsState, pauseState, sharedState.cursorType, undoStack)
+        spHelper.saveState(idState, buttonsState, pauseState, sharedState.cursorType, undoStack.serialize())
     }
 }
 

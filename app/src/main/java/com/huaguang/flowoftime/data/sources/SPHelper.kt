@@ -7,7 +7,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.EventType
-import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.PauseState
@@ -66,14 +65,14 @@ class SPHelper private constructor(context: Context) {
         buttonsState: ButtonsState,
         pauseState: PauseState,
         cursorType: MutableState<EventType?>,
-        undoStack: UndoStack,
+        undoStackJson: String,
     ) {
         sp.edit().apply {
             saveIdState(idState)
             saveButtonsState(buttonsState)
             savePauseState(pauseState)
             saveCursorType(cursorType)
-            saveUndoStack(undoStack)
+            saveUndoStackJson(undoStackJson)
             apply()
         }
     }
@@ -120,8 +119,8 @@ class SPHelper private constructor(context: Context) {
         }
     }
 
-    private fun SharedPreferences.Editor.saveUndoStack(undoStack: UndoStack) {
-        this.putString("undo_stack", undoStack.serialize())
+    private fun SharedPreferences.Editor.saveUndoStackJson(value: String) {
+        this.putString("undo_stack", value)
     }
 
     private fun SharedPreferences.Editor.saveButtonsState(buttonsState: ButtonsState) {
