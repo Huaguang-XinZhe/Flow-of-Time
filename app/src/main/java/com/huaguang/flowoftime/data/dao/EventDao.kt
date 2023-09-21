@@ -11,6 +11,7 @@ import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
+import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
@@ -231,5 +232,7 @@ interface EventDao {
     @Query("SELECT eventDate FROM events WHERE category = :category ORDER BY startTime DESC LIMIT 1")
     fun getLatestXXXDate(category: String = "xxx"): Flow<LocalDate?>
 
+    @Query("SELECT startTime, eventDate, category FROM events WHERE id = :eventId")
+    suspend fun getStopRequireById(eventId: Long): StopRequire
 
 }

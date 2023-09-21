@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
@@ -10,6 +11,7 @@ import com.huaguang.flowoftime.data.models.Action
 import com.huaguang.flowoftime.data.models.ImmutableIdState
 import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
+import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
@@ -17,6 +19,7 @@ import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -29,7 +32,8 @@ class EventControlViewModel @Inject constructor(
     val inputState: InputState,
     val sharedState: SharedState,
     val undoStack: UndoStack,
-    val repository: EventRepository,
+    private val eventRepository: EventRepository,
+    private val dailyStatRepository: DailyStatisticsRepository,
     private val pauseState: PauseState,
     val idState: IdState,
 //    private val dndManager: DNDManager,
@@ -85,11 +89,11 @@ class EventControlViewModel @Inject constructor(
         eventType: EventType,
     ): Long {
         val newEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
-        val autoId = repository.insertEvent(newEvent) // 存入数据库
+        val autoId = eventRepository.insertEvent(newEvent) // 存入数据库
 
         if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
             collectPauseInterval(eventType)
-            repository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
+            eventRepository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
         }
 
         return autoId
@@ -98,7 +102,7 @@ class EventControlViewModel @Inject constructor(
     private suspend fun updateDBOnStop(eventType: EventType): Pair<Long, Int> {
         val eventId: Long
         val pauseInterval: Int
-        val duration: Duration
+        val totalDurationOfSubInsert: Duration?
 
         if (withContent(eventType)) { // 这里没有从数据库获取 withContent，效率低，也困难
             RDALogger.info("进入 withContent 块结束事件")
@@ -106,23 +110,28 @@ class EventControlViewModel @Inject constructor(
                 eventId = pair.first
                 pauseInterval = pair.second
             }
-            duration = calEventDuration(
-                eventId = eventId,
-                eventType = eventType,
-                startTime = repository.getStartTimeById(eventId),
-                pauseIntervalLong = pauseInterval.toLong()
-            )
+            totalDurationOfSubInsert = eventRepository.calTotalSubInsertDuration(eventId, eventType)
+
         } else { // 更新没有下级的当前项
             eventId = idState.current.value
             pauseInterval = if (eventType.isInsert()) 0 else pauseState.currentAcc.value // 插入事项不允许有暂停间隔
-            RDALogger.info("没有下级的事件结束：pauseInterval = $pauseInterval")
-            duration = repository.getStartTimeById(eventId).let {
-                Duration.between(it, LocalDateTime.now())
-                    .minus(Duration.ofMinutes(pauseInterval.toLong()))
-            }
+            totalDurationOfSubInsert = null
         }
 
-        repository.updateThree(eventId, duration, pauseInterval)
+        val stopRequire = eventRepository.getStopRequire(eventId)
+        val duration = calEventDuration(
+            startTime = stopRequire.startTime,
+            pauseIntervalLong = pauseInterval.toLong(),
+            totalDurationOfSubInsert = totalDurationOfSubInsert
+        )
+
+        eventRepository.updateThree(eventId, duration, pauseInterval)
+
+        if (eventType == EventType.SUBJECT) { // 只有主题事件需要更新每日统计数据
+            stopRequire.apply {
+                dailyStatRepository.updateDailyStatistics(eventDate, category, duration)
+            }
+        }
 
         return Pair(eventId, pauseInterval)
     }
@@ -151,24 +160,21 @@ class EventControlViewModel @Inject constructor(
         return Pair(eventId, totalPauseInterval)
     }
 
-    /**
-     * 每个含有下级的事项，都要减去本事项的暂停间隔，然后还要减去插入事项的总时长。
-     * @param eventId 它就是那个含有下级事项的父事项 id
-     */
-    private suspend fun calEventDuration(
-        eventId: Long,
-        eventType: EventType,
+    private fun calEventDuration(
         startTime: LocalDateTime,
-        pauseIntervalLong: Long
+        pauseIntervalLong: Long,
+        totalDurationOfSubInsert: Duration? = null,
     ): Duration {
         val pauseIntervalDuration = Duration.ofMinutes(pauseIntervalLong)
-        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
-        val totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId, eventType)
+//        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
 //        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         val standardDuration = Duration.between(startTime, LocalDateTime.now())
 //        RDALogger.info("standardDuration = $standardDuration")
+        val currentDuration = standardDuration.minus(pauseIntervalDuration) // 结束时间减去开始时间，然后再减去当前项的暂停时间
 
-        return standardDuration.minus(totalDurationOfSubInsert).minus(pauseIntervalDuration)
+        return totalDurationOfSubInsert?.apply {
+            currentDuration.minus(this)
+        } ?: currentDuration
     }
 
     private fun updateIdState(autoId: Long, eventType: EventType) {
@@ -277,8 +283,13 @@ class EventControlViewModel @Inject constructor(
         }
     }
 
-    fun onIconClick() {
+    fun onMenuClick() {
+        viewModelScope.launch {
+            val allEvents = eventRepository.getAllEvents()
 
+            dailyStatRepository.initializeDailyStatistics(allEvents)
+        }
     }
+
 
 }

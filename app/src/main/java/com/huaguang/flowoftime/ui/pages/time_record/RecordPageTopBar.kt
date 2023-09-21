@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun RecordPageTopBar(
     modifier: Modifier = Modifier,
+    viewModel: EventControlViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onNavigation: (String) -> Unit
 ) {
     TopAppBar(
@@ -28,7 +29,7 @@ fun RecordPageTopBar(
         },
         navigationIcon = {
             IconButton(
-                onClick = {  }
+                onClick = { viewModel.onMenuClick() }
             ) {
                 Icon(
                     imageVector = Icons.Default.Menu,

@@ -4,9 +4,11 @@ import android.app.Application
 import android.content.Context
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.UndoStack
+import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.dao.IconMappingDao
+import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
@@ -68,7 +70,21 @@ object AppModule {
 
     @Singleton
     @Provides
-    fun provideEventRepository(eventDao: EventDao, dateDurationDao: DateDurationDao): EventRepository {
+    fun provideDailyStatisticsDao(database: EventDatabase): DailyStatisticsDao {
+        return database.dailyStatisticsDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideDailyStatisticsRepository(dailyStatisticsDao: DailyStatisticsDao) =
+        DailyStatisticsRepository(dailyStatisticsDao)
+
+    @Singleton
+    @Provides
+    fun provideEventRepository(
+        eventDao: EventDao,
+        dateDurationDao: DateDurationDao,
+    ): EventRepository {
         return EventRepository(eventDao, dateDurationDao)
     }
 

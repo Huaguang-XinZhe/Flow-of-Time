@@ -9,6 +9,7 @@ import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.db_returns.DateDuration
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
+import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import com.huaguang.flowoftime.ui.state.IdState
@@ -26,7 +27,7 @@ import java.time.temporal.ChronoUnit
 
 class EventRepository(
     private val eventDao: EventDao,
-    private val dateDurationDao: DateDurationDao
+    private val dateDurationDao: DateDurationDao,
 ) {
 
     suspend fun deleteEventsExceptToday() {
@@ -351,6 +352,16 @@ class EventRepository(
             eventDao.updateClassName(id, category, tags)
         }
     }
+
+    suspend fun getStopRequire(eventId: Long): StopRequire =
+        withContext(Dispatchers.IO) {
+            eventDao.getStopRequireById(eventId)
+        }
+
+    suspend fun getAllEvents() =
+        withContext(Dispatchers.IO) {
+            eventDao.getAllEvents()
+        }
 
 
 }

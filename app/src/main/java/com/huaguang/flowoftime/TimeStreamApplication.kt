@@ -4,6 +4,8 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import androidx.room.Room
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.sources.EventDatabase
 import com.huaguang.flowoftime.data.sources.IconDatabase
@@ -17,21 +19,27 @@ class TimeStreamApplication @Inject constructor() : Application() {
         const val NOTIFICATION_CHANNEL_ID = "my_service_channel"
 
         // Migration
-//        val MIGRATION_1_2 = object : Migration(1, 2) {
-//            override fun migrate(database: SupportSQLiteDatabase) {
-//                // We add the new column to the table
-//                database.execSQL("ALTER TABLE date_durations ADD COLUMN durationStr TEXT NOT NULL DEFAULT ''")
-//            }
-//        }
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // 创建新表
+                // 非空类型一定要明确指定，否则会报错！
+                database.execSQL("""
+                    CREATE TABLE daily_statistics (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        date TEXT NOT NULL,
+                        category TEXT NOT NULL,
+                        totalDuration INTEGER NOT NULL
+                    )
+                """)
+            }
+        }
     }
 
     val eventDB: EventDatabase by lazy {
         Room.databaseBuilder(
-            this,
-            EventDatabase::class.java,
-            "event_database"
-        )
-//            .addMigrations(MIGRATION_1_2)
+            this, EventDatabase::class.java, "event_database"
+            )
+            .addMigrations(MIGRATION_1_2)
             .build()
     }
 
