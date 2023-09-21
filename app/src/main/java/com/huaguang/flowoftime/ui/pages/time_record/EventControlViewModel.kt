@@ -111,7 +111,7 @@ class EventControlViewModel @Inject constructor(
                 pauseInterval = pair.second
             }
             totalDurationOfSubInsert = eventRepository.calTotalSubInsertDuration(eventId, eventType)
-
+            RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         } else { // 更新没有下级的当前项
             eventId = idState.current.value
             pauseInterval = if (eventType.isInsert()) 0 else pauseState.currentAcc.value // 插入事项不允许有暂停间隔
@@ -124,6 +124,7 @@ class EventControlViewModel @Inject constructor(
             pauseIntervalLong = pauseInterval.toLong(),
             totalDurationOfSubInsert = totalDurationOfSubInsert
         )
+        RDALogger.info("duration = $duration")
 
         eventRepository.updateThree(eventId, duration, pauseInterval)
 
@@ -167,14 +168,14 @@ class EventControlViewModel @Inject constructor(
     ): Duration {
         val pauseIntervalDuration = Duration.ofMinutes(pauseIntervalLong)
 //        RDALogger.info("pauseIntervalDuration = $pauseIntervalDuration")
-//        RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         val standardDuration = Duration.between(startTime, LocalDateTime.now())
 //        RDALogger.info("standardDuration = $standardDuration")
         val currentDuration = standardDuration.minus(pauseIntervalDuration) // 结束时间减去开始时间，然后再减去当前项的暂停时间
 
-        return totalDurationOfSubInsert?.apply {
-            currentDuration.minus(this)
+        return totalDurationOfSubInsert?.let {
+            currentDuration.minus(it)
         } ?: currentDuration
+
     }
 
     private fun updateIdState(autoId: Long, eventType: EventType) {

@@ -37,8 +37,10 @@ class TimeStreamApplication @Inject constructor() : Application() {
 
     val eventDB: EventDatabase by lazy {
         Room.databaseBuilder(
-            this, EventDatabase::class.java, "event_database"
-            )
+            context = this,
+            klass = EventDatabase::class.java,
+            name = "event_database"
+        )
             .addMigrations(MIGRATION_1_2)
             .build()
     }
