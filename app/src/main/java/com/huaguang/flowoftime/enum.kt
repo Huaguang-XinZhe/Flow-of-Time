@@ -1,7 +1,5 @@
 package com.huaguang.flowoftime
 
-
-
 enum class EventType {
     SUBJECT, // 可以有子事件：步骤、插入、伴随
     STEP, // 也可以有子事件：插入（只能在主题事件之下）
@@ -13,10 +11,6 @@ enum class EventType {
 
     fun isInsert() = this == SUBJECT_INSERT || this == STEP_INSERT
 
-    /**
-     * 没有下级的事件，于暂停的计算而言，直接使用 currentAcc 就可以了
-     */
-    fun isCurrent() = this == FOLLOW || this == SUBJECT_INSERT || this == STEP_INSERT
 }
 
 enum class TimeType {

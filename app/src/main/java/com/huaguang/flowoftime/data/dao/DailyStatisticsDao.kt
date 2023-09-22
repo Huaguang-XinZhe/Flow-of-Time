@@ -45,4 +45,11 @@ interface DailyStatisticsDao {
 
     @Query("DELETE FROM daily_statistics")
     suspend fun deleteAll()
+
+    @Query("""
+        UPDATE daily_statistics 
+        SET totalDuration = totalDuration + :deltaDuration
+        WHERE date = :eventDate AND category = :category
+    """)
+    suspend fun updateCategoryDuration(eventDate: LocalDate, category: String, deltaDuration: Duration)
 }

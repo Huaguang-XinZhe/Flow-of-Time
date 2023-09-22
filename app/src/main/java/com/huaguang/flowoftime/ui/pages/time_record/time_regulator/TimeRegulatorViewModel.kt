@@ -11,6 +11,7 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.TimeType
 import com.huaguang.flowoftime.data.models.CustomTime
+import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
@@ -28,6 +29,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TimeRegulatorViewModel @Inject constructor(
     private val repository: EventRepository,
+    private val statRepository: DailyStatisticsRepository,
     private val sharedState: SharedState,
     private val pauseState: PauseState,
     private val idState: IdState,
@@ -110,9 +112,9 @@ class TimeRegulatorViewModel @Inject constructor(
 
         updateJob?.cancel() // 取消之前的协程
         updateJob = viewModelScope.launch {
-            delay(1500) // 延迟1.5秒
+            delay(1200) // 延迟1.2秒
 
-            updateCurrentOrParentEvent(newCustomTime)
+            updateDB(newCustomTime)
 
             selectedTime?.value = null // 取消选中状态
             customTimeState.value = null // 为防止取消选中后再调整的时候更新起作用
@@ -120,8 +122,14 @@ class TimeRegulatorViewModel @Inject constructor(
         }
     }
 
-    private suspend fun updateCurrentOrParentEvent(newCustomTime: CustomTime) {
-        val (newDuration, durationMap) = calNewDurationPair(newCustomTime)
+    private suspend fun updateDB(newCustomTime: CustomTime) {
+        val (newDuration, durationMap) = calNewDurationPair(newCustomTime) { signedDelta ->
+            // 如有必要，更新类属时长
+            val (eventDate, category) = repository.getDateAndCategoryById(idState.subject.value)
+            category?.let {
+                statRepository.updateCategoryDuration(eventDate, it, signedDelta)
+            }
+        }
 
         repository.updateTimeAndDuration(newCustomTime, newDuration) // 更新数据库的开始、结束时间，同时更新 duration
 
@@ -138,33 +146,63 @@ class TimeRegulatorViewModel @Inject constructor(
      * @return 一般只取返回值的第一个元素（当前调整项的新 Duration），
      * 第二个元素是为已经结束的插入事件的父事件（也已经结束）准备的，如果为 null，表示不需要更新。
      */
-    private suspend fun calNewDurationPair(newCustomTime: CustomTime): Pair<Duration?, Map<Long, Duration>?> {
+    private suspend fun calNewDurationPair(
+        newCustomTime: CustomTime,
+        onCategoryUpdate: suspend (signedDelta: Duration) -> Unit
+    ): Pair<Duration?, Map<Long, Duration>?> {
         with(newCustomTime) {
-            if (type == TimeType.START && eventInfo.isTiming) return null to null
+            if (eventInfo.isTiming) return null to null
 
+            /*------------------------------- 调整项已经结束 ------------------------------------------*/
             val deltaDuration = ChronoUnit.MINUTES.between(initialTime, timeState.value).toDuration()
             val originalDuration = repository.getDurationById(eventInfo.id)
             val newDuration = calNewDurationWithCurrent(type, originalDuration, deltaDuration)
 
-            if (!eventInfo.eventType.isInsert() || eventInfo.isTiming) return newDuration to null
+            if (eventInfo.eventType == EventType.SUBJECT) {
+                // 调整已经结束的主题事件
+                onCategoryUpdate(signedDelta(type, deltaDuration, true))
+            }
 
+            if (!eventInfo.eventType.isInsert()) return newDuration to null
+
+            /*------------------------------------ 调整项是插入事件 ---------------------------------------*/
             val insertParent = repository.getInsertParentById(eventInfo.parentId!!)
             if (insertParent.endTime == null) return newDuration to null
 
+            /*---------------------------------- 插入事项的父事项也已经结束 -----------------------------------*/
             val newParentDuration = calNewDurationWithSuper(type, insertParent.duration!!, deltaDuration)
-            val durationMap = mutableMapOf(eventInfo.parentId to newParentDuration)
+            val durationMap = mutableMapOf(eventInfo.parentId to newParentDuration) // 这个 parent 有可能是主题事件，也有可能是步骤事件，此时的 map 只有一个元素
 
-            if (eventInfo.eventType == EventType.STEP_INSERT && sharedState.cursorType.value == null) {
+            if (eventInfo.eventType == EventType.SUBJECT_INSERT) {
+                // 调整已经结束的主题事件下的插入事件
+                onCategoryUpdate(signedDelta(type, deltaDuration))
+            } else if (sharedState.cursorType.value == null) {
+                // 调整已经结束的步骤事件下的插入事件（此时主题事件也结束了，只有这样，才会影响到主题事件，才需要进一步更新）
+                onCategoryUpdate(signedDelta(type, deltaDuration))
+
                 val subjectId = idState.subject.value
 //                RDALogger.info("进一步计算，获取主事件的 id = $subjectId")
                 val subjectDuration = repository.getDurationById(subjectId)
                 val newSubjectDuration = calNewDurationWithSuper(type, subjectDuration, deltaDuration)
 //                RDALogger.info("newSubjectDuration = $newSubjectDuration")
-                durationMap[subjectId] = newSubjectDuration
+                durationMap[subjectId] = newSubjectDuration // 此时的 map 有两个元素，第二个是主题事件，到这一步，那就说明上个 parent 一定是步骤事件了
             }
 
             return newDuration to durationMap
         }
+    }
+
+    /**
+     * 赋予变化量以符号（方向）
+     */
+    private fun signedDelta(
+        timeType: TimeType,
+        deltaDuration: Duration,
+        isStartReverse: Boolean = false, // 是否是 start 反，end 正？这是赋予变化量符号的模式，根据情况而定。
+    ) = if (isStartReverse) {
+        if (timeType == TimeType.START) Duration.ZERO.minus(deltaDuration) else deltaDuration
+    } else {
+        if (timeType == TimeType.START) deltaDuration else Duration.ZERO.minus(deltaDuration)
     }
 
     /**

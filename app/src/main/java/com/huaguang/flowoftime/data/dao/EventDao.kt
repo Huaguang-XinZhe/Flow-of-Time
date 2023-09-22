@@ -9,6 +9,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
+import com.huaguang.flowoftime.data.models.db_returns.DateCategory
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -233,6 +234,9 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE id BETWEEN :startId AND :endId")
     fun getEventsByIdRange(startId: Long, endId: Long): List<Event>
+
+    @Query("SELECT eventDate, category FROM events WHERE id = :id")
+    suspend fun getDateAndCategoryById(id: Long): DateCategory
 
 
 }

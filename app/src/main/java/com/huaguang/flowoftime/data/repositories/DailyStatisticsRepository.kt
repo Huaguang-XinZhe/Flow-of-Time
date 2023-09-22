@@ -14,34 +14,16 @@ class DailyStatisticsRepository(
     private val dailyStatisticsDao: DailyStatisticsDao
 ) {
     /**
-     * 在事件结束时更新每天的统计信息，参数都不能为 null
+     * 根据带符号的变化量，更新统计表中的类属时长数据（累加）
      */
-    suspend fun updateDailyStatistics(
-        date: LocalDate,
-        category: String?,
-        duration: Duration
-    ) {
-        if (category == null) return
-
+    suspend fun updateCategoryDuration(eventDate: LocalDate, category: String, deltaDuration: Duration) {
         withContext(Dispatchers.IO) {
-            // 获取或创建DailyStatistics条目
-            val dailyStat = dailyStatisticsDao.getDailyStatistics(date, category)
-                ?: DailyStatistics(date = date, category = category, totalDuration = Duration.ZERO)
-
-            // 更新总时长
-            dailyStat.totalDuration += duration
-
-            // 插入或更新DailyStatistics条目
-            if (dailyStat.id == 0L) {
-                dailyStatisticsDao.insert(dailyStat)
-            } else {
-                dailyStatisticsDao.update(dailyStat)
-            }
+            dailyStatisticsDao.updateCategoryDuration(eventDate, category, deltaDuration)
         }
     }
 
     fun getYesterdaysDailyStatisticsFlow(): Flow<List<DailyStatistics>> {
-        val yesterday = getAdjustedEventDate().minusDays(2)
+        val yesterday = getAdjustedEventDate().minusDays(0)
         return dailyStatisticsDao.getYesterdaysStatisticsFlow(yesterday)
     }
 
