@@ -36,15 +36,16 @@ enum class Mode {
 
 enum class DashType {
     TAG,
-    CATEGORY_ADD,
     CATEGORY_CHANGE,
     MIXED_ADD;
 
     fun isTag() = this == TAG
 
-    fun isAdd() = this == CATEGORY_ADD || this == MIXED_ADD
+    fun isAdd() = this == MIXED_ADD
 
-    fun isCategory() = this == CATEGORY_ADD || this == CATEGORY_CHANGE
+    fun isCategory() = this == CATEGORY_CHANGE
+
+
 }
 
 

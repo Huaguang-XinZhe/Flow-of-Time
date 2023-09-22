@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.data.repositories
 
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -27,9 +28,6 @@ class DailyStatisticsRepository(
         return dailyStatisticsDao.getYesterdaysStatisticsFlow(yesterday)
     }
 
-    /**
-     * 在事件结束时更新每天的统计信息，参数都不能为 null
-     */
     suspend fun updateDailyStatistics(
         date: LocalDate,
         category: String?,
@@ -95,5 +93,24 @@ class DailyStatisticsRepository(
             dailyStatisticsDao.deleteAll()
         }
     }
+
+    suspend fun originalReduction(
+        date: LocalDate,
+        originalCategory: String,
+        duration: Duration
+    ) {
+        withContext(Dispatchers.IO) {
+            RDALogger.info("原来的减少：category = $originalCategory, duration = $duration")
+            dailyStatisticsDao.reduceDuration(date, originalCategory, duration)
+        }
+    }
+
+    suspend fun deleteEntryByEmptyDuration() {
+        withContext(Dispatchers.IO) {
+            dailyStatisticsDao.deleteEntryByEmptyDuration(Duration.ZERO)
+        }
+    }
+
+
 
 }

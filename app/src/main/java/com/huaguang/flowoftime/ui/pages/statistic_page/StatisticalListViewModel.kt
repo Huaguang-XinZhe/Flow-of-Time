@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.time.Duration
 import javax.inject.Inject
@@ -26,6 +27,9 @@ class StatisticalListViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             repository.getYesterdaysDailyStatisticsFlow()
+                .onStart {
+                    repository.deleteEntryByEmptyDuration() // 清理掉统计表中时长为 0 的条目
+                }
                 .collect { yesterdaysDailyStatistics ->
                     sumDuration.value = yesterdaysDailyStatistics // 计算昨天的时长总计
                         .map { it.totalDuration }

@@ -2,8 +2,9 @@ package com.huaguang.flowoftime.ui.components.category_dialog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
+import androidx.room.Transaction
 import com.huaguang.flowoftime.DashType
+import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.LabelState
 import com.huaguang.flowoftime.ui.state.SharedState
@@ -16,6 +17,7 @@ class CategoryViewModel @Inject constructor(
     val labelState: LabelState,
     val sharedState: SharedState,
     val repository: EventRepository,
+    private val statRepository: DailyStatisticsRepository,
 ) : ViewModel() {
 
     fun onClassNameClick(
@@ -43,13 +45,56 @@ class CategoryViewModel @Inject constructor(
     }
 
     fun onClassNameDialogConfirm(eventId: Long, type: DashType, newText: String) {
-        if (newText.trim().isEmpty()) {
+        val labels = processInputText(newText) ?: return
+
+        viewModelScope.launch {
+            when(type) {
+                DashType.TAG -> {
+                    // 全是标签，存入数据库
+                    repository.updateTags(eventId, labels)
+                }
+                DashType.CATEGORY_CHANGE -> {
+                    // 只取第一个作为类属，其余无视
+                    updateCategoryAndStatistics(eventId, labels)
+                }
+                DashType.MIXED_ADD -> {
+                    updateData(eventId, labels)
+                }
+            }
+        }
+
+        onClassNameDialogDismiss()
+    }
+
+    @Transaction
+    private suspend fun updateData(eventId: Long, labels: MutableList<String>) {
+        val (date, _, duration) = repository.getEventCategoryInfoById(eventId)
+        updateMixed(eventId, labels) { category ->
+            statRepository.updateDailyStatistics(date, category, duration!!) // 能到添加类属的地步，duration 一定不为 null
+        }
+    }
+
+    @Transaction
+    private suspend fun updateCategoryAndStatistics(
+        eventId: Long,
+        labels: MutableList<String>
+    ) {
+        val (date, originalCategory, duration) = repository.getEventCategoryInfoById(eventId) // 必须放在前边，否则类属就被更新了
+        val newCategory = labels.first()
+        repository.updateCategory(eventId, newCategory)
+        statRepository.originalReduction(date, originalCategory!!, duration!!)
+        statRepository.updateDailyStatistics(date, newCategory, duration) // 插入或更新，在原基础上增加
+    }
+
+
+    private fun processInputText(text: String): MutableList<String>? {
+        if (text.trim().isEmpty()) {
             sharedState.toastMessage.value = "类属不能为空哦😊"
-            return
+            return null
         }
 
         var hasLongString = false
-        val labels = newText // 如果 labels 只有一个元素，没有逗号分隔，那么将会返回只有这个元素的集合，不会出错
+        val labels = text // 如果 labels 只有一个元素，没有逗号分隔，那么将会返回只有这个元素的集合，不会出错
             .split("，", ",")
             .map { it.trim() } // 使用 map 函数来应用 trim 函数到每一个元素
             .filterNot {
@@ -64,32 +109,23 @@ class CategoryViewModel @Inject constructor(
             sharedState.toastMessage.value = "太长的话，就删了哦🙃"
         }
 
-        viewModelScope.launch {
-            when(type) {
-                DashType.TAG -> {
-                    // 全是标签，存入数据库
-                    repository.updateTags(eventId, labels)
-                }
-                DashType.CATEGORY_ADD, DashType.CATEGORY_CHANGE -> {
-                    // 只取第一个作为类属，其余无视
-                    repository.updateCategory(eventId, labels.first())
-                }
-                DashType.MIXED_ADD -> {
-                    // 第一个作为类属，其余作为标签
-                    val category = labels.first()
-                    val remain = labels.apply { removeFirst() }
-                    val tags = if (remain.isEmpty()) null else remain
-                    RDALogger.info("tags = $tags")
-                    repository.updateClassName(
-                        id = eventId,
-                        category = category,
-                        tags = tags
-                    )
-                }
-            }
-        }
+        return labels
+    }
 
-        onClassNameDialogDismiss()
+    private suspend fun updateMixed(
+        eventId: Long,
+        labels: MutableList<String>,
+        onCategoryAdded: suspend (String) -> Unit
+    ) {
+        val category = labels.removeAt(0)  // Remove and get the first element
+        val tags = if (labels.isEmpty()) null else labels
+
+        repository.updateClassName(
+            id = eventId,
+            category = category,
+            tags = tags
+        )
+        onCategoryAdded(category)
     }
 
 }

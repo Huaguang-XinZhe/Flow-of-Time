@@ -73,7 +73,6 @@ fun SheetContent(
 ) {
     val titleText = when(type) {
         DashType.TAG -> "新增/修改标签"
-        DashType.CATEGORY_ADD -> "新增类属"
         DashType.CATEGORY_CHANGE -> "修改类属"
         else -> "新增类属和标签"
     }

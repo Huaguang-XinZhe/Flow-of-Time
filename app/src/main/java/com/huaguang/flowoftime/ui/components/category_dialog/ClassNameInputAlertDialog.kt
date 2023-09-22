@@ -34,11 +34,6 @@ fun ClassNameInputAlertDialog(viewModel: CategoryViewModel = viewModel()) {
             labelText = "多个标签之间以 ，或 , 相隔"
             titlePrefix = "#"
         }
-        DashType.CATEGORY_ADD -> {
-            title = "新增类属"
-            labelText = "若有多个，只取第一个"
-            titlePrefix = "@"
-        }
         DashType.CATEGORY_CHANGE -> {
             title = "修改类属"
             labelText = "若有多个，只取第一个"

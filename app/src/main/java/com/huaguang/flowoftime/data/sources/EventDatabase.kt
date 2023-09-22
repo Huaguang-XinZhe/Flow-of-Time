@@ -7,8 +7,8 @@ import com.huaguang.flowoftime.data.Converters
 import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
-import com.huaguang.flowoftime.data.models.db_returns.DateDuration
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
+import com.huaguang.flowoftime.data.models.tables.DateDuration
 import com.huaguang.flowoftime.data.models.tables.Event
 
 

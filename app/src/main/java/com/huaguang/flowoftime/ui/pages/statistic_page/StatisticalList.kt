@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
 import com.huaguang.flowoftime.utils.formatDurationInText
+import java.time.Duration
 
 @Composable
 fun StatisticalList(
@@ -31,10 +32,14 @@ fun StatisticalList(
         }
 
         items(yesterdaysDailyStatistics) { item: DailyStatistics ->
-            Text(
-                text = "${item.category} -> ${formatDurationInText(item.totalDuration)}",
-                modifier = Modifier.padding(10.dp)
-            )
+//            if (item.totalDuration == Duration.ZERO) return@items // 不能这样写，会报错！
+
+            if (item.totalDuration != Duration.ZERO) {
+                Text(
+                    text = "${item.category} -> ${formatDurationInText(item.totalDuration)}",
+                    modifier = Modifier.padding(10.dp)
+                )
+            }
         }
 
         item {

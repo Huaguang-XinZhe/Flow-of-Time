@@ -52,4 +52,21 @@ interface DailyStatisticsDao {
         WHERE date = :eventDate AND category = :category
     """)
     suspend fun updateCategoryDuration(eventDate: LocalDate, category: String, deltaDuration: Duration)
+
+    @Query("""
+        UPDATE daily_statistics 
+        SET totalDuration = totalDuration - :duration 
+        WHERE date = :date AND category = :category
+    """)
+    suspend fun reduceDuration(date: LocalDate, category: String, duration: Duration)
+
+    @Query("""
+        UPDATE daily_statistics 
+        SET totalDuration = totalDuration + :duration 
+        WHERE date = :date AND category = :category
+    """)
+    suspend fun increaseDuration(date: LocalDate, category: String, duration: Duration)
+
+    @Query("DELETE FROM daily_statistics WHERE totalDuration = :duration")
+    suspend fun deleteEntryByEmptyDuration(duration: Duration)
 }

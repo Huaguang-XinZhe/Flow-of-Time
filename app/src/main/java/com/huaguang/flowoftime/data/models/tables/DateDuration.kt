@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.data.models.db_returns
+package com.huaguang.flowoftime.data.models.tables
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

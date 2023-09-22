@@ -10,6 +10,7 @@ import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.db_returns.DateCategory
+import com.huaguang.flowoftime.data.models.db_returns.EventCategoryInfo
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
 import com.huaguang.flowoftime.data.models.db_returns.StopRequire
@@ -241,6 +242,9 @@ interface EventDao {
 
     @Query("SELECT eventDate, category FROM events WHERE id = :id")
     suspend fun getDateAndCategoryById(id: Long): DateCategory
+
+    @Query("SELECT eventDate, category, duration FROM events WHERE id = :id")
+    suspend fun getEventCategoryInfoById(id: Long): EventCategoryInfo
 
 
 }
