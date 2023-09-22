@@ -12,6 +12,7 @@ import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.db_returns.DateCategory
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
+import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
@@ -21,6 +22,9 @@ import java.time.LocalDateTime
 
 @Dao
 interface EventDao {
+
+    @Query("SELECT startTime, eventDate, category FROM events WHERE id = :eventId")
+    suspend fun getStopRequireById(eventId: Long): StopRequire
 
     @Query("SELECT * FROM events")
     suspend fun getAllEvents(): List<Event>

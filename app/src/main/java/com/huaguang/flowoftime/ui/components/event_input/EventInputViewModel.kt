@@ -72,9 +72,6 @@ class EventInputViewModel @Inject constructor(
             } else null
 
             category?.let {
-                if (intent.value == InputIntent.RECORD) {
-                    idState.endId = eventId.value // 意图记录且有类属时才需要更新 endId
-                }
                 sharedState.toastMessage.value = "成功类属为：$category"
             }
 

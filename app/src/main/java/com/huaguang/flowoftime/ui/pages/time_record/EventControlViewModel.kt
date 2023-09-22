@@ -118,13 +118,20 @@ class EventControlViewModel @Inject constructor(
             totalDurationOfSubInsert = null
         }
 
+        val stopRequire = repository.getStopRequire(eventId)
         val duration = calEventDuration(
-            startTime = repository.getStartTimeById(eventId),
+            startTime = stopRequire.startTime,
             pauseIntervalLong = pauseInterval.toLong(),
             totalDurationOfSubInsert = totalDurationOfSubInsert
         )
 
         repository.updateThree(eventId, duration, pauseInterval)
+
+        if (eventType == EventType.SUBJECT) { // 只有主题事件需要更新每日统计数据
+            stopRequire.apply {
+                dailyStatRepository.updateDailyStatistics(eventDate, category, duration)
+            }
+        }
 
         return Pair(eventId, pauseInterval)
     }
@@ -283,10 +290,6 @@ class EventControlViewModel @Inject constructor(
 //
 //            val allEvents = repository.getAllEvents()
 //            dailyStatRepository.upsertDailyStatistics(allEvents)
-//        }
-//        idState.apply {
-//            startId = 151
-//            endId = 151
 //        }
 
     }

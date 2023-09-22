@@ -3,10 +3,8 @@ package com.huaguang.flowoftime.ui.pages.statistic_page
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
-import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.IdState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +16,6 @@ import javax.inject.Inject
 
 @HiltViewModel
 class StatisticalListViewModel @Inject constructor(
-    private val eventRepository: EventRepository,
     val repository: DailyStatisticsRepository,
     val idState: IdState,
 ) : ViewModel() {
@@ -36,20 +33,6 @@ class StatisticalListViewModel @Inject constructor(
 
                     _yesterdaysDailyStatisticsFlow.value = yesterdaysDailyStatistics
                 }
-        }
-    }
-
-    suspend fun onStart() {
-        idState.apply {
-            RDALogger.info("startId = $startId, endId = $endId")
-            if (startId == endId) return
-
-            // 在开始收集流之前，执行类属时长的计算并填充统计表
-            val events = eventRepository.getEventsByIdRange(startId, endId)
-            if (events.isEmpty()) return
-
-            repository.upsertDailyStatistics(events)
-            startId = endId // 重置 startId，已经计算过了
         }
     }
 }

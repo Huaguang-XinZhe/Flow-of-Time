@@ -91,8 +91,6 @@ class SPHelper private constructor(context: Context) {
         current = mutableLongStateOf(sp.getLong("current", 0L)),
         subject = mutableLongStateOf(sp.getLong("subject", 0L)),
         step = mutableLongStateOf(sp.getLong("step", 0L)),
-        startId = sp.getLong("start_id", 0L),
-        endId = sp.getLong("end_id", 0L)
     )
 
     fun saveRingVolume(value: Int) {
@@ -118,8 +116,6 @@ class SPHelper private constructor(context: Context) {
             putLong("current", idState.current.value)
             putLong("subject", idState.subject.value)
             putLong("step", idState.step.value)
-            putLong("start_id", idState.startId)
-            putLong("end_id", idState.endId)
         }
     }
 
