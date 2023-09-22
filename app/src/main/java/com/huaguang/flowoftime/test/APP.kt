@@ -66,11 +66,11 @@ fun APP2() {
             }
             composable(Page.Statistic.route) {
                 RDALogger.info("统计页 composable")
-                StatisticPage()
+//                StatisticPage()
             }
             composable(Page.Category.route) {
                 RDALogger.info("类属页 composable")
-                CategoryPage()
+//                CategoryPage()
             }
 
         }
@@ -134,16 +134,3 @@ fun BottomBar(navController: NavController) {
     }
 }
 
-@Composable
-fun StatisticPage() {
-
-//    RDALogger.info("统计页重新组合")
-    Text(text = "敬请期待")
-
-}
-
-@Composable
-fun CategoryPage() {
-//    RDALogger.info("类属页重新组合")
-    Text(text = "有待开发")
-}

@@ -73,8 +73,8 @@ fun InputAlertDialog(
                     ) {
                         append("$titlePrefix ")
                     }
-                    append(title)
                 }
+                append(title) // 细节 Bug，title 不应该放在 titlePrefix 非空块下！
             }
             Text(text = annotatedString)
         },

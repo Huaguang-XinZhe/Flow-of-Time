@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
@@ -13,13 +12,13 @@ import com.huaguang.flowoftime.data.models.Operation
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
+import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -32,10 +31,11 @@ class EventControlViewModel @Inject constructor(
     val inputState: InputState,
     val sharedState: SharedState,
     val undoStack: UndoStack,
-    private val eventRepository: EventRepository,
+    private val repository: EventRepository,
     private val dailyStatRepository: DailyStatisticsRepository,
     private val pauseState: PauseState,
     val idState: IdState,
+    val spHelper: SPHelper,
 //    private val dndManager: DNDManager,
 ) : ViewModel() {
 
@@ -89,11 +89,11 @@ class EventControlViewModel @Inject constructor(
         eventType: EventType,
     ): Long {
         val newEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
-        val autoId = eventRepository.insertEvent(newEvent) // 存入数据库
+        val autoId = repository.insertEvent(newEvent) // 存入数据库
 
         if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
             collectPauseInterval(eventType)
-            eventRepository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
+            repository.updateParentWithContent(newEvent.parentEventId!!) // 有父事件，那其 parentEventId 就不会是 null
         }
 
         return autoId
@@ -110,29 +110,21 @@ class EventControlViewModel @Inject constructor(
                 eventId = pair.first
                 pauseInterval = pair.second
             }
-            totalDurationOfSubInsert = eventRepository.calTotalSubInsertDuration(eventId, eventType)
-            RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
+            totalDurationOfSubInsert = repository.calTotalSubInsertDuration(eventId, eventType)
+//            RDALogger.info("totalDurationOfSubInsert = $totalDurationOfSubInsert")
         } else { // 更新没有下级的当前项
             eventId = idState.current.value
             pauseInterval = if (eventType.isInsert()) 0 else pauseState.currentAcc.value // 插入事项不允许有暂停间隔
             totalDurationOfSubInsert = null
         }
 
-        val stopRequire = eventRepository.getStopRequire(eventId)
         val duration = calEventDuration(
-            startTime = stopRequire.startTime,
+            startTime = repository.getStartTimeById(eventId),
             pauseIntervalLong = pauseInterval.toLong(),
             totalDurationOfSubInsert = totalDurationOfSubInsert
         )
-        RDALogger.info("duration = $duration")
 
-        eventRepository.updateThree(eventId, duration, pauseInterval)
-
-        if (eventType == EventType.SUBJECT) { // 只有主题事件需要更新每日统计数据
-            stopRequire.apply {
-                dailyStatRepository.updateDailyStatistics(eventDate, category, duration)
-            }
-        }
+        repository.updateThree(eventId, duration, pauseInterval)
 
         return Pair(eventId, pauseInterval)
     }
@@ -184,6 +176,7 @@ class EventControlViewModel @Inject constructor(
 
             if (eventType == EventType.SUBJECT) {
                 subject.value = autoId
+                endId = autoId // 主题事件结束，可以计算到当前事项了
             } else if (eventType == EventType.STEP) {
                 step.value = autoId // 有新步骤的话，就会对旧的覆盖，所以，stepId 其实最新的步骤事件的 id
             }
@@ -285,11 +278,18 @@ class EventControlViewModel @Inject constructor(
     }
 
     fun onMenuClick() {
-        viewModelScope.launch {
-            val allEvents = eventRepository.getAllEvents()
+//        viewModelScope.launch {
+//            // 清除统计表中的所有数据
+//            dailyStatRepository.deleteAll()
+//
+//            val allEvents = repository.getAllEvents()
+//            dailyStatRepository.upsertDailyStatistics(allEvents)
+//        }
+//        idState.apply {
+//            startId = 151
+//            endId = 151
+//        }
 
-            dailyStatRepository.initializeDailyStatistics(allEvents)
-        }
     }
 
 

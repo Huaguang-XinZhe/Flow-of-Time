@@ -9,7 +9,6 @@ import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.db_returns.DateDuration
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
-import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import com.huaguang.flowoftime.ui.state.IdState
@@ -353,15 +352,14 @@ class EventRepository(
         }
     }
 
-    suspend fun getStopRequire(eventId: Long): StopRequire =
-        withContext(Dispatchers.IO) {
-            eventDao.getStopRequireById(eventId)
-        }
-
     suspend fun getAllEvents() =
         withContext(Dispatchers.IO) {
             eventDao.getAllEvents()
         }
 
+    suspend fun getEventsByIdRange(startId: Long, endId: Long) =
+        withContext(Dispatchers.IO) {
+            eventDao.getEventsByIdRange(startId, endId)
+        }
 
 }
