@@ -232,7 +232,7 @@ interface EventDao {
     @Query("SELECT eventDate FROM events WHERE category = :category ORDER BY startTime DESC LIMIT 1")
     fun getLatestXXXDate(category: String = "xxx"): Flow<LocalDate?>
 
-    @Query("SELECT * FROM events WHERE id BETWEEN :startId AND :endId")
+    @Query("SELECT * FROM events WHERE id BETWEEN :startId + 1 AND :endId") // 由于 BETWEEN AND 会包含 startId，所以必须加一
     fun getEventsByIdRange(startId: Long, endId: Long): List<Event>
 
     @Query("SELECT eventDate, category FROM events WHERE id = :id")

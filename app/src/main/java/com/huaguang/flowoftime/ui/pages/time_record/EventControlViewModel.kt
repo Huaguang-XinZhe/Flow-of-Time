@@ -176,7 +176,6 @@ class EventControlViewModel @Inject constructor(
 
             if (eventType == EventType.SUBJECT) {
                 subject.value = autoId
-                endId = autoId // 主题事件结束，可以计算到当前事项了
             } else if (eventType == EventType.STEP) {
                 step.value = autoId // 有新步骤的话，就会对旧的覆盖，所以，stepId 其实最新的步骤事件的 id
             }

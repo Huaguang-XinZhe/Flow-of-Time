@@ -32,6 +32,7 @@ class DailyStatisticsRepository(
      * @param events 是需要更新的事件列表（在存档 id 之后，正在进行事件 id 之前的所有事件）
      */
     suspend fun upsertDailyStatistics(events: List<Event>) {
+//        RDALogger.info("events = $events")
         // 创建一个映射来存储每日的统计数据
         val dailyStatisticsMap = mutableMapOf<Pair<LocalDate, String>, Duration>()
         // 创建两个列表来存储需要插入和需要更新的DailyStatistics条目
@@ -52,6 +53,7 @@ class DailyStatisticsRepository(
             }
         }
 
+//        RDALogger.info("解构遍历前 dailyStatisticsMap = $dailyStatisticsMap")
         // 遍历映射并准备daily_statistics表的数据
         for ((key, duration) in dailyStatisticsMap) {
             val (date, category) = key
@@ -69,6 +71,7 @@ class DailyStatisticsRepository(
             if (dailyStat.id == 0L) {
                 toInsert.add(dailyStat)
             } else {
+//                RDALogger.info("添加到更新列表")
                 toUpdate.add(dailyStat)
             }
         }
@@ -80,6 +83,7 @@ class DailyStatisticsRepository(
                 dailyStatisticsDao.insertAll(toInsert)
             }
             if (toUpdate.isNotEmpty()) {
+//                RDALogger.info("执行更新")
                 dailyStatisticsDao.updateAll(toUpdate)
             }
         }

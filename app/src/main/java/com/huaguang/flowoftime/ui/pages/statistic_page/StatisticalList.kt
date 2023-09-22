@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -20,6 +21,10 @@ fun StatisticalList(
 ) {
     val yesterdaysDailyStatistics by viewModel.yesterdaysDailyStatisticsFlow.collectAsState()
     val sumDuration by viewModel.sumDuration // 这是一个状态，当它的值发生改变的时候，组件会重组
+
+    LaunchedEffect(Unit) {
+        viewModel.onStart()
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()
