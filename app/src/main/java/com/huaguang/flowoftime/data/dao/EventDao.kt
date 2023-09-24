@@ -246,9 +246,14 @@ interface EventDao {
     @Query("SELECT eventDate, category, duration FROM events WHERE id = :id")
     suspend fun getEventCategoryInfoById(id: Long): EventCategoryInfo
 
-    @Query("SELECT * FROM events WHERE eventDate = :date AND category = :category")
-    suspend fun getEventsByDateCategory(date: LocalDate, category: String): List<Event>
+    /***
+     * 找出当天所有的事件，以备之后根据类属进一步细分
+     */
+    @Query("SELECT * FROM events WHERE eventDate = :date")
+    suspend fun getAllEventsByDate(date: LocalDate): List<Event>
 
+    @Query("SELECT id FROM events WHERE eventDate = :date AND category = :category")
+    suspend fun getIdListByDateCategory(date: LocalDate, category: String): List<Long>
 
 
 }
