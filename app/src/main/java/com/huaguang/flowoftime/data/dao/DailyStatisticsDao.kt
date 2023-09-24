@@ -34,7 +34,7 @@ interface DailyStatisticsDao {
     @Update
     suspend fun updateAll(dailyStatistics: List<DailyStatistics>)
 
-    @Query("SELECT * FROM daily_statistics WHERE date = :date")
+    @Query("SELECT * FROM daily_statistics WHERE date = :date ORDER BY totalDuration DESC")
     suspend fun getDailyStatisticsByDate(date: LocalDate): List<DailyStatistics>
 
     @Query("SELECT SUM(totalDuration) FROM daily_statistics WHERE date = :date")

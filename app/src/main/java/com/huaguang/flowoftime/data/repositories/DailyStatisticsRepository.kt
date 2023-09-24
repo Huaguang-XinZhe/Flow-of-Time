@@ -28,6 +28,11 @@ class DailyStatisticsRepository(
         return dailyStatisticsDao.getYesterdaysStatisticsFlow(yesterday)
     }
 
+    suspend fun getDailyStatisticsByDate(date: LocalDate) =
+        withContext(Dispatchers.IO) {
+            dailyStatisticsDao.getDailyStatisticsByDate(date)
+        }
+
     suspend fun updateDailyStatistics(
         date: LocalDate,
         category: String?,

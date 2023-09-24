@@ -42,14 +42,14 @@ fun HorizontalBarChart(
     ) {
 
         data.forEach { (label, value) ->
-            val percent = "${(value/maxValue * 100).toInt()}%"
-            val ratio = value /referenceValue
+            val percent = (value/maxValue * 100).toInt()
+            val ratio = if (referenceValue != 0f) value / referenceValue else 0f
             val formattedDuration = formatDurationInText(Duration.ofMinutes(value.toLong()))
 
             if (ratio <= 0.16) {
                 TextButton(onClick = { onClick(label) }) {
                     Text(
-                        text = "$label -> $formattedDuration  $percent",
+                        text = "$label -> $formattedDuration  $percent%",
                         modifier = Modifier.padding(vertical = spacing)
                     )
                 }
@@ -64,7 +64,7 @@ fun HorizontalBarChart(
             )
             // 条形
             Bar(
-                percent = percent,
+                percent = "$percent%",
                 ratio = ratio,
                 durationText = formattedDuration,
                 barHeight = barHeight,
@@ -130,7 +130,7 @@ fun Bar(
             text = percent,
             color = barColor,
             fontWeight = FontWeight.SemiBold,
-            modifier = if (ratio == 1f) Modifier else Modifier.weight((1 - ratio)) // invalid weight 0.0; must be greater than zero
+            modifier = if (ratio >= 1f) Modifier else Modifier.weight((1 - ratio)) // invalid weight 0.0; must be greater than zero
         )
     }
 }

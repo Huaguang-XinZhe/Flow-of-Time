@@ -149,6 +149,9 @@ dependencies {
     // MPAndroidChart 图表库
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
 
+    // 日期选择库
+    implementation 'com.github.Rafsanjani:datepickertimeline:0.7.1'
+
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
