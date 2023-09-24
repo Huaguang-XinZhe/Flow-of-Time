@@ -24,7 +24,7 @@ class DailyStatisticsRepository(
     }
 
     fun getYesterdaysDailyStatisticsFlow(): Flow<List<DailyStatistics>> {
-        val yesterday = getAdjustedEventDate().minusDays(0)
+        val yesterday = getAdjustedEventDate().minusDays(1)
         return dailyStatisticsDao.getYesterdaysStatisticsFlow(yesterday)
     }
 

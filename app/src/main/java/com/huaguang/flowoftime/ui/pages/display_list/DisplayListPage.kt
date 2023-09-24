@@ -54,6 +54,10 @@ fun DisplayListPage(
     LaunchedEffect(Unit) { // 只会在初次重组的时候执行（每次切换到展示页都是初次执行，之后留在页面内的其他重组不会执行）
 //        listState.animateScrollToItem(80) // 这里固定编码，不过没关系，一般两天的事件总数不会超过这个
         listState.scrollToItem(80) // 立即滚动到底部，不需要动画
+
+        recentTwoDaysCombinedEvents.forEach { combinedEvent ->
+            toggleMap[combinedEvent!!.event.id] = ItemState.initialDisplay()
+        }
     }
 
     Column(
@@ -75,14 +79,9 @@ fun DisplayListPage(
                     }
 
                     items(events) { item: CombinedEvent? ->
-                        val eventId = item!!.event.id
-                        if (toggleMap[eventId] == null) { // items 块会多次执行（列表滑动引起），为保证状态实例的唯一性，必须进行 null 检查，只有为 null 时才重新创建
-                            toggleMap[eventId] = ItemState.initialDisplay()
-                        }
-
                         DRToggleItem(
                             modifier = Modifier.padding(bottom = 5.dp),
-                            itemState = toggleMap[eventId] ?: ItemState.initialDisplay(),
+                            itemState = toggleMap[item!!.event.id] ?: ItemState.initialDisplay(),
                             combinedEvent = item,
                         )
                     }

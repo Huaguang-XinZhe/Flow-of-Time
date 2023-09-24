@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.ui.widget
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +34,7 @@ fun HorizontalBarChart(
     barHeight: Dp = 30.dp,
     spacing: Dp = 10.dp,
     barColor: Color = MaterialTheme.colorScheme.primary,
+    onClick: (label: String) -> Unit
 ) {
     Column(
         modifier = Modifier.padding(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 16.dp),
@@ -44,10 +47,12 @@ fun HorizontalBarChart(
             val formattedDuration = formatDurationInText(Duration.ofMinutes(value.toLong()))
 
             if (ratio <= 0.16) {
-                Text(
-                    text = "$label -> $formattedDuration  $percent",
-                    modifier = Modifier.padding(vertical = spacing)
-                )
+                TextButton(onClick = { onClick(label) }) {
+                    Text(
+                        text = "$label -> $formattedDuration  $percent",
+                        modifier = Modifier.padding(vertical = spacing)
+                    )
+                }
                 return@forEach
             }
 
@@ -63,7 +68,8 @@ fun HorizontalBarChart(
                 ratio = ratio,
                 durationText = formattedDuration,
                 barHeight = barHeight,
-                barColor = barColor
+                barColor = barColor,
+                onClick = { onClick(label) }
             )
         }
     }
@@ -77,7 +83,9 @@ fun HorizontalBarChartPreview() {
         "Category B" to 30f,
         "Category C" to 70f
     )
-    HorizontalBarChart(data = sampleData, referenceValue = 70f, maxValue = 150f)
+    HorizontalBarChart(data = sampleData, referenceValue = 70f, maxValue = 150f) {
+
+    }
 }
 
 @Composable
@@ -86,14 +94,15 @@ fun Bar(
     ratio: Float,
     durationText: String,
     barHeight: Dp,
-    barColor: Color
+    barColor: Color,
+    onClick: () -> Unit
 ) {
 
 //    RDALogger.info("formattedDuration = $formattedDuration, ratio = $ratio")
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
     ) {
         // Bar
         Box(
@@ -101,7 +110,8 @@ fun Bar(
                 .background(barColor, shape = RoundedCornerShape(8.dp))
 //                .width(maxBarWidth * (value / maxValue)) // 这里必须用 dp，用 float 的条形是一样的，全部充满，不会有区分
                 .weight(ratio)
-                .height(barHeight),
+                .height(barHeight)
+                .clickable { onClick() },
             contentAlignment = Alignment.CenterStart
         ) {
             Text(

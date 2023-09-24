@@ -4,16 +4,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.IdState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import java.time.Duration
+import java.time.LocalDate
 import javax.inject.Inject
 
 @HiltViewModel
-class StatisticalListViewModel @Inject constructor(
+class StatisticViewModel @Inject constructor(
     val repository: DailyStatisticsRepository,
+    private val eventRepository: EventRepository,
     val idState: IdState,
 ) : ViewModel() {
 //    private val _yesterdaysDailyStatisticsFlow = MutableStateFlow<List<DailyStatistics>>(listOf())
@@ -41,4 +44,8 @@ class StatisticalListViewModel @Inject constructor(
                 }
         }
     }
+
+    suspend fun getCombinedEventsByDateCategory(date: LocalDate, category: String) =
+        eventRepository.getCombinedEventsByDateCategory(date, category)
+
 }

@@ -318,6 +318,14 @@ class EventButtonsViewModel @Inject constructor(
         }
     }
 
+    fun onMenuClick() {
+        idState.apply {
+            subject.value = 195
+            current.value = 195
+        }
+
+        toSubjectTimingState()
+    }
 
 
 }

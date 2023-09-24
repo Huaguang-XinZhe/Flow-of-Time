@@ -11,12 +11,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordPageTopBar(
     modifier: Modifier = Modifier,
-    viewModel: EventControlViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    viewModel: EventControlViewModel = viewModel(),
     onNavigation: (String) -> Unit
 ) {
     TopAppBar(

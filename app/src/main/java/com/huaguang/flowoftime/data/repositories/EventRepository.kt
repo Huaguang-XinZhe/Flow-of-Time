@@ -378,5 +378,12 @@ class EventRepository(
             eventDao.getEventCategoryInfoById(eventId)
         }
 
+    suspend fun getCombinedEventsByDateCategory(date: LocalDate, category: String): List<CombinedEvent> {
+        val eventsMap = withContext(Dispatchers.IO) {
+            eventDao.getEventsByDateCategory(date, category).associateBy { it.id }
+        }
+
+        return buildCombinedEvents(eventsMap, null)
+    }
 
 }
