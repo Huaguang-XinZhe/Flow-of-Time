@@ -19,7 +19,7 @@ interface DailyStatisticsDao {
 
     // 在这里，我犯了两个错误，一个是返回类型应该是 List，另一个是导错了包，应该是协程包，而不是 current.flow
     // 复制粘贴多了，自己写的少了，就容易出各种各样的错误。
-    @Query("SELECT * FROM daily_statistics WHERE date = :yesterday")
+    @Query("SELECT * FROM daily_statistics WHERE date = :yesterday ORDER BY totalDuration DESC")
     fun getYesterdaysStatisticsFlow(yesterday: LocalDate): Flow<List<DailyStatistics>>
 
     @Insert
