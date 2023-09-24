@@ -20,11 +20,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.compose.rememberNavController
+import com.foreverrafs.datepicker.state.rememberDatePickerState
 import com.huaguang.flowoftime.ui.components.category_dialog.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
 import com.huaguang.flowoftime.ui.pages.statistic_page.StatisticPage
 import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
+import com.huaguang.flowoftime.utils.getAdjustedEventDate
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,6 +34,7 @@ import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
 fun MyApp(appViewModels: AppViewModels) {
 //    val selectedTab = remember { mutableStateOf(tabs[0]) }
     val selectedTab = rememberSaveable { mutableStateOf(tabs[0]) } // 配置更改或被系统杀内存时将保存这个状态（里边类型需要 Parcelable）
+    val datePickerState = rememberDatePickerState(initialDate = getAdjustedEventDate().minusDays(1))
 
     Scaffold(
         bottomBar = { BottomBar(selectedTab) },
@@ -56,8 +59,8 @@ fun MyApp(appViewModels: AppViewModels) {
                         }
                     }
                     Page.List -> DisplayListPage()
-                    Page.Statistic -> StatisticPage()
-                    Page.Category -> StatisticPage()
+                    Page.Statistic -> StatisticPage(datePickerState)
+                    Page.Category -> Text(text = "类属页，敬请期待")
                 }
             }
 

@@ -45,11 +45,14 @@ fun DisplayListPage(
 
     // 为避免设值时触发重组，不能使用 MutableStateMapOf，只能使用普通的可变 Map。
     val toggleMap = remember { mutableMapOf<Long, ItemState>() } // Map 必须放在外边，如果放在 items 块内，对于每个 item 就都会创建一个 map
-    val groupedEvents = recentTwoDaysCombinedEvents.groupBy { combinedEvent ->
-        combinedEvent?.event?.eventDate ?: LocalDate.now()
-    } // 先分组，后遍历
-    val listState = rememberLazyListState()
+    val groupedEvents = recentTwoDaysCombinedEvents
+        .groupBy { combinedEvent ->
+            combinedEvent?.event?.eventDate ?: LocalDate.now()
+        } // 先分组，后遍历
+//        .entries
+//        .sortedByDescending { it.key } // 按日期降序排列
     val addDashButton = remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) { // 只会在初次重组的时候执行（每次切换到展示页都是初次执行，之后留在页面内的其他重组不会执行）
 //        listState.animateScrollToItem(80) // 这里固定编码，不过没关系，一般两天的事件总数不会超过这个
