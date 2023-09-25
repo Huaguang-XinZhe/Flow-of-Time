@@ -38,9 +38,13 @@ import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.HorizontalBarChart
 import com.huaguang.flowoftime.utils.formatDurationInText
+import com.huaguang.flowoftime.utils.formatLocalDateTime
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.space
 import kotlinx.coroutines.launch
+import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -90,10 +94,15 @@ fun BarStatistics(
     val data by viewModel.data.collectAsState()
     val referenceValue by viewModel.referenceValue.collectAsState()
 
+
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
+        item {
+            DaySummaryText()
+        }
+
         item {
             HorizontalBarChart( // 这是完整的一块，已经包含所有的条目了，不能放在 items 里边，否则会有很多很多个！！！
                 data = data,
@@ -110,8 +119,40 @@ fun BarStatistics(
                 modifier = Modifier.padding(bottom = 20.dp)
             )
         }
+
     }
 
+}
+
+@Composable
+fun DaySummaryText(viewModel: StatisticViewModel = viewModel()) {
+    val wakeUpTime by viewModel.wakeUpTime.collectAsState()
+    val sleepTime by viewModel.sleepTime.collectAsState()
+    val nextWakeUpTime by viewModel.nextWakeUpTime.collectAsState()
+    val date by viewModel.date.collectAsState()
+    val sumDuration by viewModel.sumDuration.collectAsState()
+
+    if (wakeUpTime == null || sleepTime == null) return
+
+    val firstWakeUpText = "（起床）${formatLocalDateTime(wakeUpTime!!)}"
+
+    val text = if (date.isEqual(getAdjustedEventDate())) { // 如果是当天
+        val duration = Duration.between(wakeUpTime, LocalDateTime.now())
+        "$firstWakeUpText -> ${formatLocalDateTime(LocalDateTime.now())}（当前）\n\n" +
+                "${space(21)}${formatDurationInText(duration)}"
+    } else {
+        val firstDuration = Duration.between(wakeUpTime, sleepTime)
+        val secondDuration = Duration.between(sleepTime, nextWakeUpTime)
+        val diffDurationText = formatDurationInText(firstDuration + secondDuration - sumDuration)
+        "$firstWakeUpText -> ${formatLocalDateTime(sleepTime!!)}（入睡）-> ${formatLocalDateTime(nextWakeUpTime!!)}（次日起床）\n\n" +
+                "${space(21)}${formatDurationInText(firstDuration)}${space(17)}${formatDurationInText(secondDuration)}\n\n" +
+                "${space(38)}间隙：$diffDurationText"
+    }
+
+    Text(
+        text = text,
+        modifier = Modifier.padding(vertical = 10.dp)
+    )
 }
 
 @Composable

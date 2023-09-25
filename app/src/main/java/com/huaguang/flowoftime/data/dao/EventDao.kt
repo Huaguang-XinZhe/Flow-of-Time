@@ -13,6 +13,7 @@ import com.huaguang.flowoftime.data.models.db_returns.DateCategory
 import com.huaguang.flowoftime.data.models.db_returns.EventCategoryInfo
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
+import com.huaguang.flowoftime.data.models.db_returns.KeyTimePoints
 import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
@@ -255,5 +256,11 @@ interface EventDao {
     @Query("SELECT id FROM events WHERE eventDate = :date AND category = :category")
     suspend fun getIdListByDateCategory(date: LocalDate, category: String): List<Long>
 
+    @Query("""
+        SELECT MIN(startTime) as wakeUpTime, MAX(startTime) as sleepTime, MAX(endTime) as nextWakeUpTime
+        FROM events 
+        WHERE eventDate = :date
+    """)
+    fun getKeyTimePointsByDate(date: LocalDate): Flow<KeyTimePoints>
 
 }

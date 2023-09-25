@@ -392,4 +392,7 @@ class EventRepository(
         }
     }
 
+    fun getKeyTimePointsByDate(date: LocalDate) =
+        eventDao.getKeyTimePointsByDate(date)
+
 }

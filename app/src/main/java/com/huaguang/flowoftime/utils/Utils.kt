@@ -9,6 +9,16 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import com.huaguang.flowoftime.coreEventKeyWords
 
+fun space(num: Int): String {
+    var count = 0
+    val builder = StringBuilder()
+    while (count <= num) {
+        builder.append(" ")
+        count++
+    }
+    return builder.toString()
+}
+
 fun isCoreEvent(name: String): Boolean {
     for (keyWord in coreEventKeyWords) {
         val contains = name.contains(keyWord, true)

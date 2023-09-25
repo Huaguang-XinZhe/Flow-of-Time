@@ -44,7 +44,7 @@ fun HorizontalBarChart(
             val ratio = if (referenceValue != 0f) value / referenceValue else 0f
             val formattedDuration = formatDurationInText(Duration.ofMinutes(value.toLong()))
 
-            if (ratio <= 0.16) {
+            if (ratio <= 0.175) {
                 TextButton(onClick = { onClick(label) }) {
                     Text(
                         text = "$label -> $formattedDuration  $percent%",

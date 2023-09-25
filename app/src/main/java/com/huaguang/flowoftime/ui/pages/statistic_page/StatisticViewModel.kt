@@ -3,7 +3,6 @@ package com.huaguang.flowoftime.ui.pages.statistic_page
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -17,6 +16,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -32,7 +32,6 @@ class StatisticViewModel @Inject constructor(
     private val _combinedEvents = MutableStateFlow<List<CombinedEvent>>(listOf())
     val combinedEvents: StateFlow<List<CombinedEvent>> = _combinedEvents
 
-
     val category = mutableStateOf("")
 
     private val _date = MutableStateFlow(yesterday)
@@ -46,6 +45,15 @@ class StatisticViewModel @Inject constructor(
 
     private val _referenceValue = MutableStateFlow(0f)
     val referenceValue: StateFlow<Float> = _referenceValue
+
+    private val _wakeUpTime = MutableStateFlow<LocalDateTime?>(null)
+    val wakeUpTime: StateFlow<LocalDateTime?> = _wakeUpTime
+
+    private val _sleepTime = MutableStateFlow<LocalDateTime?>(null)
+    val sleepTime: StateFlow<LocalDateTime?> = _sleepTime
+
+    private val _nextWakeUpTime = MutableStateFlow<LocalDateTime?>(null)
+    val nextWakeUpTime: StateFlow<LocalDateTime?> = _nextWakeUpTime
 
     init {
         viewModelScope.launch {
@@ -72,6 +80,16 @@ class StatisticViewModel @Inject constructor(
             }
         }
 
+        viewModelScope.launch {
+            _date.flatMapLatest { selectedDate ->
+                eventRepository.getKeyTimePointsByDate(selectedDate)
+            }.collect { keyTimePoints ->
+                _wakeUpTime.value = keyTimePoints.wakeUpTime
+                _sleepTime.value = keyTimePoints.sleepTime
+                _nextWakeUpTime.value = keyTimePoints.nextWakeUpTime
+            }
+        }
+
     }
 
     suspend fun fetchCombinedEventsByDateCategory(date: LocalDate, category: String) {
@@ -80,9 +98,8 @@ class StatisticViewModel @Inject constructor(
         this.category.value = category
     }
 
-    fun onDateSelected(selectedDate: LocalDate) {
+    fun onDateSelected(selectedDate: LocalDate) { // 进入统计页时不会执行，只有选中日期才会
         _date.value = selectedDate
-        RDALogger.info("date = ${_date.value}")
     }
 
     private fun resetBarData() {
