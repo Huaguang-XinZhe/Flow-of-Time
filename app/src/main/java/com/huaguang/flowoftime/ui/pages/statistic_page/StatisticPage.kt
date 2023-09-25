@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ardakaplan.rdalogger.RDALogger
 import com.foreverrafs.datepicker.DatePickerTimeline
 import com.foreverrafs.datepicker.state.DatePickerState
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -76,6 +77,7 @@ fun StatisticPage(
 
             BarStatistics { barCategory ->
                 coroutineScope.launch {
+                    RDALogger.info("barCategory = $barCategory")
                     viewModel.fetchCombinedEventsByDateCategory(date, barCategory)
                     sheetState.show() // 显示
                 }
@@ -88,7 +90,7 @@ fun StatisticPage(
 @Composable
 fun BarStatistics(
     viewModel: StatisticViewModel = viewModel(),
-    onBarClick: (category: String) -> Unit
+    onBarClick: (category: String?) -> Unit
 ) {
     val sumDuration by viewModel.sumDuration.collectAsState()
     val data by viewModel.data.collectAsState()
@@ -114,11 +116,22 @@ fun BarStatistics(
         }
 
         item {
+            if (sumDuration == Duration.ZERO) return@item
+
             Text(
                 text = "总计：${formatDurationInText(sumDuration)}",
                 modifier = Modifier.padding(bottom = 20.dp)
             )
         }
+
+//        item {
+//            Button(
+//                onClick = { viewModel.deleteAllOfTheDay() },
+//                modifier = Modifier.padding(bottom = 20.dp),
+//            ) {
+//                Text(text = "删除当日全部数据")
+//            }
+//        }
 
     }
 
@@ -215,7 +228,7 @@ fun DatePicker(datePickerState: DatePickerState, onDateSelected: (LocalDate) -> 
         selectedBackgroundColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = Color.White,
         dateTextColor = Color.Black,
-        pastDaysCount = 10,  // The number of previous dates to display, relative to the initial date. Defaults to 120
+//        pastDaysCount = 10,  // The number of previous dates to display, relative to the initial date. Defaults to 120
         eventIndicatorColor = Color.DarkGray,
         onDateSelected = onDateSelected,
         eventDates = listOf(getAdjustedEventDate())

@@ -26,13 +26,13 @@ import java.time.Duration
 
 @Composable
 fun HorizontalBarChart(
-    data: List<Pair<String, Float>>,
+    data: List<Pair<String?, Float>>,
     referenceValue: Float,
     maxValue: Float,
     barHeight: Dp = 30.dp,
     spacing: Dp = 10.dp,
     barColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: (label: String) -> Unit
+    onClick: (label: String?) -> Unit
 ) {
     Column(
         modifier = Modifier.padding(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 16.dp),
@@ -40,6 +40,7 @@ fun HorizontalBarChart(
     ) {
 
         data.forEach { (label, value) ->
+            val labelNotNull = label ?: "❓"
             val percent = (value/maxValue * 100).toInt()
             val ratio = if (referenceValue != 0f) value / referenceValue else 0f
             val formattedDuration = formatDurationInText(Duration.ofMinutes(value.toLong()))
@@ -47,7 +48,7 @@ fun HorizontalBarChart(
             if (ratio <= 0.175) {
                 TextButton(onClick = { onClick(label) }) {
                     Text(
-                        text = "$label -> $formattedDuration  $percent%",
+                        text = "$labelNotNull -> $formattedDuration  $percent%",
                         modifier = Modifier.padding(vertical = spacing)
                     )
                 }
@@ -56,7 +57,7 @@ fun HorizontalBarChart(
 
             // 类属
             Text(
-                text = label,
+                text = labelNotNull,
                 fontWeight = FontWeight.ExtraBold,
                 modifier = Modifier.padding(top = spacing, bottom = 5.dp)
             )

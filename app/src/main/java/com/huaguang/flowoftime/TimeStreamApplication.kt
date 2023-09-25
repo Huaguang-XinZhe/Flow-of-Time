@@ -19,18 +19,29 @@ class TimeStreamApplication @Inject constructor() : Application() {
         const val NOTIFICATION_CHANNEL_ID = "my_service_channel"
 
         // Migration
-        val MIGRATION_1_2 = object : Migration(1, 2) {
+        val MIGRATION_2_3 = object : Migration(2, 3) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                // 创建新表
-                // 非空类型一定要明确指定，否则会报错！
+                // Create a new temporary table with the desired structure
                 database.execSQL("""
-                    CREATE TABLE daily_statistics (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-                        date TEXT NOT NULL,
-                        category TEXT NOT NULL,
-                        totalDuration INTEGER NOT NULL
-                    )
-                """)
+            CREATE TABLE daily_statistics_temp (
+                id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                date TEXT NOT NULL,
+                category TEXT,
+                totalDuration INTEGER NOT NULL
+            )
+        """)
+
+                // Copy the data from the old table to the new temporary table
+                database.execSQL("""
+            INSERT INTO daily_statistics_temp (id, date, category, totalDuration)
+            SELECT id, date, category, totalDuration FROM daily_statistics
+        """)
+
+                // Remove the old table
+                database.execSQL("DROP TABLE daily_statistics")
+
+                // Rename the new temporary table to the original table name
+                database.execSQL("ALTER TABLE daily_statistics_temp RENAME TO daily_statistics")
             }
         }
     }
@@ -41,7 +52,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
             klass = EventDatabase::class.java,
             name = "event_database"
         )
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3)
             .build()
     }
 

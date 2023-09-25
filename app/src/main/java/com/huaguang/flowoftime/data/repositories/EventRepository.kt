@@ -378,7 +378,7 @@ class EventRepository(
             eventDao.getEventCategoryInfoById(eventId)
         }
 
-    suspend fun getCombinedEventsByDateCategory(date: LocalDate, category: String): List<CombinedEvent> {
+    suspend fun getCombinedEventsByDateCategory(date: LocalDate, category: String?): List<CombinedEvent> {
         return withContext(Dispatchers.IO) {
             val allEventsMap = eventDao.getAllEventsByDate(date).associateBy { it.id }
             val parentIdList = eventDao.getIdListByDateCategory(date, category)
@@ -394,5 +394,16 @@ class EventRepository(
 
     fun getKeyTimePointsByDate(date: LocalDate) =
         eventDao.getKeyTimePointsByDate(date)
+
+    suspend fun deleteEventsByDate(date: LocalDate) {
+        withContext(Dispatchers.IO) {
+            eventDao.deleteEventsByDate(date)
+        }
+    }
+
+    suspend fun getSubjectNullCategoryInfoList() =
+        withContext(Dispatchers.IO) {
+            eventDao.getSubjectNullCategoryInfoList()
+        }
 
 }

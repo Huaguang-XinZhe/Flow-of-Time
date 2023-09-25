@@ -9,6 +9,6 @@ import java.time.LocalDate
 data class DailyStatistics(
     @PrimaryKey(autoGenerate = true) var id: Long = 0L,
     val date: LocalDate, // 无需更新
-    val category: String, // 无需更新
+    val category: String?, // 无需更新，也存储未类属的
     var totalDuration: Duration,
 )

@@ -70,7 +70,7 @@ class CategoryViewModel @Inject constructor(
     private suspend fun updateData(eventId: Long, labels: MutableList<String>) {
         val (date, _, duration) = repository.getEventCategoryInfoById(eventId)
         updateMixed(eventId, labels) { category ->
-            statRepository.updateDailyStatistics(date, category, duration!!) // 能到添加类属的地步，duration 一定不为 null
+            statRepository.upsertDailyStatistics(date, category, duration) // 能到添加类属的地步，duration 一定不为 null
         }
     }
 
@@ -82,8 +82,8 @@ class CategoryViewModel @Inject constructor(
         val (date, originalCategory, duration) = repository.getEventCategoryInfoById(eventId) // 必须放在前边，否则类属就被更新了
         val newCategory = labels.first()
         repository.updateCategory(eventId, newCategory)
-        statRepository.originalReduction(date, originalCategory!!, duration!!)
-        statRepository.updateDailyStatistics(date, newCategory, duration) // 插入或更新，在原基础上增加
+        statRepository.originalReduction(date, originalCategory!!, duration)
+        statRepository.upsertDailyStatistics(date, newCategory, duration) // 插入或更新，在原基础上增加
     }
 
 

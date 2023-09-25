@@ -14,7 +14,7 @@ import com.huaguang.flowoftime.data.models.tables.Event
 
 @Database(
     entities = [Event::class, DateDuration::class, DailyStatistics::class], // 新增表
-    version = 2, // 新增表，必须更新
+    version = 3, // 新增表，必须更新
     exportSchema = false
 )
 @TypeConverters(Converters::class)

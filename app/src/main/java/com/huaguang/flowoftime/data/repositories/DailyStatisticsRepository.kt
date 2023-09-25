@@ -31,13 +31,11 @@ class DailyStatisticsRepository(
             dailyStatisticsDao.getDailyStatisticsByDate(date)
         }
 
-    suspend fun updateDailyStatistics(
+    suspend fun upsertDailyStatistics(
         date: LocalDate,
         category: String?,
         duration: Duration
     ) {
-        if (category == null) return
-
         withContext(Dispatchers.IO) {
             // 获取或创建DailyStatistics条目
             val dailyStat = dailyStatisticsDao.getDailyStatistics(date, category)
@@ -57,17 +55,17 @@ class DailyStatisticsRepository(
 
     suspend fun initializeDailyStatistics(allEvents: List<Event>) {
         // 创建一个映射来存储每日的统计数据
-        val dailyStatisticsMap = mutableMapOf<Pair<LocalDate, String>, Duration>()
+        val dailyStatisticsMap = mutableMapOf<Pair<LocalDate, String?>, Duration>()
         // 创建两个列表来存储需要插入和需要更新的DailyStatistics条目
         val toInsert = mutableListOf<DailyStatistics>()
 
         // 遍历所有的事件
         for (event in allEvents) {
-            // 确保事件有结束时间和类属
-            if (event.endTime != null && event.category != null) {
+            // 确保事件有结束时间
+            if (event.endTime != null && event.parentEventId == null) { // 已经结束的主题事件
                 // 获取事件的日期和类属
                 val date = event.eventDate!!
-                val category = event.category!!
+                val category = event.category
 
                 // 更新映射中的时长
                 val key = Pair(date, category)
@@ -114,6 +112,11 @@ class DailyStatisticsRepository(
         }
     }
 
+    suspend fun deleteAllByDate(date: LocalDate) {
+        withContext(Dispatchers.IO) {
+            dailyStatisticsDao.deleteAllByDate(date)
+        }
+    }
 
 
 }

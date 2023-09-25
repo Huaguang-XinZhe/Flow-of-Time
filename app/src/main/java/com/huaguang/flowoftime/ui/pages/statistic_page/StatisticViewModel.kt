@@ -3,6 +3,7 @@ package com.huaguang.flowoftime.ui.pages.statistic_page
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
@@ -40,8 +41,8 @@ class StatisticViewModel @Inject constructor(
     private val _sumDuration = MutableStateFlow(Duration.ZERO)
     val sumDuration: StateFlow<Duration> = _sumDuration
 
-    private val _data = MutableStateFlow(listOf<Pair<String, Float>>())
-    val data: StateFlow<List<Pair<String, Float>>> = _data
+    private val _data = MutableStateFlow(listOf<Pair<String?, Float>>())
+    val data: StateFlow<List<Pair<String?, Float>>> = _data
 
     private val _referenceValue = MutableStateFlow(0f)
     val referenceValue: StateFlow<Float> = _referenceValue
@@ -84,6 +85,10 @@ class StatisticViewModel @Inject constructor(
             _date.flatMapLatest { selectedDate ->
                 eventRepository.getKeyTimePointsByDate(selectedDate)
             }.collect { keyTimePoints ->
+                if (keyTimePoints.wakeUpTime == null) { // 起床时间不可能为 null，如果为 null，那一定没有数据
+//                    resetBarData() // 这里就不重置了，以免重置两次
+                    return@collect
+                }
                 _wakeUpTime.value = keyTimePoints.wakeUpTime
                 _sleepTime.value = keyTimePoints.sleepTime
                 _nextWakeUpTime.value = keyTimePoints.nextWakeUpTime
@@ -92,10 +97,11 @@ class StatisticViewModel @Inject constructor(
 
     }
 
-    suspend fun fetchCombinedEventsByDateCategory(date: LocalDate, category: String) {
+    suspend fun fetchCombinedEventsByDateCategory(date: LocalDate, category: String?) {
         val events = eventRepository.getCombinedEventsByDateCategory(date, category)
+        RDALogger.info("events = $events")
         _combinedEvents.value = events
-        this.category.value = category
+        this.category.value = category ?: "❓"
     }
 
     fun onDateSelected(selectedDate: LocalDate) { // 进入统计页时不会执行，只有选中日期才会
@@ -108,7 +114,18 @@ class StatisticViewModel @Inject constructor(
         _data.value = listOf()
         _referenceValue.value = 0f
 
+        _wakeUpTime.value = null
+        _sleepTime.value = null
+        _nextWakeUpTime.value = null
+
         sharedState.toastMessage.value = "当日无数据"
+    }
+
+    fun deleteAllOfTheDay() {
+        viewModelScope.launch {
+            repository.deleteAllByDate(_date.value)
+            eventRepository.deleteEventsByDate(_date.value)
+        }
     }
 
 

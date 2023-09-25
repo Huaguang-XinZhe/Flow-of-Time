@@ -131,7 +131,7 @@ class EventControlViewModel @Inject constructor(
 
         if (eventType == EventType.SUBJECT) { // 只有主题事件需要更新每日统计数据
             stopRequire.apply {
-                dailyStatRepository.updateDailyStatistics(eventDate, category, duration)
+                dailyStatRepository.upsertDailyStatistics(eventDate, category, duration)
             }
         }
 
@@ -292,6 +292,14 @@ class EventControlViewModel @Inject constructor(
 
             val allEvents = repository.getAllEvents()
             dailyStatRepository.initializeDailyStatistics(allEvents)
+//            val categoryInfoList = repository.getSubjectNullCategoryInfoList()
+//            RDALogger.info("categoryInfoList = $categoryInfoList")
+//            categoryInfoList.forEach { categoryInfo ->
+//                RDALogger.info("categoryInfo = $categoryInfo")
+//                categoryInfo.apply {
+//                    dailyStatRepository.upsertDailyStatistics(eventDate, null, duration)
+//                }
+//            }
         }
 
     }

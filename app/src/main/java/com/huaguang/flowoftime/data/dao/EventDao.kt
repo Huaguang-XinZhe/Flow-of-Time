@@ -253,8 +253,13 @@ interface EventDao {
     @Query("SELECT * FROM events WHERE eventDate = :date")
     suspend fun getAllEventsByDate(date: LocalDate): List<Event>
 
-    @Query("SELECT id FROM events WHERE eventDate = :date AND category = :category")
-    suspend fun getIdListByDateCategory(date: LocalDate, category: String): List<Long>
+    @Query("""
+        SELECT id FROM events 
+        WHERE eventDate = :date 
+        AND ((category = :category AND :category IS NOT NULL) OR (category IS NULL AND :category IS NULL))
+    """)
+    suspend fun getIdListByDateCategory(date: LocalDate, category: String?): List<Long>
+
 
     @Query("""
         SELECT MIN(startTime) as wakeUpTime, MAX(startTime) as sleepTime, MAX(endTime) as nextWakeUpTime
@@ -262,5 +267,11 @@ interface EventDao {
         WHERE eventDate = :date
     """)
     fun getKeyTimePointsByDate(date: LocalDate): Flow<KeyTimePoints>
+
+    @Query("DELETE FROM events WHERE eventDate = :date")
+    suspend fun deleteEventsByDate(date: LocalDate)
+
+    @Query("SELECT eventDate, category, duration FROM events WHERE parentEventId = NULL AND category = NULL")
+    fun getSubjectNullCategoryInfoList(): List<EventCategoryInfo>
 
 }
