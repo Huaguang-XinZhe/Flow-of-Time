@@ -48,7 +48,7 @@ fun StatisticPage(
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
     val combinedEvents by viewModel.combinedEvents.collectAsState()
-    val category by viewModel.category.collectAsState()
+    val category by viewModel.category
     val date by viewModel.date.collectAsState()
 
     ModalBottomSheetLayout(
@@ -63,10 +63,8 @@ fun StatisticPage(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            DatePicker(datePickerState) { selectedDate: LocalDate ->
-                coroutineScope.launch {
-                    viewModel.fetchDailyStatisticsByDate(selectedDate)
-                }
+            DatePicker(datePickerState) {
+                viewModel.onDateSelected(it)
             }
 
             BarStatistics { barCategory ->

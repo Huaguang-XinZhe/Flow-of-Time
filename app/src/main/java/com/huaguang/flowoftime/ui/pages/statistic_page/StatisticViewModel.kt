@@ -1,20 +1,25 @@
 package com.huaguang.flowoftime.ui.pages.statistic_page
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDate
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class StatisticViewModel @Inject constructor(
     val repository: DailyStatisticsRepository,
@@ -22,13 +27,13 @@ class StatisticViewModel @Inject constructor(
     val sharedState: SharedState,
 ) : ViewModel() {
 
-    val yesterday: LocalDate = getAdjustedEventDate().minusDays(1)
+    private val yesterday: LocalDate = getAdjustedEventDate().minusDays(1)
 
     private val _combinedEvents = MutableStateFlow<List<CombinedEvent>>(listOf())
     val combinedEvents: StateFlow<List<CombinedEvent>> = _combinedEvents
 
-    private val _category = MutableStateFlow("")
-    val category: StateFlow<String> = _category
+
+    val category = mutableStateOf("")
 
     private val _date = MutableStateFlow(yesterday)
     val date: StateFlow<LocalDate> = _date
@@ -44,37 +49,49 @@ class StatisticViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            repository.deleteEntryByEmptyDuration()
-            fetchDailyStatisticsByDate(yesterday)
+            repository.deleteEntryByEmptyDuration() // 删除时长为空的条目
         }
+
+        viewModelScope.launch {
+            _date.flatMapLatest { selectedDate ->
+                repository.getDailyStatisticsFlowByDate(selectedDate)
+            }.collect { categoryData ->
+                // 这里的代码每次 categoryData 改变时都会执行
+                if (categoryData.isEmpty()) {
+                    resetBarData()
+                    return@collect
+                }
+
+                _data.value = categoryData
+                    .filterNot { it.totalDuration == Duration.ZERO } // 时长为 0 的条目筛出，不展示
+                    .map { it.category to it.totalDuration.toMinutes().toFloat() }
+                _sumDuration.value = categoryData
+                    .map { it.totalDuration }
+                    .fold(Duration.ZERO) { acc, duration -> acc + duration }
+                _referenceValue.value = data.value.first().second
+            }
+        }
+
     }
 
     suspend fun fetchCombinedEventsByDateCategory(date: LocalDate, category: String) {
         val events = eventRepository.getCombinedEventsByDateCategory(date, category)
         _combinedEvents.value = events
-        _category.value = category
+        this.category.value = category
     }
 
-    suspend fun fetchDailyStatisticsByDate(date: LocalDate) {
-        _date.value = date
+    fun onDateSelected(selectedDate: LocalDate) {
+        _date.value = selectedDate
+        RDALogger.info("date = ${_date.value}")
+    }
 
-        val dailyStatistics = repository.getDailyStatisticsByDate(date)
-        if (dailyStatistics.isEmpty()) {
-            sharedState.toastMessage.value = "当日无数据"
-            // 置空条形统计相关的重要状态值
-            _sumDuration.value = Duration.ZERO
-            _data.value = listOf()
-            _referenceValue.value = 0f
-            return
-        }
+    private fun resetBarData() {
+        // 置空条形统计相关的重要状态值
+        _sumDuration.value = Duration.ZERO
+        _data.value = listOf()
+        _referenceValue.value = 0f
 
-        _sumDuration.value = dailyStatistics
-            .map { it.totalDuration }
-            .fold(Duration.ZERO) { acc, duration -> acc + duration }
-        _data.value = dailyStatistics.map {
-            it.category to it.totalDuration.toMinutes().toFloat()
-        }
-        _referenceValue.value = data.value.first().second
+        sharedState.toastMessage.value = "当日无数据"
     }
 
 

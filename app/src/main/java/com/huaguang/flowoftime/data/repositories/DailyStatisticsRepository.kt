@@ -4,7 +4,6 @@ import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
 import com.huaguang.flowoftime.data.models.tables.Event
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -23,9 +22,8 @@ class DailyStatisticsRepository(
         }
     }
 
-    fun getYesterdaysDailyStatisticsFlow(): Flow<List<DailyStatistics>> {
-        val yesterday = getAdjustedEventDate().minusDays(1)
-        return dailyStatisticsDao.getYesterdaysStatisticsFlow(yesterday)
+    fun getDailyStatisticsFlowByDate(date: LocalDate): Flow<List<DailyStatistics>> {
+        return dailyStatisticsDao.getStatisticsFlowByDate(date)
     }
 
     suspend fun getDailyStatisticsByDate(date: LocalDate) =
