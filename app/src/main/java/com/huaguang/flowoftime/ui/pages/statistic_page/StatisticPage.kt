@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.ui.pages.statistic_page
 
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
@@ -18,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.foreverrafs.datepicker.DatePickerTimeline
 import com.foreverrafs.datepicker.state.DatePickerState
 import com.huaguang.flowoftime.data.models.CombinedEvent
+import com.huaguang.flowoftime.ui.components.DashShowToggleButton
 import com.huaguang.flowoftime.ui.components.toggle_item.DRToggleItem
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.HorizontalBarChart
@@ -114,6 +117,7 @@ fun BarStatistics(
 @Composable
 fun SpecificItemsUnderCategory(combinedEvents: List<CombinedEvent>, category: String) {
     val toggleMap = remember { mutableMapOf<Long, ItemState>() }
+    val dashButtonShow = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         combinedEvents.forEach { event ->
@@ -130,13 +134,23 @@ fun SpecificItemsUnderCategory(combinedEvents: List<CombinedEvent>, category: St
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            Text(
-                text = category,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(10.dp)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = category,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 10.dp)
+                )
+
+                DashShowToggleButton(
+                    dashButtonShow = dashButtonShow,
+                    modifier = Modifier.padding(start = 5.dp)
+                )
+
+            }
         }
 
         items(combinedEvents) { item ->
@@ -144,6 +158,7 @@ fun SpecificItemsUnderCategory(combinedEvents: List<CombinedEvent>, category: St
                 modifier = Modifier.padding(bottom = 5.dp),
                 itemState = toggleMap[item.event.id] ?: ItemState.initialDisplay(),
                 combinedEvent = item,
+                dashButtonShow = dashButtonShow,
             )
         }
     }

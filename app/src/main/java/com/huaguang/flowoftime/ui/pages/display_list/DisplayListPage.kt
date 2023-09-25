@@ -14,10 +14,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,7 +32,6 @@ import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.theme.PurpleWhite
 import java.time.LocalDate
 
-val LocalAddDashButton = compositionLocalOf { mutableStateOf(false) }
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DisplayListPage(
@@ -51,8 +48,8 @@ fun DisplayListPage(
         } // 先分组，后遍历
 //        .entries
 //        .sortedByDescending { it.key } // 按日期降序排列
-    val addDashButton = remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    val dashButtonShow = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { // 只会在初次重组的时候执行（每次切换到展示页都是初次执行，之后留在页面内的其他重组不会执行）
 //        listState.animateScrollToItem(80) // 这里固定编码，不过没关系，一般两天的事件总数不会超过这个
@@ -66,36 +63,33 @@ fun DisplayListPage(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        CompositionLocalProvider(
-            LocalAddDashButton provides addDashButton
+        DisplayPageTopBar(dashButtonShow)
+
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            DisplayPageTopBar()
-
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                groupedEvents.forEach { (date, events) ->
-                    stickyHeader {
-                        DateItem(date = date)
-                    }
-
-                    items(events) { item: CombinedEvent? ->
-                        DRToggleItem(
-                            modifier = Modifier.padding(bottom = 5.dp),
-                            itemState = toggleMap[item!!.event.id] ?: ItemState.initialDisplay(),
-                            combinedEvent = item,
-                        )
-                    }
+            groupedEvents.forEach { (date, events) ->
+                stickyHeader {
+                    DateItem(date = date)
                 }
 
-                item {// 尾部 Item
-                    Text(
-                        text = "~~ 到底了哦 ~~",
-                        modifier = Modifier.padding(20.dp)
+                items(events) { item: CombinedEvent? ->
+                    DRToggleItem(
+                        modifier = Modifier.padding(bottom = 5.dp),
+                        itemState = toggleMap[item!!.event.id] ?: ItemState.initialDisplay(),
+                        combinedEvent = item,
+                        dashButtonShow = dashButtonShow,
                     )
                 }
+            }
+
+            item {// 尾部 Item
+                Text(
+                    text = "~~ 到底了哦 ~~",
+                    modifier = Modifier.padding(20.dp)
+                )
             }
         }
     }

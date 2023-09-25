@@ -14,6 +14,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,7 +38,6 @@ import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.category_dialog.CategoryViewModel
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
-import com.huaguang.flowoftime.ui.pages.display_list.LocalAddDashButton
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.Category
 import com.huaguang.flowoftime.ui.widget.CategoryRow
@@ -51,6 +51,7 @@ fun DisplayEventItem(
     modifier: Modifier = Modifier,
     combinedEvent: CombinedEvent?,
     itemState: ItemState,
+    dashButtonShow: MutableState<Boolean>,
     viewModel: EventInputViewModel = viewModel()
 ) {
     val event = combinedEvent?.event ?: return
@@ -105,6 +106,7 @@ fun DisplayEventItem(
                 id = event.id,
                 category = event.category,
                 tags = event.tags,
+                dashButtonShow = dashButtonShow,
 //                tags = event.tags?.apply { add("") }, // 加一个虚框添加按钮，也不能在这里加，会频闪！
             )
         }
@@ -116,10 +118,9 @@ fun LabelRow(
     id: Long,
     category: String?,
     tags: MutableList<String>?,
+    dashButtonShow: MutableState<Boolean>,
     viewModel: CategoryViewModel = viewModel(),
 ) {
-    val addDashButton = LocalAddDashButton.current
-
     if (category == null && tags == null) {
         Category(
             onClick = { _, type ->
@@ -130,14 +131,14 @@ fun LabelRow(
     } else { // 若 category 为 null（tags 也一定为 null）就一定会走上面的设置，所以下边的一定为非 null
         CategoryRow(
             category = category!!,
-            addDashButton = addDashButton.value
+            addDashButton = dashButtonShow.value
         ) { name, type ->
             viewModel.onClassNameClick(id, name, type, listOf(category))
         }
 
         TagsRow(
             tags = tags, // 就算 category 不为 null，tags 依然可能为 null
-            addDashButton = addDashButton.value,
+            addDashButton = dashButtonShow.value,
             modifier = Modifier.padding(bottom = 10.dp)
         ) { name ->
             viewModel.onClassNameClick(id, name, DashType.TAG, tags)

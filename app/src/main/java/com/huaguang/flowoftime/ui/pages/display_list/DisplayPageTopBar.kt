@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledIconButton
-import androidx.compose.material3.FilledIconToggleButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -20,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -34,11 +34,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.R
+import com.huaguang.flowoftime.ui.components.DashShowToggleButton
 import com.huaguang.flowoftime.ui.theme.DeepRed
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DisplayPageTopBar(viewModel: DRListViewModel = viewModel()) {
+fun DisplayPageTopBar(
+    dashButtonShow: MutableState<Boolean>,
+    viewModel: DRListViewModel = viewModel()
+) {
     val intervalDays by viewModel.latestXXXIntervalDaysFlow.collectAsState()
 
     TopAppBar(
@@ -60,21 +64,7 @@ fun DisplayPageTopBar(viewModel: DRListViewModel = viewModel()) {
             }
         },
         actions = {
-            val addDashButton = LocalAddDashButton.current
-
-            FilledIconToggleButton(
-                checked = addDashButton.value,
-                onCheckedChange = { addDashButton.value = it },
-                modifier = Modifier
-                    .padding(5.dp)
-                    .size(24.dp) // padding 必须放在 size 前边，否则会向内挤
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.eye),
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+            DashShowToggleButton(dashButtonShow)
 
             NumberCircle(
                 number = intervalDays,

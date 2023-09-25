@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.ui.components.toggle_item
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -11,12 +12,14 @@ fun DRToggleItem(
     modifier: Modifier = Modifier,
     itemState: ItemState,
     combinedEvent: CombinedEvent?,
+    dashButtonShow: MutableState<Boolean>,
 ) {
     if (itemState.mode.value == Mode.DISPLAY) {
         DisplayEventItem(
             modifier = modifier,
             combinedEvent = combinedEvent,
             itemState = itemState,
+            dashButtonShow = dashButtonShow,
         )
     } else {
         RecordingEventItem(
