@@ -5,6 +5,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 
 fun getEventDate(startTime: LocalDateTime): LocalDate {
     return if (startTime.hour in 0..4) {
@@ -41,6 +43,16 @@ fun isGetUpTime(time: LocalTime): Boolean {
 
     return time.isAfter(getUpRangeStart) && time.isBefore(getUpRangeEnd)
 }
+
+/**
+ * 把 LocalDate 转换为 “09-26 周二” 这样的格式。
+ */
+fun formatDateToCustomPattern(date: LocalDate): String {
+    val monthDayFormatter = DateTimeFormatter.ofPattern("MM-dd")
+    val dayOfWeek = date.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.CHINESE)
+    return "${monthDayFormatter.format(date)} $dayOfWeek"
+}
+
 
 fun formatLocalDateTime(dateTime: LocalDateTime): String {
     val formatter = DateTimeFormatter.ofPattern("HH:mm")

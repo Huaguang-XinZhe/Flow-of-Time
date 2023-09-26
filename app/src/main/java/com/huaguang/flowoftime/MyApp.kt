@@ -24,7 +24,7 @@ import com.foreverrafs.datepicker.state.rememberDatePickerState
 import com.huaguang.flowoftime.ui.components.category_dialog.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
-import com.huaguang.flowoftime.ui.pages.statistic_page.StatisticPage
+import com.huaguang.flowoftime.ui.pages.statistics_page.StatisticsPage
 import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 
@@ -39,13 +39,13 @@ fun MyApp(appViewModels: AppViewModels) {
     Scaffold(
         bottomBar = { BottomBar(selectedTab) },
     ) { paddingValues ->
+        val navController = rememberNavController()
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding())
         ) {
-            val navController = rememberNavController()
-
             // 通过 when 切换会快一些，但每次切换还是会重新组合，页面并不能保持
             appViewModels.apply {
                 when (selectedTab.value) { // 只有选中项的 Composable 会重新组合
@@ -59,7 +59,9 @@ fun MyApp(appViewModels: AppViewModels) {
                         }
                     }
                     Page.List -> DisplayListPage()
-                    Page.Statistic -> StatisticPage(datePickerState)
+                    Page.Statistic -> {
+                        StatisticsPage(datePickerState)
+                    }
                     Page.Category -> Text(text = "类属页，敬请期待")
                 }
             }

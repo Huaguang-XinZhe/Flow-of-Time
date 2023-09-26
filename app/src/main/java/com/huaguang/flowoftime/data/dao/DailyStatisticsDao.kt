@@ -6,7 +6,9 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.huaguang.flowoftime.data.models.db_returns.DateDuration
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
+
 import kotlinx.coroutines.flow.Flow
 import java.time.Duration
 import java.time.LocalDate
@@ -72,4 +74,10 @@ interface DailyStatisticsDao {
 
     @Query("DELETE FROM daily_statistics WHERE date = :date")
     suspend fun deleteAllByDate(date: LocalDate)
+
+    @Query("SELECT date, totalDuration FROM daily_statistics WHERE category = :category")
+    suspend fun getDateDurationByCategory(category: String): DateDuration
+
+    @Query("SELECT * FROM daily_statistics")
+    suspend fun getAllDailyStatistics(): List<DailyStatistics>
 }

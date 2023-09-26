@@ -58,7 +58,7 @@ fun TimeRecordPage(
     ) {
 
         val (topBar, itemColumn, timeRegulator,
-            eventButtons, eventInput, floatingButton) = createRefs()
+            eventButtons, floatingButton) = createRefs()
 
         RecordPageTopBar(
             modifier = Modifier.constrainAs(topBar) {

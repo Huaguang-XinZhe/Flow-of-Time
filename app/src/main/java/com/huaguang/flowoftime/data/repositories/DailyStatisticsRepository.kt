@@ -118,5 +118,15 @@ class DailyStatisticsRepository(
         }
     }
 
+    suspend fun getDateDurationByCategory(category: String) =
+        withContext(Dispatchers.IO) {
+            dailyStatisticsDao.getDateDurationByCategory(category)
+        }
+
+    suspend fun getAllDailyStatistics() =
+        withContext(Dispatchers.IO) {
+            dailyStatisticsDao.getAllDailyStatistics()
+        }
+
 
 }

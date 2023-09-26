@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.pages.statistic_page
+package com.huaguang.flowoftime.ui.pages.statistics_page
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,21 +48,12 @@ import java.time.LocalDateTime
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun StatisticPage(
+fun StatisticsPage(
     datePickerState: DatePickerState,
-    viewModel: StatisticViewModel = viewModel()
+    viewModel: StatisticViewModel = viewModel(),
 ) {
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
-    val date by viewModel.date.collectAsState()
-    val category = viewModel.category
-
-    val combinedEvents by produceState(initialValue = emptyList<CombinedEvent>(), date, category.value) {
-        viewModel.getCombinedEventsFlow(date, category.value).collect { combinedEventList ->
-            value = combinedEventList
-            viewModel.size.intValue = combinedEventList.size
-        }
-    }
 
     LaunchedEffect(viewModel.size.intValue) {
         if (viewModel.size.intValue == 0) { // 为 0 才隐藏！
@@ -74,7 +65,7 @@ fun StatisticPage(
         sheetState = sheetState,
         sheetShape = RoundedCornerShape(16.dp, 16.dp, 0.dp, 0.dp),
         sheetContent = {
-            SpecificItemsUnderCategory(combinedEvents)
+            SpecificItemsUnderCategory()
         },
         sheetBackgroundColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
@@ -86,9 +77,9 @@ fun StatisticPage(
                 viewModel.onDateSelected(it)
             }
 
-            BarStatistics { barCategory ->
+            StatisticsColumn { barCategory ->
                 coroutineScope.launch {
-                    category.value = barCategory
+                    viewModel.category.value = barCategory
                     sheetState.show() // 显示
                 }
             }
@@ -98,14 +89,13 @@ fun StatisticPage(
 
 
 @Composable
-fun BarStatistics(
+fun StatisticsColumn(
     viewModel: StatisticViewModel = viewModel(),
     onBarClick: (category: String?) -> Unit
 ) {
     val sumDuration by viewModel.sumDuration.collectAsState()
     val data by viewModel.data.collectAsState()
     val referenceValue by viewModel.referenceValue.collectAsState()
-
 
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -134,6 +124,10 @@ fun BarStatistics(
             )
         }
 
+        item {
+            DateDurationColumn()
+        }
+
 //        item {
 //            Button(
 //                onClick = { viewModel.deleteAllOfTheDay() },
@@ -147,15 +141,25 @@ fun BarStatistics(
 
 }
 
+
+
 @Composable
 fun SpecificItemsUnderCategory(
-    combinedEvents: List<CombinedEvent>,
     viewModel: StatisticViewModel = viewModel()
 ) {
     val toggleMap = remember { mutableMapOf<Long, ItemState>() }
     val dashButtonShow = remember { mutableStateOf(false) }
+    val date by viewModel.date.collectAsState()
     val category by viewModel.category
     val map = viewModel.categoryDurationMap
+
+    val combinedEvents by produceState(initialValue = emptyList<CombinedEvent>(), category) {
+        if (category == "-1") return@produceState // 初始化的时候不要执行 lambda
+        viewModel.getCombinedEventsFlow(date, category).collect { combinedEventList ->
+            value = combinedEventList
+            viewModel.size.intValue = combinedEventList.size
+        }
+    }
 
     LaunchedEffect(Unit) {
         combinedEvents.forEach { event ->

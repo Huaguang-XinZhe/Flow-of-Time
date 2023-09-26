@@ -1,4 +1,4 @@
-package com.huaguang.flowoftime.ui.pages.statistic_page
+package com.huaguang.flowoftime.ui.pages.statistics_page
 
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -30,7 +30,7 @@ class StatisticViewModel @Inject constructor(
 
     private val yesterday: LocalDate = getAdjustedEventDate().minusDays(1)
 
-    val category = mutableStateOf<String?>(null)
+    val category = mutableStateOf<String?>("-1")
     val size = mutableIntStateOf(0)
     val categoryDurationMap = mutableStateMapOf<String?, Duration>()
 
@@ -125,6 +125,14 @@ class StatisticViewModel @Inject constructor(
 
     fun getCombinedEventsFlow(date: LocalDate, category: String?) =
         eventRepository.getCombinedEventsByDateCategoryFlow(date, category)
+
+
+
+    fun onDateDurationItemClick() {
+        viewModelScope.launch {
+
+        }
+    }
 
 
 }
