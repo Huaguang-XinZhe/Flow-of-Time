@@ -144,18 +144,16 @@ class EventInputViewModel @Inject constructor(
             // 如果点击的不是主题事件，或者主题事件正在进行，那就返回
             if (eventType.value != EventType.SUBJECT || sharedState.isSubjectTiming()) return
 
-            val eventCategoryInfo = repository.getEventCategoryInfoById(eventId.value)
+            val (date, previousCategory, duration) = repository.getEventCategoryInfoById(eventId.value)
             // 如果以前的类属（必须通过数据库获取）和现在的类属相同，那也不用继续了
-            if (eventCategoryInfo.category == newCategory) return
+            if (previousCategory == newCategory) return
 
-            eventCategoryInfo.apply {
-                sharedState.categoryInfo.value = CategoryInfo(
-                    previous = category,
-                    now = newCategory,
-                    date = eventDate,
-                    duration = duration,
-                )
-            }
+            sharedState.categoryInfo.value = CategoryInfo(
+                previous = previousCategory,
+                now = newCategory,
+                date = date,
+                duration = duration,
+            )
 
         }
     }

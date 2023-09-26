@@ -95,7 +95,7 @@ class DailyStatisticsRepository(
         }
     }
 
-    private suspend fun originalReduction(
+    suspend fun originalReduction(
         date: LocalDate,
         originalCategory: String?,
         duration: Duration

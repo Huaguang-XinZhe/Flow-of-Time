@@ -20,7 +20,7 @@ data class ImmutableIdState(
 @Serializable
 enum class Action(val value: Int) {
     SUBJECT_START(0),
-    SUBJECT_END(1),
+    SUBJECT_END(1), // 关键，只有这个撤销会影响到统计数据
     STEP_START(0),
     STEP_END(1),
     SUBJECT_INSERT_START(0),
