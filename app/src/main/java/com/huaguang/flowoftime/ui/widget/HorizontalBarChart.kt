@@ -32,7 +32,7 @@ fun HorizontalBarChart(
     barHeight: Dp = 30.dp,
     spacing: Dp = 10.dp,
     barColor: Color = MaterialTheme.colorScheme.primary,
-    onClick: (label: String?) -> Unit
+    onClick: (String?) -> Unit
 ) {
     Column(
         modifier = Modifier.padding(start = 16.dp, top = 6.dp, end = 16.dp, bottom = 16.dp),
@@ -86,9 +86,9 @@ fun HorizontalBarChartPreview() {
         "家人" to 31f,
         "违破" to 24f,
     )
-    HorizontalBarChart(data = sampleData, referenceValue = 181f, maxValue = 696f) {
-
-    }
+//    HorizontalBarChart(data = sampleData, referenceValue = 181f, maxValue = 696f) {
+//
+//    }
 }
 
 @Composable

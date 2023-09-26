@@ -251,14 +251,14 @@ interface EventDao {
      * 找出当天所有的事件，以备之后根据类属进一步细分
      */
     @Query("SELECT * FROM events WHERE eventDate = :date")
-    suspend fun getAllEventsByDate(date: LocalDate): List<Event>
+    fun getAllEventsByDateFlow(date: LocalDate): Flow<List<Event>>
 
     @Query("""
-        SELECT id FROM events 
-        WHERE eventDate = :date 
-        AND ((category = :category AND :category IS NOT NULL) OR (category IS NULL AND :category IS NULL))
-    """)
-    suspend fun getIdListByDateCategory(date: LocalDate, category: String?): List<Long>
+    SELECT id FROM events 
+    WHERE eventDate = :date 
+    AND ((category = :category AND :category IS NOT NULL) OR (category IS NULL AND :category IS NULL))
+""")
+    fun getIdListByDateCategoryFlow(date: LocalDate, category: String?): Flow<List<Long>>
 
 
     @Query("""

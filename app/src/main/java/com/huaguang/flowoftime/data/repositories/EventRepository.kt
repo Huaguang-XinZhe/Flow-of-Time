@@ -18,6 +18,8 @@ import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedEventDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.Duration
@@ -378,19 +380,21 @@ class EventRepository(
             eventDao.getEventCategoryInfoById(eventId)
         }
 
-    suspend fun getCombinedEventsByDateCategory(date: LocalDate, category: String?): List<CombinedEvent> {
-        return withContext(Dispatchers.IO) {
-            val allEventsMap = eventDao.getAllEventsByDate(date).associateBy { it.id }
-            val parentIdList = eventDao.getIdListByDateCategory(date, category)
+    fun getCombinedEventsByDateCategoryFlow(date: LocalDate, category: String?): Flow<List<CombinedEvent>> {
+        val allEventsFlow = eventDao.getAllEventsByDateFlow(date)
+        val parentIdListFlow = eventDao.getIdListByDateCategoryFlow(date, category)
 
+        return combine(allEventsFlow, parentIdListFlow) { allEvents, parentIdList ->
+            val allEventsMap = allEvents.associateBy { it.id }
             parentIdList.map { eventId ->
                 CombinedEvent(
                     event = allEventsMap[eventId]!!,
                     contentEvents = buildCombinedEvents(allEventsMap, eventId)
                 )
             }
-        }
+        }.flowOn(Dispatchers.IO)
     }
+
 
     fun getKeyTimePointsByDate(date: LocalDate) =
         eventDao.getKeyTimePointsByDate(date)

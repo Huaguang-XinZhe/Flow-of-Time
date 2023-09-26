@@ -1,10 +1,10 @@
 package com.huaguang.flowoftime.ui.pages.statistic_page
 
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.SharedState
@@ -30,10 +30,9 @@ class StatisticViewModel @Inject constructor(
 
     private val yesterday: LocalDate = getAdjustedEventDate().minusDays(1)
 
-    private val _combinedEvents = MutableStateFlow<List<CombinedEvent>>(listOf())
-    val combinedEvents: StateFlow<List<CombinedEvent>> = _combinedEvents
-
-    val category = mutableStateOf("")
+    val category = mutableStateOf<String?>(null)
+    val size = mutableIntStateOf(0)
+    val categoryDurationMap = mutableStateMapOf<String?, Duration>()
 
     private val _date = MutableStateFlow(yesterday)
     val date: StateFlow<LocalDate> = _date
@@ -78,6 +77,9 @@ class StatisticViewModel @Inject constructor(
                     .map { it.totalDuration }
                     .fold(Duration.ZERO) { acc, duration -> acc + duration }
                 _referenceValue.value = data.value.first().second
+                categoryDurationMap.putAll(
+                    categoryData.associate { it.category to it.totalDuration }
+                )
             }
         }
 
@@ -95,13 +97,6 @@ class StatisticViewModel @Inject constructor(
             }
         }
 
-    }
-
-    suspend fun fetchCombinedEventsByDateCategory(date: LocalDate, category: String?) {
-        val events = eventRepository.getCombinedEventsByDateCategory(date, category)
-        RDALogger.info("events = $events")
-        _combinedEvents.value = events
-        this.category.value = category ?: "❓"
     }
 
     fun onDateSelected(selectedDate: LocalDate) { // 进入统计页时不会执行，只有选中日期才会
@@ -127,6 +122,9 @@ class StatisticViewModel @Inject constructor(
             eventRepository.deleteEventsByDate(_date.value)
         }
     }
+
+    fun getCombinedEventsFlow(date: LocalDate, category: String?) =
+        eventRepository.getCombinedEventsByDateCategoryFlow(date, category)
 
 
 }

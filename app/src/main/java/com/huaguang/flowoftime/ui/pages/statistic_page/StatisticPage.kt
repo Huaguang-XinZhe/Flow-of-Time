@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.pages.statistic_page
 
-
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -30,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ardakaplan.rdalogger.RDALogger
 import com.foreverrafs.datepicker.DatePickerTimeline
 import com.foreverrafs.datepicker.state.DatePickerState
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -55,15 +54,27 @@ fun StatisticPage(
 ) {
     val sheetState = rememberModalBottomSheetState(initialValue = ModalBottomSheetValue.Hidden)
     val coroutineScope = rememberCoroutineScope()
-    val combinedEvents by viewModel.combinedEvents.collectAsState()
-    val category by viewModel.category
     val date by viewModel.date.collectAsState()
+    val category = viewModel.category
+
+    val combinedEvents by produceState(initialValue = emptyList<CombinedEvent>(), date, category.value) {
+        viewModel.getCombinedEventsFlow(date, category.value).collect { combinedEventList ->
+            value = combinedEventList
+            viewModel.size.intValue = combinedEventList.size
+        }
+    }
+
+    LaunchedEffect(viewModel.size.intValue) {
+        if (viewModel.size.intValue == 0) { // 为 0 才隐藏！
+            sheetState.hide()
+        }
+    }
 
     ModalBottomSheetLayout(
         sheetState = sheetState,
         sheetShape = RoundedCornerShape(16.dp, 16.dp, 0.dp, 0.dp),
         sheetContent = {
-            SpecificItemsUnderCategory(combinedEvents, category) // 两个参数，只要有一个是状态，引发重组即可
+            SpecificItemsUnderCategory(combinedEvents)
         },
         sheetBackgroundColor = MaterialTheme.colorScheme.background,
         modifier = Modifier.fillMaxSize()
@@ -77,8 +88,7 @@ fun StatisticPage(
 
             BarStatistics { barCategory ->
                 coroutineScope.launch {
-                    RDALogger.info("barCategory = $barCategory")
-                    viewModel.fetchCombinedEventsByDateCategory(date, barCategory)
+                    category.value = barCategory
                     sheetState.show() // 显示
                 }
             }
@@ -138,6 +148,61 @@ fun BarStatistics(
 }
 
 @Composable
+fun SpecificItemsUnderCategory(
+    combinedEvents: List<CombinedEvent>,
+    viewModel: StatisticViewModel = viewModel()
+) {
+    val toggleMap = remember { mutableMapOf<Long, ItemState>() }
+    val dashButtonShow = remember { mutableStateOf(false) }
+    val category by viewModel.category
+    val map = viewModel.categoryDurationMap
+
+    LaunchedEffect(Unit) {
+        combinedEvents.forEach { event ->
+            toggleMap[event.event.id] = ItemState.initialDisplay()
+        }
+    }
+
+    LazyColumn(
+        // 这里如果设为 fillMaxSize() 的话，就先是半屏呈现，上拉的话，会全屏
+        // 必须加这个（height），要不然会崩溃，报错：The initial value must have an associated anchor.
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        item {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${category ?: "❓"} ${formatDurationInText(map[category] ?: Duration.ZERO)}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(vertical = 15.dp)
+                )
+
+                DashShowToggleButton(
+                    dashButtonShow = dashButtonShow,
+                    modifier = Modifier.padding(start = 5.dp)
+                )
+
+            }
+        }
+
+        items(combinedEvents) { item ->
+            DRToggleItem(
+                modifier = Modifier.padding(bottom = 5.dp),
+                itemState = toggleMap[item.event.id] ?: ItemState.initialDisplay(),
+                combinedEvent = item,
+                dashButtonShow = dashButtonShow,
+            )
+        }
+    }
+}
+
+@Composable
 fun DaySummaryText(viewModel: StatisticViewModel = viewModel()) {
     val wakeUpTime by viewModel.wakeUpTime.collectAsState()
     val sleepTime by viewModel.sleepTime.collectAsState()
@@ -166,56 +231,6 @@ fun DaySummaryText(viewModel: StatisticViewModel = viewModel()) {
         text = text,
         modifier = Modifier.padding(vertical = 10.dp)
     )
-}
-
-@Composable
-fun SpecificItemsUnderCategory(combinedEvents: List<CombinedEvent>, category: String) {
-    val toggleMap = remember { mutableMapOf<Long, ItemState>() }
-    val dashButtonShow = remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        combinedEvents.forEach { event ->
-            toggleMap[event.event.id] = ItemState.initialDisplay()
-        }
-    }
-
-    LazyColumn(
-        // 这里如果设为 fillMaxSize() 的话，就先是半屏呈现，上拉的话，会全屏
-        // 必须加这个（height），要不然会崩溃，报错：The initial value must have an associated anchor.
-        modifier = Modifier
-            .wrapContentSize()
-            .padding(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = category,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 10.dp)
-                )
-
-                DashShowToggleButton(
-                    dashButtonShow = dashButtonShow,
-                    modifier = Modifier.padding(start = 5.dp)
-                )
-
-            }
-        }
-
-        items(combinedEvents) { item ->
-            DRToggleItem(
-                modifier = Modifier.padding(bottom = 5.dp),
-                itemState = toggleMap[item.event.id] ?: ItemState.initialDisplay(),
-                combinedEvent = item,
-                dashButtonShow = dashButtonShow,
-            )
-        }
-    }
 }
 
 @OptIn(ExperimentalComposeUiApi::class)
