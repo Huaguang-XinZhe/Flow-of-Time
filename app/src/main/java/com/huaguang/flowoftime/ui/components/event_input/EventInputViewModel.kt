@@ -8,6 +8,7 @@ import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
+import com.huaguang.flowoftime.data.models.CategoryInfo
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
@@ -61,12 +62,6 @@ class EventInputViewModel @Inject constructor(
 
             show.value = false
 
-            if (intent.value == InputIntent.MODIFY) { // 意图修改
-                handleModifyIntent()
-            } else { // 意图记录
-                handleRecordIntent()
-            }
-
             val category = if (eventType.value == EventType.SUBJECT) { // 类属
                 sharedState.classify(text) // 这里的类属不成功也会返回 null
             } else null
@@ -76,8 +71,15 @@ class EventInputViewModel @Inject constructor(
             }
 
             viewModelScope.launch {
+                if (intent.value == InputIntent.MODIFY) { // 意图修改
+                    handleModifyIntent(category)
+                } else { // 意图记录
+                    handleRecordIntent()
+                }
+
                 repository.updateNameAndCategory(eventId.value, text, category)
             }
+
         }
     }
 
@@ -133,10 +135,28 @@ class EventInputViewModel @Inject constructor(
 
     }
 
-    private fun handleModifyIntent() {
+    private suspend fun handleModifyIntent(newCategory: String?) {
         inputState.apply {
             if (newName.value == initialName) return // 有差异才更新
+
             // TODO:
+
+            // 如果点击的不是主题事件，或者主题事件正在进行，那就返回
+            if (eventType.value != EventType.SUBJECT || sharedState.isSubjectTiming()) return
+
+            val eventCategoryInfo = repository.getEventCategoryInfoById(eventId.value)
+            // 如果以前的类属（必须通过数据库获取）和现在的类属相同，那也不用继续了
+            if (eventCategoryInfo.category == newCategory) return
+
+            eventCategoryInfo.apply {
+                sharedState.categoryInfo.value = CategoryInfo(
+                    previous = category,
+                    now = newCategory,
+                    date = eventDate,
+                    duration = duration,
+                )
+            }
+
         }
     }
 

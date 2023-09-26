@@ -39,8 +39,8 @@ class EventTrackerMediator(
 
     // 依赖的共享状态
 
-    private val newEventName
-        get() = sharedState.newEventName.value
+//    private val newEventName
+//        get() = sharedState.newEventName.value
 
     // 依赖子 ViewModel 的状态
     private val beModifiedEvent
@@ -118,7 +118,7 @@ class EventTrackerMediator(
 
     fun onConfirmed() {
         sharedState.apply {
-            when(newEventName.value) {
+            when("") {
                 "" -> {
                     sharedState.toastMessage.value = "你还没有输入呢？"
                     return
@@ -148,7 +148,7 @@ class EventTrackerMediator(
                     generalHandle()
                 }
             }
-            isInputShow.value = false
+//            isInputShow.value = false
         }
     }
 
@@ -235,11 +235,11 @@ class EventTrackerMediator(
         eventNameViewModel.apply {
             updateNameChangedToDB()
 
-            durationSliderViewModel.updateCDonNameChangeConfirmed(
-                previousName = previousName.value,
-                presentName = newEventName,
-                event = beModifiedEvent!!,
-            )
+//            durationSliderViewModel.updateCDonNameChangeConfirmed(
+//                previousName = previousName.value,
+////                presentName = newEventName,
+//                event = beModifiedEvent!!,
+//            )
 
             // 延迟一下，让边框再飞一会儿
             delayReset()

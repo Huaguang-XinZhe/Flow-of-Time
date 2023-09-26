@@ -65,7 +65,7 @@ fun CoreNameInputAlertDialog(viewModel: CurrentCoreViewModel = viewModel()) {
     val recordingItemState = LocalRecordingItemState.current
 
     InputAlertDialog(
-        show = viewModel.sharedState.coreInputShow.value,
+        show = viewModel.coreInputShow.value,
         title = "「当前核心」事项",
         initialValue = initialValue,
         onDismiss = { viewModel.onCoreNameDialogDismiss() },

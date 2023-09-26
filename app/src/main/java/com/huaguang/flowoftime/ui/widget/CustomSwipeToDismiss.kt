@@ -44,7 +44,7 @@ fun CustomSwipeToDismiss(
 ) {
     val dismissState = rememberDismissState()
     val isItemClicked = remember { mutableStateOf(false) }
-    val isInputShow by sharedState.isInputShow
+//    val isInputShow by sharedState.isInputShow
 
     val direction =
         if (isItemClicked.value) {
@@ -62,19 +62,19 @@ fun CustomSwipeToDismiss(
         modifier = Modifier
             .padding(8.dp)
             .clickable { // TODO: 这个地方有待优化，可以利用 StateHolder 精简
-                when {
-                    isInputShow -> sharedState.toastMessage.value = "当前状态禁止删除，确认后继续操作"
-                    event?.endTime == null -> {
-                        sharedState.toastMessage.value = "计时项禁止删除！"
-                    }
-                    else -> {
-                        isItemClicked.value = !isItemClicked.value
-
-                        if (isItemClicked.value) {
-                            sharedState.toastMessage.value = "解除限制，可右滑删除"
-                        }
-                    }
-                }
+//                when {
+//                    isInputShow -> sharedState.toastMessage.value = "当前状态禁止删除，确认后继续操作"
+//                    event?.endTime == null -> {
+//                        sharedState.toastMessage.value = "计时项禁止删除！"
+//                    }
+//                    else -> {
+//                        isItemClicked.value = !isItemClicked.value
+//
+//                        if (isItemClicked.value) {
+//                            sharedState.toastMessage.value = "解除限制，可右滑删除"
+//                        }
+//                    }
+//                }
 
             }
             .then(borderModifier),

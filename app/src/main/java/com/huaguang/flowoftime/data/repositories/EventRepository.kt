@@ -405,9 +405,9 @@ class EventRepository(
         }
     }
 
-    suspend fun getSubjectNullCategoryInfoList() =
+    suspend fun getDateDurationById(id: Long) =
         withContext(Dispatchers.IO) {
-            eventDao.getSubjectNullCategoryInfoList()
+            eventDao.getDateDurationById(id)
         }
 
 }

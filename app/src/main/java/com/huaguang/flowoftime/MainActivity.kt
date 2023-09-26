@@ -5,7 +5,9 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
 import com.ardakaplan.rdalogger.RDALogger
+import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.pages.time_record.EventControlViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
@@ -15,6 +17,7 @@ import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -34,6 +37,8 @@ class MainActivity : ComponentActivity() {
 //    lateinit var iconRepository: IconMappingRepository
     @Inject
     lateinit var undoStack: UndoStack
+    @Inject
+    lateinit var dailyRepository: DailyStatisticsRepository
 
     private val eventControlViewModel: EventControlViewModel by viewModels()
     private val buttonsViewModel: EventButtonsViewModel by viewModels()
@@ -54,6 +59,15 @@ class MainActivity : ComponentActivity() {
 
         sharedState.toastMessage.observe(this) { toastMessage ->
             Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show()
+        }
+
+        sharedState.categoryInfo.observe(this) { categoryInfo ->
+            RDALogger.info("观察到 categoryInfo 变化")
+            categoryInfo.apply {
+                lifecycleScope.launch {
+                    dailyRepository.categoryReplaced(date, previous, now, duration)
+                }
+            }
         }
 
     }

@@ -30,8 +30,8 @@ class DurationSliderViewModel @Inject constructor(
 ) : ViewModel() {
 
     // 外界依赖（由 sharedState 共享）
-    private val newEventName
-        get() = sharedState.newEventName.value
+//    private val newEventName
+//        get() = sharedState.newEventName.value
 //    private val isSubEventTracking
 //        get() = sharedState.eventStatus.value == EventStatus.fromInt(2)
 

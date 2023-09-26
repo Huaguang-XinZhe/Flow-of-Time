@@ -95,9 +95,9 @@ class DailyStatisticsRepository(
         }
     }
 
-    suspend fun originalReduction(
+    private suspend fun originalReduction(
         date: LocalDate,
-        originalCategory: String,
+        originalCategory: String?,
         duration: Duration
     ) {
         withContext(Dispatchers.IO) {
@@ -128,5 +128,17 @@ class DailyStatisticsRepository(
             dailyStatisticsDao.getAllDailyStatistics()
         }
 
+
+    suspend fun categoryReplaced(
+        date: LocalDate,
+        originalCategory: String?,
+        newCategory: String?,
+        duration: Duration,
+    ) {
+        withContext(Dispatchers.IO) {
+            originalReduction(date, originalCategory, duration)
+            upsertDailyStatistics(date, newCategory, duration)
+        }
+    }
 
 }

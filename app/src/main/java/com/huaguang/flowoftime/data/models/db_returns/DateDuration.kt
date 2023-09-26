@@ -5,5 +5,5 @@ import java.time.LocalDate
 
 data class DateDuration(
     val date: LocalDate,
-    val totalDuration: Duration,
+    val duration: Duration?,
 )

@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.ui.state
 
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
@@ -15,7 +16,7 @@ data class InputState(
     companion object {
         fun initialValue() =
             InputState(
-                eventId = mutableStateOf(0L),
+                eventId = mutableLongStateOf(0L),
                 eventType = mutableStateOf(EventType.SUBJECT),
                 show = mutableStateOf(false),
                 newName = mutableStateOf(""),

@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record.core_fab
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.EventType
@@ -19,6 +20,8 @@ class CurrentCoreViewModel @Inject constructor(
     val inputState: InputState,
     val spHelper: SPHelper,
 ) : ViewModel() {
+
+    val coreInputShow = mutableStateOf(false)
     var coreName = ""
     private var confirmThenStart = false
 
@@ -40,10 +43,8 @@ class CurrentCoreViewModel @Inject constructor(
             coreName = spHelper.getCurrentCoreEventName(coreName)
 
             if (coreName.isEmpty()) { // 在最开始的时候，SP 中没有值，coreName 仍有可能为空，这是就弹窗请用户设置，然后再开始事件
-                sharedState.apply {
-                    coreInputShow.value = true
-                    toastMessage.value = "请预先设置当前核心（名称）"
-                }
+                coreInputShow.value = true
+                sharedState.toastMessage.value = "请预先设置当前核心（名称）"
                 confirmThenStart = true // 设置好点击确认就马上开启一个新事件
 
                 return@launch
@@ -67,11 +68,11 @@ class CurrentCoreViewModel @Inject constructor(
 
     fun onCoreFloatingButtonLongClick() {
         coreName = spHelper.getCurrentCoreEventName(coreName)
-        sharedState.coreInputShow.value = true // 显示名称输入 Dialog
+        coreInputShow.value = true // 显示名称输入 Dialog
     }
 
     fun onCoreNameDialogDismiss() {
-        sharedState.coreInputShow.value = false
+        coreInputShow.value = false
     }
 
 

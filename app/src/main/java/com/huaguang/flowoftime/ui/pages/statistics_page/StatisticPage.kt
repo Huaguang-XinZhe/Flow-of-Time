@@ -179,6 +179,7 @@ fun SpecificItemsUnderCategory(
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
+//                RDALogger.info("map[category] = ${map[category]}")
                 Text(
                     text = "${category ?: "❓"} ${formatDurationInText(map[category] ?: Duration.ZERO)}",
                     fontSize = 24.sp,

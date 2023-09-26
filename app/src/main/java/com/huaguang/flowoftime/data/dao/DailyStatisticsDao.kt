@@ -16,7 +16,11 @@ import java.time.LocalDate
 @Dao
 interface DailyStatisticsDao {
 
-    @Query("SELECT * FROM daily_statistics WHERE date = :date AND category = :category")
+    @Query("""
+        SELECT * FROM daily_statistics 
+        WHERE date = :date 
+        AND ((category = :category AND :category IS NOT NULL) OR (category IS NULL AND :category IS NULL))
+    """)
     suspend fun getDailyStatistics(date: LocalDate, category: String?): DailyStatistics?
 
     // 在这里，我犯了两个错误，一个是返回类型应该是 List，另一个是导错了包，应该是协程包，而不是 current.flow
@@ -58,9 +62,10 @@ interface DailyStatisticsDao {
     @Query("""
         UPDATE daily_statistics 
         SET totalDuration = totalDuration - :duration 
-        WHERE date = :date AND category = :category
+        WHERE date = :date 
+        AND ((category = :category AND :category IS NOT NULL) OR (category IS NULL AND :category IS NULL))
     """)
-    suspend fun reduceDuration(date: LocalDate, category: String, duration: Duration)
+    suspend fun reduceDuration(date: LocalDate, category: String?, duration: Duration)
 
     @Query("""
         UPDATE daily_statistics 
@@ -75,7 +80,7 @@ interface DailyStatisticsDao {
     @Query("DELETE FROM daily_statistics WHERE date = :date")
     suspend fun deleteAllByDate(date: LocalDate)
 
-    @Query("SELECT date, totalDuration FROM daily_statistics WHERE category = :category")
+    @Query("SELECT date, totalDuration as duration FROM daily_statistics WHERE category = :category")
     suspend fun getDateDurationByCategory(category: String): DateDuration
 
     @Query("SELECT * FROM daily_statistics")

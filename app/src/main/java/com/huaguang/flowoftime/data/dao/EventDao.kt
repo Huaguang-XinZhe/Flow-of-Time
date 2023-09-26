@@ -10,11 +10,13 @@ import androidx.room.Update
 import androidx.sqlite.db.SimpleSQLiteQuery
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.data.models.db_returns.DateCategory
+import com.huaguang.flowoftime.data.models.db_returns.DateDuration
 import com.huaguang.flowoftime.data.models.db_returns.EventCategoryInfo
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
 import com.huaguang.flowoftime.data.models.db_returns.KeyTimePoints
 import com.huaguang.flowoftime.data.models.db_returns.StopRequire
+
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.other.EventWithSubEvents
 import kotlinx.coroutines.flow.Flow
@@ -271,7 +273,7 @@ interface EventDao {
     @Query("DELETE FROM events WHERE eventDate = :date")
     suspend fun deleteEventsByDate(date: LocalDate)
 
-    @Query("SELECT eventDate, category, duration FROM events WHERE parentEventId = NULL AND category = NULL")
-    fun getSubjectNullCategoryInfoList(): List<EventCategoryInfo>
+    @Query("SELECT eventDate as date, duration FROM events WHERE id = :id")
+    suspend fun getDateDurationById(id: Long): DateDuration
 
 }

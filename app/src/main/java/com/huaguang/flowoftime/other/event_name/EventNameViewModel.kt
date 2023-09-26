@@ -38,19 +38,19 @@ class EventNameViewModel @Inject constructor(
             return
         }
 
-        previousName.value = event.name
-        sharedState.newEventName.value = event.name
-        beModifiedEvent = event
-        // 点击的事项条目的状态会被设为 true
-        clickedTracker.toggleSelection(event.id)
-
-        sharedState.isInputShow.value = true
+//        previousName.value = event.name
+//        sharedState.newEventName.value = event.name
+//        beModifiedEvent = event
+//        // 点击的事项条目的状态会被设为 true
+//        clickedTracker.toggleSelection(event.id)
+//
+//        sharedState.isInputShow.value = true
     }
 
 
     suspend fun updateNameChangedToDB() {
         beModifiedEvent!!.let {
-            it.name = sharedState.newEventName.value
+//            it.name = sharedState.newEventName.value
 
             repository.updateEvent(it)
         }
