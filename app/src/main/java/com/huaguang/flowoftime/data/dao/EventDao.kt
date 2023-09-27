@@ -257,7 +257,7 @@ interface EventDao {
 
     @Query("""
     SELECT id FROM events 
-    WHERE eventDate = :date 
+    WHERE eventDate = :date AND parentEventId IS NULL
     AND ((category = :category AND :category IS NOT NULL) OR (category IS NULL AND :category IS NULL))
 """)
     fun getIdListByDateCategoryFlow(date: LocalDate, category: String?): Flow<List<Long>>
