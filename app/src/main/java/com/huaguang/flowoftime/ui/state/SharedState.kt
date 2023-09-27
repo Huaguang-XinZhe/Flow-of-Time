@@ -8,7 +8,7 @@ import com.huaguang.flowoftime.data.sources.SPHelper
 import javax.inject.Inject
 
 class SharedState @Inject constructor(
-    private val application: Application,
+    val application: Application,
     spHelper: SPHelper,
 ) {
     val toastMessage = MutableLiveData<String>()

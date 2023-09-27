@@ -96,6 +96,7 @@ dependencies {
     // 原来的 material 库
     implementation 'androidx.compose.material:material'
     implementation platform('androidx.compose:compose-bom:2022.10.00')
+    implementation 'com.google.android.material:material:1.9.0'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     androidTestImplementation platform('androidx.compose:compose-bom:2022.10.00')
@@ -152,6 +153,8 @@ dependencies {
     // 日期选择库
     implementation 'com.github.Rafsanjani:datepickertimeline:0.7.1'
 
+    // 郭神的运行时权限申请库
+    implementation 'com.guolindev.permissionx:permissionx:1.7.1'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

@@ -2,11 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
-    <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" /> <!--发送通知权限-->
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" /> <!--设置闹钟-->
+    <uses-permission android:name="android.permission.VIBRATE" /> <!--振动-->
+    <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" /> <!--勿扰权限-->
+    <uses-permission android:name="android.permission.INTERNET" /> <!--联网权限-->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/> <!--悬浮窗权限-->
 
     <application
         android:name=".TimeStreamApplication"
@@ -19,6 +20,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FlowOfTime"
         tools:targetApi="31">
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
