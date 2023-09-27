@@ -2,13 +2,14 @@ package com.huaguang.flowoftime.ui.components.category_dialog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Transaction
+import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.DashType
-import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
+import com.huaguang.flowoftime.data.models.EventCategoryUpdate
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.LabelState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,7 +18,6 @@ class CategoryViewModel @Inject constructor(
     val labelState: LabelState,
     val sharedState: SharedState,
     val repository: EventRepository,
-    private val dailyRepository: DailyStatisticsRepository,
 ) : ViewModel() {
 
     fun onClassNameClick(
@@ -55,10 +55,13 @@ class CategoryViewModel @Inject constructor(
                 }
                 DashType.CATEGORY_CHANGE -> {
                     // 只取第一个作为类属，其余无视
-                    updateCategoryAndStatistics(eventId, labels)
+                    val newCategory = labels.first()
+                    sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, newCategory)
+                    delay(50)
+                    repository.updateCategory(eventId, newCategory) // 之后才能更新类属
                 }
                 DashType.MIXED_ADD -> {
-                    updateData(eventId, labels)
+                    updateMixed(eventId, labels)
                 }
             }
         }
@@ -66,24 +69,6 @@ class CategoryViewModel @Inject constructor(
         onClassNameDialogDismiss()
     }
 
-    @Transaction
-    private suspend fun updateData(eventId: Long, labels: MutableList<String>) {
-        val (date, originalCategory, duration) = repository.getEventCategoryInfoById(eventId)
-        updateMixed(eventId, labels) { category ->
-            dailyRepository.categoryReplaced(date, originalCategory, category, duration)
-        }
-    }
-
-    @Transaction
-    private suspend fun updateCategoryAndStatistics(
-        eventId: Long,
-        labels: MutableList<String>
-    ) {
-        val (date, originalCategory, duration) = repository.getEventCategoryInfoById(eventId) // 必须放在前边，否则类属就被更新了
-        val newCategory = labels.first()
-        repository.updateCategory(eventId, newCategory)
-        dailyRepository.categoryReplaced(date, originalCategory, newCategory, duration)
-    }
 
     private fun processInputText(text: String): MutableList<String>? {
         if (text.trim().isEmpty()) {
@@ -113,17 +98,20 @@ class CategoryViewModel @Inject constructor(
     private suspend fun updateMixed(
         eventId: Long,
         labels: MutableList<String>,
-        onCategoryAdded: suspend (String) -> Unit
     ) {
         val category = labels.removeAt(0)  // Remove and get the first element
         val tags = if (labels.isEmpty()) null else labels
 
+        // 触发类属统计更新（必须放在前边，否则以前的类属获取不到）
+        sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, category)
+
+        delay(50) // 延迟一下，防止以前的类属还没获取到就更新了
+        RDALogger.info("类属更新")
         repository.updateClassName(
             id = eventId,
             category = category,
             tags = tags
         )
-        onCategoryAdded(category)
     }
 
 }

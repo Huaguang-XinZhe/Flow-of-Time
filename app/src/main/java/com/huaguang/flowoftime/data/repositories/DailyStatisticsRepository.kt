@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.data.repositories
 
+import androidx.room.Transaction
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
@@ -129,6 +130,7 @@ class DailyStatisticsRepository(
         }
 
 
+    @Transaction
     suspend fun categoryReplaced(
         date: LocalDate,
         originalCategory: String?,
@@ -137,6 +139,7 @@ class DailyStatisticsRepository(
     ) {
         withContext(Dispatchers.IO) {
             originalReduction(date, originalCategory, duration)
+            if (newCategory == "-1") return@withContext // 为 “-1”（特殊指定，撤销适用），就不需要增加新类属的时长了。
             upsertDailyStatistics(date, newCategory, duration)
         }
     }

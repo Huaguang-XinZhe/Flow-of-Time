@@ -5,9 +5,11 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+
 import androidx.lifecycle.lifecycleScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
+import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.ui.pages.time_record.EventControlViewModel
 import com.huaguang.flowoftime.ui.pages.time_record.event_buttons.EventButtonsViewModel
@@ -38,6 +40,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var undoStack: UndoStack
     @Inject
+    lateinit var eventRepository: EventRepository
+    @Inject
     lateinit var dailyRepository: DailyStatisticsRepository
 
     private val eventControlViewModel: EventControlViewModel by viewModels()
@@ -61,13 +65,25 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT).show()
         }
 
-        sharedState.categoryInfo.observe(this) { categoryInfo ->
-            RDALogger.info("观察到 categoryInfo 变化")
-            categoryInfo.apply {
-                lifecycleScope.launch {
-                    dailyRepository.categoryReplaced(date, previous, now, duration)
-                }
+        sharedState.categoryUpdate.observe(this) { categoryUpdate ->
+            RDALogger.info("观察到 categoryUpdate")
+            lifecycleScope.launch {
+                val (date, previousCategory, duration) =
+                    eventRepository.getEventCategoryInfoById(categoryUpdate.eventId)
+
+                RDALogger.info("previous = $previousCategory, newCategory = ${categoryUpdate.newCategory}")
+                // 如果以前的类属（必须通过数据库获取）和现在的类属相同，那也不用继续了
+                if (previousCategory == categoryUpdate.newCategory) return@launch
+
+                dailyRepository.categoryReplaced(
+                    date = date,
+                    originalCategory = previousCategory,
+                    newCategory = categoryUpdate.newCategory,
+                    duration = duration
+                )
+
             }
+
         }
 
     }

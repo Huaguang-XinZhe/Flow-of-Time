@@ -101,6 +101,7 @@ class StatisticViewModel @Inject constructor(
 
     fun onDateSelected(selectedDate: LocalDate) { // 进入统计页时不会执行，只有选中日期才会
         _date.value = selectedDate
+        category.value = "-1" // 重置 category，以防止进入新日期后点击同样的类属，不触发收集、状态更新
     }
 
     private fun resetBarData() {

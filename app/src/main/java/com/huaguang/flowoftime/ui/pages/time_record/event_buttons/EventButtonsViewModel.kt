@@ -12,8 +12,8 @@ import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
 import com.huaguang.flowoftime.data.models.Action
 import com.huaguang.flowoftime.data.models.ButtonActionParams
+import com.huaguang.flowoftime.data.models.EventCategoryUpdate
 import com.huaguang.flowoftime.data.models.Operation
-import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
@@ -28,7 +28,6 @@ import javax.inject.Inject
 @HiltViewModel
 class EventButtonsViewModel @Inject constructor(
     private val repository: EventRepository,
-    private val dailyRepository: DailyStatisticsRepository,
     private val sharedState: SharedState,
     val buttonsState: ButtonsState,
     val inputState: InputState,
@@ -187,8 +186,7 @@ class EventButtonsViewModel @Inject constructor(
                 } else { // 只有两种，要么 start，要么 end，所以这里一定是结束（撤销）
                     // 必须在前边进行，否则获取的 duration 为 null
                     if (action == Action.SUBJECT_END) {
-                        val (date, category, duration) = repository.getEventCategoryInfoById(eventId)
-                        dailyRepository.originalReduction(date, category, duration)
+                        sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, "-1")
                     }
 
                     repository.updateThree(eventId, null, pauseInterval, null)

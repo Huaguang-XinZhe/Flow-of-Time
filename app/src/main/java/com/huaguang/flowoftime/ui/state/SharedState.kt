@@ -3,7 +3,7 @@ package com.huaguang.flowoftime.ui.state
 import android.app.Application
 import androidx.lifecycle.MutableLiveData
 import com.huaguang.flowoftime.TimeStreamApplication
-import com.huaguang.flowoftime.data.models.CategoryInfo
+import com.huaguang.flowoftime.data.models.EventCategoryUpdate
 import com.huaguang.flowoftime.data.sources.SPHelper
 import javax.inject.Inject
 
@@ -12,7 +12,7 @@ class SharedState @Inject constructor(
     spHelper: SPHelper,
 ) {
     val toastMessage = MutableLiveData<String>()
-    val categoryInfo = MutableLiveData<CategoryInfo>()
+    val categoryUpdate = MutableLiveData<EventCategoryUpdate>()
     val cursorType = spHelper.getCursorType() // 指示当前最近的正在进行的事项的类型，null 代表当前没有事项正在进行
 
     /**

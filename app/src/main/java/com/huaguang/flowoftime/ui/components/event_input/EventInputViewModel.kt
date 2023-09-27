@@ -8,7 +8,7 @@ import com.huaguang.flowoftime.InputIntent
 import com.huaguang.flowoftime.Mode
 import com.huaguang.flowoftime.custom_interface.ButtonsStateControl
 import com.huaguang.flowoftime.custom_interface.EventControl
-import com.huaguang.flowoftime.data.models.CategoryInfo
+import com.huaguang.flowoftime.data.models.EventCategoryUpdate
 import com.huaguang.flowoftime.data.models.tables.Event
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
@@ -17,6 +17,7 @@ import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -144,17 +145,9 @@ class EventInputViewModel @Inject constructor(
             // 如果点击的不是主题事件，或者主题事件正在进行，那就返回
             if (eventType.value != EventType.SUBJECT || sharedState.isSubjectTiming()) return
 
-            val (date, previousCategory, duration) = repository.getEventCategoryInfoById(eventId.value)
-            // 如果以前的类属（必须通过数据库获取）和现在的类属相同，那也不用继续了
-            if (previousCategory == newCategory) return
-
-            sharedState.categoryInfo.value = CategoryInfo(
-                previous = previousCategory,
-                now = newCategory,
-                date = date,
-                duration = duration,
-            )
-
+            // 触发类属统计更新
+            sharedState.categoryUpdate.value = EventCategoryUpdate(eventId.value, newCategory)
+            delay(50) // 延迟一下，免得类属更新过早
         }
     }
 

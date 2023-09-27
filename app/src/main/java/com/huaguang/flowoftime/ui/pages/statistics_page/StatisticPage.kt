@@ -27,9 +27,11 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ardakaplan.rdalogger.RDALogger
 import com.foreverrafs.datepicker.DatePickerTimeline
 import com.foreverrafs.datepicker.state.DatePickerState
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -56,6 +58,7 @@ fun StatisticsPage(
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(viewModel.size.intValue) {
+        RDALogger.info("size = ${viewModel.size.intValue}")
         if (viewModel.size.intValue == 0) { // 为 0 才隐藏！
             sheetState.hide()
         }
@@ -185,7 +188,9 @@ fun SpecificItemsUnderCategory(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(vertical = 15.dp)
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(vertical = 15.dp),
                 )
 
                 DashShowToggleButton(
