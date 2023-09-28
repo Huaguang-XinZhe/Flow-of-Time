@@ -12,4 +12,7 @@
     <color name="light_blue_600">#FF039BE5</color>
     <color name="gray_400">#FFBDBDBD</color>
     <color name="gray_600">#FF757575</color>
+<!--    自定义颜色-->
+    <color name="gray_light_bg_input">#f1f2f6</color>
+    <color name="gray_light_dividing_line">#d9d9d9</color>
 </resources>
