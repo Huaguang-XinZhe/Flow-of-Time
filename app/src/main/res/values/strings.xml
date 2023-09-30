@@ -12,4 +12,5 @@
     <string name="statistic">统计</string>
     <string name="category">类属</string>
     <string name="fab_desc">可以悬浮在其他应用之上的悬浮按钮</string>
+    <string name="inspiration">灵感</string>
 </resources>

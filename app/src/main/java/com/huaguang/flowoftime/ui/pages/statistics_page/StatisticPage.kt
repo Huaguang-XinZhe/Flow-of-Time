@@ -41,7 +41,7 @@ import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.widget.HorizontalBarChart
 import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.formatLocalDateTime
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.getAdjustedDate
 import com.huaguang.flowoftime.utils.space
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -224,7 +224,7 @@ fun DaySummaryText(viewModel: StatisticViewModel = viewModel()) {
 
     val firstWakeUpText = "（起床）${formatLocalDateTime(wakeUpTime!!)}"
 
-    val text = if (date.isEqual(getAdjustedEventDate())) { // 如果是当天
+    val text = if (date.isEqual(getAdjustedDate())) { // 如果是当天
         val duration = Duration.between(wakeUpTime, LocalDateTime.now())
         "$firstWakeUpText -> ${formatLocalDateTime(LocalDateTime.now())}（当前）\n\n" +
                 "${space(21)}${formatDurationInText(duration)}"
@@ -256,6 +256,6 @@ fun DatePicker(datePickerState: DatePickerState, onDateSelected: (LocalDate) -> 
 //        pastDaysCount = 10,  // The number of previous dates to display, relative to the initial date. Defaults to 120
         eventIndicatorColor = Color.DarkGray,
         onDateSelected = onDateSelected,
-        eventDates = listOf(getAdjustedEventDate())
+        eventDates = listOf(getAdjustedDate())
     )
 }

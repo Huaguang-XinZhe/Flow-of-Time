@@ -6,7 +6,7 @@ import java.time.LocalDate
 
 @Entity("inspirations")
 data class Inspiration(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val text: String,
     val date: LocalDate,
     val category: String? = null, // 默认无类属

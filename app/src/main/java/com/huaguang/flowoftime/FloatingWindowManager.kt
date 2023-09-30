@@ -26,9 +26,12 @@ import com.huaguang.flowoftime.utils.vibrate
 import kotlin.math.abs
 import kotlin.math.absoluteValue
 
-class FloatingWindowManager(private val context: Context) {
+class FloatingWindowManager(
+    private val context: Context,
+) {
 
     val isFabClose = MutableLiveData(false)
+    val inputStr = MutableLiveData("")
     var fab: FloatingActionButton? = null
 
     private val themedContext = ContextThemeWrapper(context, R.style.FloatingButtonTheme)
@@ -218,8 +221,7 @@ class FloatingWindowManager(private val context: Context) {
 
     private fun setConfirmButtonClickListener(confirmButton: Button) {
         confirmButton.setOnClickListener {
-            val inputValue = input.text.toString()
-            RDALogger.info("输入的值是: $inputValue")
+            inputStr.value = input.text.toString() // 触发数据库存储
             windowManager.removeView((confirmButton.parent as View))
             isFabClose.value = false // 恢复 FAB 的样式
         }

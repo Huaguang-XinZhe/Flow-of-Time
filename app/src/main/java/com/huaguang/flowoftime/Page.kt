@@ -22,6 +22,9 @@ sealed class Page(
 
     @Parcelize
     object Category : Page("category", R.string.category, R.drawable.category)
+
+    @Parcelize
+    object Inspiration: Page("inspiration", R.string.inspiration, R.drawable.inspiration)
 }
 
 
@@ -30,4 +33,5 @@ val tabs = listOf(
     Page.List,
     Page.Statistic,
     Page.Category,
+    Page.Inspiration,
 )

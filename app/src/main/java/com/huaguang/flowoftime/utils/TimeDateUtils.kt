@@ -16,7 +16,7 @@ fun getEventDate(startTime: LocalDateTime): LocalDate {
     }
 }
 
-fun getAdjustedEventDate(): LocalDate {
+fun getAdjustedDate(): LocalDate {
     val now = LocalTime.now()
     val midnight = LocalTime.MIDNIGHT
     val fiveAM = LocalTime.of(5, 0)

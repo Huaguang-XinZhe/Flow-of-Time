@@ -24,9 +24,10 @@ import com.foreverrafs.datepicker.state.rememberDatePickerState
 import com.huaguang.flowoftime.ui.components.category_dialog.ClassNameInputAlertDialog
 import com.huaguang.flowoftime.ui.components.event_input.EventInputField
 import com.huaguang.flowoftime.ui.pages.display_list.DisplayListPage
+import com.huaguang.flowoftime.ui.pages.inspiration_page.InspirationPage
 import com.huaguang.flowoftime.ui.pages.statistics_page.StatisticsPage
 import com.huaguang.flowoftime.ui.pages.time_record.TimeRecordPage
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.getAdjustedDate
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -34,7 +35,7 @@ import com.huaguang.flowoftime.utils.getAdjustedEventDate
 fun MyApp(appViewModels: AppViewModels) {
 //    val selectedTab = remember { mutableStateOf(tabs[0]) }
     val selectedTab = rememberSaveable { mutableStateOf(tabs[0]) } // 配置更改或被系统杀内存时将保存这个状态（里边类型需要 Parcelable）
-    val datePickerState = rememberDatePickerState(initialDate = getAdjustedEventDate().minusDays(1))
+    val datePickerState = rememberDatePickerState(initialDate = getAdjustedDate().minusDays(1))
 
     Scaffold(
         bottomBar = { BottomBar(selectedTab) },
@@ -63,6 +64,7 @@ fun MyApp(appViewModels: AppViewModels) {
                         StatisticsPage(datePickerState)
                     }
                     Page.Category -> Text(text = "类属页，敬请期待")
+                    Page.Inspiration -> InspirationPage()
                 }
             }
 

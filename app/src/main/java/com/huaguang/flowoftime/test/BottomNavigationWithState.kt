@@ -31,6 +31,7 @@ fun BottomNavigationWithState() {
             Page.List -> SecondScreen()
             Page.Statistic -> ThirdScreen()
             Page.Category -> FourthScreen()
+            Page.Inspiration -> FourthScreen()
         }
 
         // 你的底部导航栏

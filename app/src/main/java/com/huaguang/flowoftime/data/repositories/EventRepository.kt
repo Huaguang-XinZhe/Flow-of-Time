@@ -15,7 +15,7 @@ import com.huaguang.flowoftime.other.EventWithSubEvents
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.utils.EventSerializer
 import com.huaguang.flowoftime.utils.formatDurationInText
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.getAdjustedDate
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -33,7 +33,7 @@ class EventRepository(
 ) {
 
     suspend fun deleteEventsExceptToday() {
-        val customToday = getAdjustedEventDate()
+        val customToday = getAdjustedDate()
 
         withContext(Dispatchers.IO) {
             eventDao.deleteEventsExceptToday(customToday)
@@ -61,12 +61,12 @@ class EventRepository(
     }
 
     fun getRecentTwoDaysEvents(): Flow<List<EventWithSubEvents>> {
-        val customToday = getAdjustedEventDate()
+        val customToday = getAdjustedDate()
         return eventDao.getEventsWithSubEvents(customToday.minusDays(1), customToday)
     }
 
     fun getRecentTwoDaysCombinedEventsFlow(): Flow<List<CombinedEvent?>> {
-        val customToday = getAdjustedEventDate()
+        val customToday = getAdjustedDate()
         return eventDao.getAllWithinRangeEvents(
             startDate = customToday.minusDays(1),
             endDate = customToday,
@@ -80,7 +80,7 @@ class EventRepository(
      * 获取上次性泄和今天间隔的天数的 Flow（转换而成）
      */
     fun getLatestXXXIntervalDaysFlow(): Flow<Int> {
-        val customToday = getAdjustedEventDate()
+        val customToday = getAdjustedDate()
         return eventDao.getLatestXXXDate().map { date -> // date 是上次性泄的日期
             date?.let { ChronoUnit.DAYS.between(it, customToday).toInt() } ?: 0
         }
@@ -94,7 +94,7 @@ class EventRepository(
     }
 
     fun getCustomTodayEvents(): Flow<List<EventWithSubEvents>> {
-        return eventDao.getEventsWithSubEvents(getAdjustedEventDate())
+        return eventDao.getEventsWithSubEvents(getAdjustedDate())
     }
 
     suspend fun calculateSubEventsDuration(mainEventId: Long): Duration {
@@ -114,7 +114,7 @@ class EventRepository(
         }
 
         val eventsWithSubEvents = if (tag == "昨日") {
-            val customYesterday = getAdjustedEventDate().minusDays(1)
+            val customYesterday = getAdjustedDate().minusDays(1)
             eventDao.getYesterdayEventsWithSubEventsImmediate(customYesterday)
         } else {
             eventDao.getEventsWithSubEventsImmediate()

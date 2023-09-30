@@ -8,9 +8,11 @@ import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
 import com.huaguang.flowoftime.data.dao.DateDurationDao
 import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.dao.IconMappingDao
+import com.huaguang.flowoftime.data.dao.InspirationDao
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.data.repositories.IconMappingRepository
+import com.huaguang.flowoftime.data.repositories.InspirationRepository
 import com.huaguang.flowoftime.data.sources.DataStoreHelper
 import com.huaguang.flowoftime.data.sources.EventDatabase
 import com.huaguang.flowoftime.data.sources.IconDatabase
@@ -172,6 +174,20 @@ object AppModule {
     fun provideDNDManager(application: Application): DNDManager {
         return DNDManager(application)
     }
+
+    @Singleton
+    @Provides
+    fun provideInspirationDao(database: EventDatabase): InspirationDao {
+        return database.inspirationDao()
+    }
+
+    @Singleton
+    @Provides
+    fun provideInspirationRepository(dao: InspirationDao): InspirationRepository {
+        return InspirationRepository(dao)
+    }
+
+
 
 }
 

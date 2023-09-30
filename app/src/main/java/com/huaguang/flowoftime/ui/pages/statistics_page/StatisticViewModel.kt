@@ -8,7 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.SharedState
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.getAdjustedDate
+
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,7 @@ class StatisticViewModel @Inject constructor(
     val sharedState: SharedState,
 ) : ViewModel() {
 
-    private val yesterday: LocalDate = getAdjustedEventDate().minusDays(1)
+    private val yesterday: LocalDate = getAdjustedDate().minusDays(1)
 
     val category = mutableStateOf<String?>("-1")
     val size = mutableIntStateOf(0)

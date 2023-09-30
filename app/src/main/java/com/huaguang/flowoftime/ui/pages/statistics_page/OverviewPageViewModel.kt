@@ -6,7 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.models.tables.DailyStatistics
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
-import com.huaguang.flowoftime.utils.getAdjustedEventDate
+import com.huaguang.flowoftime.utils.getAdjustedDate
+
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.time.Duration
@@ -23,7 +24,7 @@ class OverviewPageViewModel @Inject constructor(
     fun loadDateDurationData() {
         viewModelScope.launch {
             val groupedMap = dailyRepository.getAllDailyStatistics()
-                .filterNot { it.date.isEqual(getAdjustedEventDate()) } // 筛除今天的数据
+                .filterNot { it.date.isEqual(getAdjustedDate()) } // 筛除今天的数据
                 .groupBy { it.category }
             val transformedMap = groupedMap.mapValues { entry ->
                 val averageMillis = entry.value.map { it.totalDuration.toMillis() }.average()
