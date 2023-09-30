@@ -1,48 +1,44 @@
 package com.huaguang.flowoftime
 
-import android.app.Service
-import android.content.Context
-import android.content.Intent
-import android.graphics.PixelFormat
-import android.os.IBinder
-import android.view.WindowManager
-import android.widget.Button
-import android.widget.Toast
+import android.content.res.ColorStateList
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.LifecycleService
 
-class FloatingWindowService : Service() {
+class FloatingWindowService : LifecycleService() {
 
-    private lateinit var windowManager: WindowManager
-    private lateinit var floatingButton: Button
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
-    }
+    private val floatingWindowManager = FloatingWindowManager(this) // Service 也是 context 的一种
 
     override fun onCreate() {
         super.onCreate()
 
-        windowManager = application.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        floatingWindowManager.apply {
+            initFloatingButton() // 初始化悬浮窗逻辑
 
-        floatingButton = Button(application).apply {
-            text = "点击我"
-            setOnClickListener {
-                Toast.makeText(application, "悬浮窗被点击了！", Toast.LENGTH_SHORT).show()
+            // 这段观察代码必须放在 Service 中，否则在其他应用之上无法观察。
+            isFabClose.observe(this@FloatingWindowService) { isClose ->
+                val bgColorRes: Int
+                val iconRes: Int
+
+                if (isClose) {
+                    bgColorRes = R.color.red
+                    iconRes = R.drawable.close
+                } else {
+                    bgColorRes = R.color.deep_green
+                    iconRes = R.drawable.write
+                }
+
+                fab?.backgroundTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(this@FloatingWindowService, bgColorRes)
+                ) // 设置 FAB 的背景色，必须用 backgroundTintList
+                fab?.setImageResource(iconRes)
             }
         }
-
-        val layoutParams = WindowManager.LayoutParams(
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
-            PixelFormat.TRANSLUCENT
-        )
-
-        windowManager.addView(floatingButton, layoutParams)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        windowManager.removeView(floatingButton)
-    }
+//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+//        super.onStartCommand(intent, flags, startId)
+//
+//        return START_STICKY
+//    }
 }
+

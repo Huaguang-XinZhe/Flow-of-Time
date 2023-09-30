@@ -2,7 +2,6 @@ package com.huaguang.flowoftime.di
 
 import android.app.Application
 import android.content.Context
-import com.huaguang.flowoftime.FloatingWindowManager
 import com.huaguang.flowoftime.TimeStreamApplication
 import com.huaguang.flowoftime.UndoStack
 import com.huaguang.flowoftime.data.dao.DailyStatisticsDao
@@ -172,12 +171,6 @@ object AppModule {
     @Provides
     fun provideDNDManager(application: Application): DNDManager {
         return DNDManager(application)
-    }
-
-    @Singleton
-    @Provides
-    fun provideFloatingWindowManager(application: Application): FloatingWindowManager {
-        return FloatingWindowManager(application)
     }
 
 }

@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime
 
 import android.Manifest
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import com.huaguang.flowoftime.ui.state.ButtonsState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
+import com.huaguang.flowoftime.utils.vibrate
 import com.permissionx.guolindev.PermissionX
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
@@ -44,8 +46,8 @@ class MainActivity : FragmentActivity() {
     lateinit var eventRepository: EventRepository
     @Inject
     lateinit var dailyRepository: DailyStatisticsRepository
-    @Inject
-    lateinit var floatingWindowManager: FloatingWindowManager // 不能设为 private，否则会报错！
+//    @Inject
+//    lateinit var floatingWindowManager: FloatingWindowManager // 不能设为 private，否则会报错！
 
     private val eventControlViewModel: EventControlViewModel by viewModels()
     private val buttonsViewModel: EventButtonsViewModel by viewModels()
@@ -102,6 +104,7 @@ class MainActivity : FragmentActivity() {
         }
 
         eventControlViewModel.requestPermissionSignal.observe(this) {
+            vibrate(this)
             requestPermissions()
         }
     }
@@ -115,8 +118,7 @@ class MainActivity : FragmentActivity() {
             }
             .request { allGranted, _, deniedList ->
                 if (allGranted) {
-                    floatingWindowManager.initFloatingButton()
-//                    startFloatingWindowService()
+                    startFloatingWindowService()
                     sharedState.toastMessage.value = "申请已通过"
                 } else {
                     sharedState.toastMessage.value = "您拒绝了如下权限：$deniedList"
@@ -125,9 +127,9 @@ class MainActivity : FragmentActivity() {
             }
     }
 
-//    private fun startFloatingWindowService() {
-//        val intent = Intent(this, FloatingWindowService::class.java)
-//        startService(intent)
-//    }
+    private fun startFloatingWindowService() {
+        val intent = Intent(this, FloatingWindowService::class.java)
+        startService(intent)
+    }
 }
 

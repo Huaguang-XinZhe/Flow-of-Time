@@ -15,4 +15,5 @@
 <!--    自定义颜色-->
     <color name="gray_light_bg_input">#f1f2f6</color>
     <color name="gray_light_dividing_line">#d9d9d9</color>
+    <color name="red">#d50000</color>
 </resources>

@@ -9,6 +9,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.TimeStreamApplication
+import com.huaguang.flowoftime.utils.vibrate
 
 class MyAlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
