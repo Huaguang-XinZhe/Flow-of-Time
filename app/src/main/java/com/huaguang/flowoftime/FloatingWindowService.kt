@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleService
@@ -20,8 +21,8 @@ class FloatingWindowService : LifecycleService() {
 
     private val floatingWindowManager = FloatingWindowManager(this) // Service 也是 context 的一种
 
-    override fun onCreate() {
-        super.onCreate()
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        super.onStartCommand(intent, flags, startId)
 
         floatingWindowManager.apply {
             initFloatingButton() // 初始化悬浮窗逻辑
@@ -58,12 +59,8 @@ class FloatingWindowService : LifecycleService() {
             }
 
         }
-    }
 
-//    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-//        super.onStartCommand(intent, flags, startId)
-//
-//        return START_STICKY
-//    }
+        return START_STICKY
+    }
 }
 

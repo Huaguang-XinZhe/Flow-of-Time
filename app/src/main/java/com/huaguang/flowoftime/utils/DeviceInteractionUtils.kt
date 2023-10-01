@@ -14,6 +14,16 @@ fun copyToClipboard(context: Context, text: String) {
     clipboard.setPrimaryClip(clip)
 }
 
+fun getClipboardContent(context: Context): String? {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clipData = clipboard.primaryClip
+    return if (clipData != null && clipData.itemCount > 0) {
+        clipData.getItemAt(0).text?.toString()
+    } else {
+        null
+    }
+}
+
 fun vibrate(context: Context) {
     val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) { // Android 12 是 API 级别 31 (也被称为 API S)
         val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager

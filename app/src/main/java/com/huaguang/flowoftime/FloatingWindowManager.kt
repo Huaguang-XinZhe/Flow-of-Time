@@ -38,15 +38,19 @@ class FloatingWindowManager(
     private lateinit var windowManager: WindowManager
     private var isDraggable = false
     private lateinit var input: EditText
+    private var fabView: View? = null
 
     @SuppressLint("InflateParams")
     fun initFloatingButton() {
+        // fab 在 XML 中没有父布局，就不要用 parent 属性去获取了，可能会出现类型转换错误
+        fabView?.let { windowManager.removeView(it) } // 如果 fabView 已经存在，就移除它，避免显示多个 Fab 按钮
+
         KeyboardUtils.init(context) // 初始化软键盘弹收工具类
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-        val fabView = LayoutInflater.from(themedContext)
+        fabView = LayoutInflater.from(themedContext)
             .inflate(R.layout.floating_action_button, null, false)
-        fab = fabView.findViewById(R.id.floatingActionButton)
+        fab = fabView?.findViewById(R.id.floatingActionButton)
 
         val params = configureFabViewParams()
 
@@ -200,10 +204,8 @@ class FloatingWindowManager(
         inputView.setOnTouchListener { _, event ->
             if (event.action == MotionEvent.ACTION_OUTSIDE) {
                 hideSoftKeyboard(input)
-                true
-            } else {
-                false
             }
+            false
         }
     }
 
