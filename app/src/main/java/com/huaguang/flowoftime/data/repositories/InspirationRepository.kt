@@ -18,4 +18,9 @@ class InspirationRepository(private val dao: InspirationDao) {
         withContext(Dispatchers.IO) {
             dao.deleteInspirationById(id)
         }
+
+    suspend fun getLastText() =
+        withContext(Dispatchers.IO) {
+            dao.getLastText()
+        }
 }

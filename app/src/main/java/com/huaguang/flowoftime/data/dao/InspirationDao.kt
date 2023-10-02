@@ -27,7 +27,7 @@ interface InspirationDao {
     @Query("SELECT * FROM inspirations")
     suspend fun getAllInspirations(): List<Inspiration>
 
-    @Query("SELECT * FROM inspirations")
+    @Query("SELECT * FROM inspirations ORDER BY id DESC") // 降序排列
     fun getAllInspirationsFlow(): Flow<List<Inspiration>>
 
     // 根据类属查询灵感记录
@@ -41,4 +41,7 @@ interface InspirationDao {
     // 根据ID查询单个灵感记录
     @Query("SELECT * FROM inspirations WHERE id = :id")
     suspend fun getInspirationById(id: Int): Inspiration?
+
+    @Query("SELECT text FROM inspirations WHERE id = (SELECT MAX(id) FROM inspirations)")
+    suspend fun getLastText(): String?
 }

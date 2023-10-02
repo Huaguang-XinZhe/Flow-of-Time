@@ -38,19 +38,15 @@ class FloatingWindowManager(
     private lateinit var windowManager: WindowManager
     private var isDraggable = false
     private lateinit var input: EditText
-    private var fabView: View? = null
 
     @SuppressLint("InflateParams")
     fun initFloatingButton() {
-        // fab 在 XML 中没有父布局，就不要用 parent 属性去获取了，可能会出现类型转换错误
-        fabView?.let { windowManager.removeView(it) } // 如果 fabView 已经存在，就移除它，避免显示多个 Fab 按钮
-
         KeyboardUtils.init(context) // 初始化软键盘弹收工具类
         windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-        fabView = LayoutInflater.from(themedContext)
+        val fabView = LayoutInflater.from(themedContext)
             .inflate(R.layout.floating_action_button, null, false)
-        fab = fabView?.findViewById(R.id.floatingActionButton)
+        fab = fabView?.findViewById(R.id.floatingActionButton) // fabView 和 fab 其实本质上是一样的
 
         val params = configureFabViewParams()
 
@@ -58,6 +54,39 @@ class FloatingWindowManager(
 
         setFabListener(params)
 
+    }
+
+    fun removeFloatingButton() {
+        // fab 在 XML 中没有父布局，就不要用 parent 属性去获取了，可能会出现类型转换错误
+        fab?.let { windowManager.removeView(it) }
+    }
+
+    fun handleSingleTap(text: String? = null) {
+        RDALogger.info("按钮点击")
+        if (isFabClose.value == true) {
+            windowManager.removeView(input.parent as View)
+            isFabClose.value = false // 恢复 fab 样式
+            return
+        }
+
+        val inputView = createInputView()
+        input = inputView.findViewById<EditText?>(R.id.input).apply {
+            setText(text)
+            setSelection(text?.length ?: 0)
+        }
+        val confirmButton = inputView.findViewById<Button>(R.id.confirmButton)
+
+        setInputTouchListener(inputView)
+        setInputTextWatcher(confirmButton) // 这个每次点击似乎都会设置，每次都会产生不同的实例
+        setConfirmButtonClickListener(confirmButton)
+
+        windowManager.addView(inputView, configureInputViewParams())
+
+        input.postDelayed({
+            showSoftKeyboard(input)
+            // 改 FAB 为关闭样式
+            isFabClose.value = true
+        }, 100)
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -142,31 +171,6 @@ class FloatingWindowManager(
         }
     }
 
-    private fun handleSingleTap() {
-        RDALogger.info("按钮点击")
-        if (isFabClose.value == true) {
-            windowManager.removeView(input.parent as View)
-            isFabClose.value = false // 恢复 fab 样式
-            return
-        }
-
-        val inputView = createInputView()
-        input = inputView.findViewById(R.id.input)
-        val confirmButton = inputView.findViewById<Button>(R.id.confirmButton)
-
-        setInputTouchListener(inputView)
-        setInputTextWatcher(confirmButton)
-        setConfirmButtonClickListener(confirmButton)
-
-        windowManager.addView(inputView, configureInputViewParams())
-
-        input.postDelayed({
-            showSoftKeyboard(input)
-            // 改 FAB 为关闭样式
-            isFabClose.value = true
-        }, 100)
-    }
-
     private fun handleDoubleTap() {
         RDALogger.info("按钮双击")
     }
@@ -189,7 +193,10 @@ class FloatingWindowManager(
                 context.startActivity(intent)
             }
             abs(diffY) > abs(diffX) && diffY > 0 -> RDALogger.info("向下滑动：diffY = $diffY")
-            abs(diffY) > abs(diffX) && diffY < 0 -> RDALogger.info("向上滑动：diffY = $diffY")
+            abs(diffY) > abs(diffX) && diffY < 0 -> {
+                RDALogger.info("向上滑动：diffY = $diffY")
+                inputStr.value = "-1"
+            }
         }
     }
 
