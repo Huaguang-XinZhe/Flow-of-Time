@@ -82,6 +82,8 @@ fun NumberCircle(
     number: Int,
     onClick: () -> Unit
 ) {
+    if (number == -1) return
+
     if (number == 0) {
         FilledIconButton(
             onClick = onClick,

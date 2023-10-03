@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import com.huaguang.flowoftime.data.models.db_returns.IdText
 import com.huaguang.flowoftime.data.models.tables.Inspiration
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -42,6 +43,9 @@ interface InspirationDao {
     @Query("SELECT * FROM inspirations WHERE id = :id")
     suspend fun getInspirationById(id: Int): Inspiration?
 
-    @Query("SELECT text FROM inspirations WHERE id = (SELECT MAX(id) FROM inspirations)")
-    suspend fun getLastText(): String?
+    @Query("SELECT id as maxId, text FROM inspirations WHERE id = (SELECT MAX(id) FROM inspirations)")
+    suspend fun getLastIdText(): IdText
+
+    @Query("UPDATE inspirations SET text = :newText WHERE id = :id")
+    suspend fun updateTextById(id: Long, newText: String)
 }

@@ -21,6 +21,7 @@ import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.ItemState
 import com.huaguang.flowoftime.ui.state.SharedState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -188,7 +189,7 @@ class EventButtonsViewModel @Inject constructor(
                     if (action == Action.SUBJECT_END) {
                         sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, "-1")
                     }
-
+                    delay(50)
                     repository.updateThree(eventId, null, pauseInterval, null)
                 }
             }

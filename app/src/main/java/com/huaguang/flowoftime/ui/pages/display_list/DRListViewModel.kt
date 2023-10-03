@@ -21,7 +21,7 @@ class DRListViewModel @Inject constructor(
     private val _recentTwoDaysCombinedEventsFlow = MutableStateFlow<List<CombinedEvent?>>(listOf(null)) // 最开始什么都没有就为空值
     val recentTwoDaysCombinedEventsFlow: StateFlow<List<CombinedEvent?>>
         get() = _recentTwoDaysCombinedEventsFlow.asStateFlow() // TODO: 这里用 getter 和不用 getter 有什么区别？
-    private val _latestXXXIntervalDaysFlow = MutableStateFlow(0)
+    private val _latestXXXIntervalDaysFlow = MutableStateFlow(-1)
     val latestXXXIntervalDaysFlow: StateFlow<Int> = _latestXXXIntervalDaysFlow.asStateFlow()
 
     init {
@@ -34,7 +34,7 @@ class DRListViewModel @Inject constructor(
 
         viewModelScope.launch {  // 必须分开进行，因为收集会挂起协程，如果放在一起，后边的代码不会执行
             repository.getLatestXXXIntervalDaysFlow().filterNotNull().collect { intervalDays -> // 筛除空值
-                _latestXXXIntervalDaysFlow.value = intervalDays
+                _latestXXXIntervalDaysFlow.value = intervalDays // 默认获取不到就是 -1
             }
 
         }

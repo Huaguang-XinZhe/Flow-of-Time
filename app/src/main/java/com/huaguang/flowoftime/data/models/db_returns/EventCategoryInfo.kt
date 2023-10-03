@@ -6,5 +6,5 @@ import java.time.LocalDate
 data class EventCategoryInfo(
     val eventDate: LocalDate,
     val category: String?,
-    val duration: Duration,
+    val duration: Duration?,
 )

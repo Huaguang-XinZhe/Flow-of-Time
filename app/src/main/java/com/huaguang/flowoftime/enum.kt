@@ -13,6 +13,13 @@ enum class EventType {
 
 }
 
+enum class Data {
+    GET_LAST,
+    INSERT,
+    UPDATE,
+    EMPTY,
+}
+
 enum class TimeType {
     START,
     END

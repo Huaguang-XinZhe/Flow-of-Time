@@ -91,7 +91,8 @@ class MainActivity : FragmentActivity() {
                     eventRepository.getEventCategoryInfoById(categoryUpdate.eventId)
 
                 // 如果以前的类属（必须通过数据库获取）和现在的类属相同，那也不用继续了
-                if (previousCategory == categoryUpdate.newCategory) return@launch
+                // 获取的 duration 为 null 也返回（一般不会为 null）
+                if (previousCategory == categoryUpdate.newCategory || duration == null) return@launch
 
                 dailyRepository.categoryReplaced(
                     date = date,

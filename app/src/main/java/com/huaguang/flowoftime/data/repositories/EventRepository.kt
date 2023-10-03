@@ -82,7 +82,7 @@ class EventRepository(
     fun getLatestXXXIntervalDaysFlow(): Flow<Int> {
         val customToday = getAdjustedDate()
         return eventDao.getLatestXXXDate().map { date -> // date 是上次性泄的日期
-            date?.let { ChronoUnit.DAYS.between(it, customToday).toInt() } ?: 0
+            date?.let { ChronoUnit.DAYS.between(it, customToday).toInt() } ?: -1
         }
     }
 

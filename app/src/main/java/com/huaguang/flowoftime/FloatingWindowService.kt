@@ -62,21 +62,28 @@ class FloatingWindowService : LifecycleService() {
                 fab?.setImageResource(iconRes)
             }
 
+            var id = 0L // 必须放在观察之外缓存，否则每次的值都是初始值
             inputStr.observe(this@FloatingWindowService) { inputStr ->
-                RDALogger.info("观察到变化，inputStr = $inputStr")
-                if (inputStr.trim().isEmpty()) return@observe
+                val (dataType, text) = inputStr
 
                 lifecycleScope.launch {
-                    if (inputStr == "-1") {
-                        val text = repository.getLastText()
-                        floatingWindowManager.handleSingleTap(text)
-                        return@launch
+                    RDALogger.info("dataType = $dataType")
+                    when(dataType) {
+                        Data.EMPTY -> return@launch
+                        Data.GET_LAST -> {
+                            val (maxId, lastText) = repository.getLastIdText()
+                            id = maxId
+                            floatingWindowManager.handleSingleTap(lastText)
+                        }
+                        Data.INSERT -> {
+                            val inspiration = Inspiration(
+                                date = getAdjustedDate(),
+                                text = text,
+                            )
+                            repository.insert(inspiration)
+                        }
+                        Data.UPDATE -> repository.updateTextById(id, text)
                     }
-
-                    repository.insert(Inspiration(
-                        date = getAdjustedDate(),
-                        text = inputStr,
-                    ))
                 }
             }
 

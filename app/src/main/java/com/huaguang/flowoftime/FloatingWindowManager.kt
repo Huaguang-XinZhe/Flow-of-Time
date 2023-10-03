@@ -31,7 +31,7 @@ class FloatingWindowManager(
 ) {
 
     val isFabClose = MutableLiveData(false)
-    val inputStr = MutableLiveData("")
+    val inputStr = MutableLiveData(Data.EMPTY to "")
     var fab: FloatingActionButton? = null
 
     private val themedContext = ContextThemeWrapper(context, R.style.FloatingButtonTheme)
@@ -195,7 +195,7 @@ class FloatingWindowManager(
             abs(diffY) > abs(diffX) && diffY > 0 -> RDALogger.info("向下滑动：diffY = $diffY")
             abs(diffY) > abs(diffX) && diffY < 0 -> {
                 RDALogger.info("向上滑动：diffY = $diffY")
-                inputStr.value = "-1"
+                inputStr.value = Data.GET_LAST to ""
             }
         }
     }
@@ -230,7 +230,12 @@ class FloatingWindowManager(
 
     private fun setConfirmButtonClickListener(confirmButton: Button) {
         confirmButton.setOnClickListener {
-            inputStr.value = input.text.toString() // 触发数据库存储
+            val text = input.text.toString() // TODO: 这个 text 会不会丢失格式？ 
+            inputStr.value = if (inputStr.value?.first == Data.GET_LAST) {
+                Data.UPDATE to text // 触发更新
+            } else {
+                Data.INSERT to text // 触发存储
+            }
             windowManager.removeView((confirmButton.parent as View))
             isFabClose.value = false // 恢复 FAB 的样式
         }
