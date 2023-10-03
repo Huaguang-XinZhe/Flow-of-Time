@@ -156,7 +156,8 @@ dependencies {
     // 郭神的运行时权限申请库
     implementation 'com.guolindev.permissionx:permissionx:1.7.1'
 
-
+    // 在 Android 内部打开网页
+    implementation "com.google.accompanist:accompanist-webview:0.30.1"
 
 
     testImplementation 'junit:junit:4.13.2'

@@ -31,4 +31,10 @@ class InspirationRepository(private val dao: InspirationDao) {
             dao.updateTextById(id, newText)
         }
     }
+
+    suspend fun insertAll(inspirations: List<Inspiration>) {
+        withContext(Dispatchers.IO) {
+            dao.insertAll(inspirations)
+        }
+    }
 }

@@ -15,6 +15,7 @@ import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.view.ContextThemeWrapper
+import androidx.core.text.toHtml
 import androidx.lifecycle.MutableLiveData
 import com.ardakaplan.rdalogger.RDALogger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -230,11 +231,11 @@ class FloatingWindowManager(
 
     private fun setConfirmButtonClickListener(confirmButton: Button) {
         confirmButton.setOnClickListener {
-            val text = input.text.toString() // TODO: 这个 text 会不会丢失格式？ 
+            val htmlText = input.text.toHtml()
             inputStr.value = if (inputStr.value?.first == Data.GET_LAST) {
-                Data.UPDATE to text // 触发更新
+                Data.UPDATE to htmlText // 更新数据
             } else {
-                Data.INSERT to text // 触发存储
+                Data.INSERT to htmlText // 插入数据
             }
             windowManager.removeView((confirmButton.parent as View))
             isFabClose.value = false // 恢复 FAB 的样式

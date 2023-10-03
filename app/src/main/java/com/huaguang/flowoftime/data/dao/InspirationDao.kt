@@ -48,4 +48,7 @@ interface InspirationDao {
 
     @Query("UPDATE inspirations SET text = :newText WHERE id = :id")
     suspend fun updateTextById(id: Long, newText: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(inspirations: List<Inspiration>)
 }
