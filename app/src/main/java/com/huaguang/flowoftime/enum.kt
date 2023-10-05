@@ -13,11 +13,11 @@ enum class EventType {
 
 }
 
-enum class Data {
+enum class DBOperationType {
     GET_LAST,
     INSERT,
     UPDATE,
-    EMPTY,
+    INVALID,
 }
 
 enum class TimeType {

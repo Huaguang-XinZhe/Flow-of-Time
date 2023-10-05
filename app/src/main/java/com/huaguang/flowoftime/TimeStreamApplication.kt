@@ -109,33 +109,32 @@ class TimeStreamApplication @Inject constructor() : Application() {
 
         val routine = listOf("煮吃", "洗澡", "洗漱", "厕", "外吃", "热吃", "吃晚饭", "买菜", "晾衣", "拿快递", "理发")
         val family = listOf("老妈", "爷爷")
-        val continueWatching = listOf("续观", "续阅", "啊粥", "小吏", "纪史", "卢克文", "差评", "1900", "华商",
-            "一知君", "小敏", "程前", "半佛", "思维实验", "许右史", )
         val rest = listOf("睡", "躺歇", "眯躺")
         val exercise = listOf("慢跑", "俯卧撑")
-        val communication = listOf("鸿", "铮", "师父", "小洁", "小聚", "聊天", "通话")
+        val communication = listOf("聊天", "通话", "鸿", "铮", "师父", "小洁", "小聚",)
         val frame = listOf("财务", "收集库", "时间统计", "清整", "规划", "省思", "统析", "仓库", "预算",
             "纸上统计", "思考", "草思")
-        val core = listOf("阅读", "总结", "时光流", "应用", "输出", "初阅", "阅", "搭建个人网站", "渐构",
-            "前端学习", "修bug", "HTML和CSS基础学习", "代码")
+        val frontEnd = listOf("HTML", "CSS", "JavaScript", "前端", "Vue", "React")
+        val underlyingTech = listOf("计算机底层", "图解网络")
         val fallow = listOf("散步", "打字", "抽烟", "吹风", "休闲")
         val breach = listOf("躺刷", "贪刷", "朋友圈", "刷视频", "QQ空间", "Q朋抖",
             "刷手机", "躺思", "刷抖音", "动态", "贪观")
         val masturbation = listOf("xxx", "泄", "淫",)
-        val getUp = listOf("起床")
-        val entertainment = listOf("看电影")
+        val entertainment = listOf("续观", "看电影")
 
         classifier.apply {
             insert(routine, "常务")
             insert(family, "家人")
-            insert(continueWatching, "续观")
             insert(rest, "休息")
             insert(exercise, "锻炼")
             insert(communication, "交际")
             insert(frame, "框架")
-            insert(core, "核心")
+            insert(frontEnd, "前端")
+            insert(underlyingTech, "底层")
+            insert("spring", "Spring")
+            insert("时光流", "时光流")
+            insert("探索", "探索")
             insert(fallow, "休闲")
-            insert(getUp, "起床")
             insert(breach, "违破")
             insert(masturbation, "xxx")
             insert(entertainment, "娱乐")

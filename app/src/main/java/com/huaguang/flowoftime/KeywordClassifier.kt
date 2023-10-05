@@ -25,7 +25,7 @@ class KeywordClassifier {
         return null // 没有找到类属，就返回 null
     }
 
-    private fun insert(keyword: String, category: String) {
+    fun insert(keyword: String, category: String) {
         var node = root
         for (ch in keyword) {
             node = node.children.computeIfAbsent(ch) { TrieNode() }

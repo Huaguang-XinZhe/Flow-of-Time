@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.text.HtmlCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.ardakaplan.rdalogger.RDALogger
@@ -63,26 +64,34 @@ class FloatingWindowService : LifecycleService() {
             }
 
             var id = 0L // 必须放在观察之外缓存，否则每次的值都是初始值
-            inputStr.observe(this@FloatingWindowService) { inputStr ->
-                val (dataType, text) = inputStr
+            inputConfirm.observe(this@FloatingWindowService) { inputConfirm ->
+                val (type, taggedText, category) = inputConfirm
 
                 lifecycleScope.launch {
-                    RDALogger.info("dataType = $dataType")
-                    when(dataType) {
-                        Data.EMPTY -> return@launch
-                        Data.GET_LAST -> {
+                    when(type) {
+                        DBOperationType.INVALID -> return@launch
+                        DBOperationType.GET_LAST -> {
                             val (maxId, lastText) = repository.getLastIdText()
                             id = maxId
-                            floatingWindowManager.handleSingleTap(lastText)
+                            val displayText = if (lastText != null) {
+                                val (source, tag) = lastText.split(separator)
+                                if (tag.isEmpty()) { // 纯文本
+                                    source
+                                } else { // html 文本
+                                    HtmlCompat.fromHtml(source, HtmlCompat.FROM_HTML_MODE_LEGACY).toString().trimEnd()
+                                }
+                            } else ""
+                            floatingWindowManager.handleSingleTap(displayText)
                         }
-                        Data.INSERT -> {
+                        DBOperationType.INSERT -> {
                             val inspiration = Inspiration(
                                 date = getAdjustedDate(),
-                                text = text,
+                                text = taggedText,
+                                category = category
                             )
                             repository.insert(inspiration)
                         }
-                        Data.UPDATE -> repository.updateTextById(id, text)
+                        DBOperationType.UPDATE -> repository.updateTextById(id, taggedText)
                     }
                 }
             }

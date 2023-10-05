@@ -28,7 +28,7 @@ val FOCUS_EVENT_DURATION_THRESHOLD: Duration = Duration.ofHours(8)
 // 这是为了减少设置闹钟的频率，因为大多数事务的持续时间都不会超过此阈值。
 val ALARM_SETTING_THRESHOLD: Duration = Duration.ofHours(5)
 
-
+const val separator = "^, ^" // 分隔符
 
 
 

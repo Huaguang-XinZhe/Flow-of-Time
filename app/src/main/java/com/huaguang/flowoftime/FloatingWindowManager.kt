@@ -6,6 +6,7 @@ import android.content.Intent
 import android.graphics.PixelFormat
 import android.text.Editable
 import android.text.TextWatcher
+import android.text.style.URLSpan
 import android.view.GestureDetector
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -19,10 +20,14 @@ import androidx.core.text.toHtml
 import androidx.lifecycle.MutableLiveData
 import com.ardakaplan.rdalogger.RDALogger
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.huaguang.flowoftime.data.models.InputConfirm
 import com.huaguang.flowoftime.data.models.TouchData
 import com.huaguang.flowoftime.utils.KeyboardUtils
 import com.huaguang.flowoftime.utils.KeyboardUtils.hideSoftKeyboard
 import com.huaguang.flowoftime.utils.KeyboardUtils.showSoftKeyboard
+import com.huaguang.flowoftime.utils.convertToHtml
+import com.huaguang.flowoftime.utils.extractUrls
+import com.huaguang.flowoftime.utils.getCustomSpans
 import com.huaguang.flowoftime.utils.vibrate
 import kotlin.math.abs
 import kotlin.math.absoluteValue
@@ -32,7 +37,7 @@ class FloatingWindowManager(
 ) {
 
     val isFabClose = MutableLiveData(false)
-    val inputStr = MutableLiveData(Data.EMPTY to "")
+    val inputConfirm = MutableLiveData(InputConfirm.initialValue())
     var fab: FloatingActionButton? = null
 
     private val themedContext = ContextThemeWrapper(context, R.style.FloatingButtonTheme)
@@ -196,7 +201,9 @@ class FloatingWindowManager(
             abs(diffY) > abs(diffX) && diffY > 0 -> RDALogger.info("向下滑动：diffY = $diffY")
             abs(diffY) > abs(diffX) && diffY < 0 -> {
                 RDALogger.info("向上滑动：diffY = $diffY")
-                inputStr.value = Data.GET_LAST to ""
+                inputConfirm.value = InputConfirm.initialValue().copy(
+                    type = DBOperationType.GET_LAST
+                )
             }
         }
     }
@@ -231,12 +238,45 @@ class FloatingWindowManager(
 
     private fun setConfirmButtonClickListener(confirmButton: Button) {
         confirmButton.setOnClickListener {
-            val htmlText = input.text.toHtml()
-            inputStr.value = if (inputStr.value?.first == Data.GET_LAST) {
-                Data.UPDATE to htmlText // 更新数据
-            } else {
-                Data.INSERT to htmlText // 插入数据
+            val allSpans = input.text.getCustomSpans()
+            var category: String? = null
+
+            val taggedText = if (allSpans.isEmpty()) { // 纯文本，没有任何样式（但输入中可能包含 html 链接）
+                val plainText = input.text.toString()
+                val urls = plainText.extractUrls()
+//                RDALogger.info("urls = $urls")
+
+                if (urls.isEmpty()) {
+//                    RDALogger.info("纯文本")
+                    plainText + separator
+                } else { // 输入中包含 html 链接，就将整段文本都转换成 html 存储
+//                    RDALogger.info("包含 html 链接")
+                    category = "资源"
+                    plainText.convertToHtml(urls) + separator + "html"
+                }
+            } else { // 有样式
+//                RDALogger.info("有样式")
+                // 判断 allSpans 里边是否包含 URLSpan
+                val containsURLSpan = allSpans.any { it is URLSpan }
+//                RDALogger.info("containsURLSpan = $containsURLSpan")
+                if (containsURLSpan) category = "资源"
+
+                val htmlText = input.text.toHtml() // 这后边带了一个换行符，可去可不去，不影响后边解析 Html 的时候依然会多出两个换行符的结果
+                htmlText + separator + "html"
             }
+
+            val type = if (inputConfirm.value?.type == DBOperationType.GET_LAST) {
+                DBOperationType.UPDATE // 更新数据
+            } else {
+                DBOperationType.INSERT // 插入数据
+            }
+
+            inputConfirm.value = InputConfirm(
+                type = type,
+                taggedText = taggedText,
+                category = category
+            )
+
             windowManager.removeView((confirmButton.parent as View))
             isFabClose.value = false // 恢复 FAB 的样式
         }

@@ -40,7 +40,10 @@ import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
+import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.data.models.tables.Inspiration
+import com.huaguang.flowoftime.separator
+import com.huaguang.flowoftime.ui.widget.Category
 import com.huaguang.flowoftime.utils.toAnnotatedString
 
 @Composable
@@ -86,6 +89,14 @@ fun InspirationPage(viewModel: InspirationPageViewModel = viewModel()) {
                         Text("del")
                     }
                 }
+
+                Category(
+                    name = item.category ?: "null",
+                    modifier = Modifier.padding(10.dp),
+                    onClick = { s: String, dashType: DashType ->
+
+                    }
+                )
             }
         }
 
@@ -134,26 +145,40 @@ fun InspirationPage(viewModel: InspirationPageViewModel = viewModel()) {
 
 @Composable
 fun RowScope.FormattedText(inspiration: Inspiration) {
-    val spannedText = HtmlCompat.fromHtml(inspiration.text, HtmlCompat.FROM_HTML_MODE_LEGACY)
-    val annotatedStr = spannedText.toAnnotatedString()
-    val context = LocalContext.current
+    val (source, tag) = inspiration.text.split(separator)
 
-    ClickableText(
-        text = annotatedStr,
-        style = TextStyle(fontSize = 15.sp),
-        modifier = Modifier
-            .padding(15.dp, 10.dp, 0.dp, 10.dp)
-            .weight(1f),
-        onClick = { offset ->
-            val annotations = annotatedStr.getStringAnnotations("URL", offset, offset)
-            annotations.firstOrNull()?.let {
-                val uri = Uri.parse(it.item)
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                context.startActivity(intent)
+    if (tag.isEmpty()) {
+        Text(
+            text = source,
+            fontSize = 15.sp,
+            modifier = Modifier
+                .padding(15.dp, 10.dp, 0.dp, 0.dp)
+                .weight(1f),
+        )
+    } else {
+        // 这个方法真的是有问题，原本有换行的，到这里居然没了！
+        val spannedText = HtmlCompat.fromHtml(source, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        val annotatedStr = spannedText.toAnnotatedString()
+        val context = LocalContext.current
+
+        ClickableText(
+            text = annotatedStr,
+            style = TextStyle(fontSize = 15.sp),
+            modifier = Modifier
+                .padding(15.dp, 10.dp, 0.dp, 0.dp)
+                .weight(1f),
+            onClick = { offset ->
+                val annotations = annotatedStr.getStringAnnotations("URL", offset, offset)
+                annotations.firstOrNull()?.let {
+                    val uri = Uri.parse(it.item)
+                    val intent = Intent(Intent.ACTION_VIEW, uri)
+                    context.startActivity(intent)
+                }
             }
-        }
 
-    )
+        )
+    }
+
 }
 
 @Composable

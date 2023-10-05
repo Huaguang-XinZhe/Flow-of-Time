@@ -1,6 +1,7 @@
 package com.huaguang.flowoftime.utils
 
 import android.graphics.Typeface
+import android.text.Editable
 import android.text.Spanned
 import android.text.style.QuoteSpan
 import android.text.style.StyleSpan
@@ -17,7 +18,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.core.text.getSpans
 import com.huaguang.flowoftime.coreEventKeyWords
+import java.util.regex.Pattern
 
 fun space(num: Int): String {
     var count = 0
@@ -59,14 +62,16 @@ fun Modifier.dashBorder(
     }
 }
 
+
+
 fun Spanned.toAnnotatedString(): AnnotatedString {
-    val length = this.length
+    val length = this.length - 2 // 排除 HTML 解析后产生的两个换行符
 //    RDALogger.info("length = $length")
     return buildAnnotatedString {
         var lastIndex = 0
 
         // 暂时不对引用 Span 进行处理，过滤掉！
-        getSpans(0, length, Any::class.java).filterNot { it is QuoteSpan }.forEach {span ->
+        getSpans(0, length, Any::class.java).filterNot { it is QuoteSpan }.forEach { span ->
 //            RDALogger.info("span = $span")
             val start = getSpanStart(span)
             val end = getSpanEnd(span)
@@ -100,7 +105,52 @@ fun Spanned.toAnnotatedString(): AnnotatedString {
     }
 }
 
+fun Editable.getCustomSpans(): List<Any> {
+    val interestedSpanTypes = arrayOf(URLSpan::class.java, StyleSpan::class.java)
+    val allSpans = this.getSpans<Any>()
+    // 创建一个空的集合来存储找到的自定义 spans
+    val foundCustomSpans = mutableListOf<Any>()
+    // 遍历 allSpans 数组，检查每个 span 是否是你关心的类型之一
+    for (span in allSpans) {
+        if (interestedSpanTypes.any { it.isInstance(span) }) { // java 类是否是当前 span 的实例
+            foundCustomSpans.add(span)
+        }
+    }
+    return foundCustomSpans
+}
+
+fun String.extractUrls(): List<String> {
+    val urlRegex = "https?://\\S*?(?=[\\u4e00-\\u9fa5\\s,])"
+    val pattern = Pattern.compile(urlRegex)
+    val matcher = pattern.matcher(this)
+    val urls = mutableListOf<String>()
+    while (matcher.find()) {
+        urls.add(matcher.group())
+    }
+    return urls
+}
+
+fun String.convertToHtml(urls: List<String>): String {
+    var htmlText = this
+    for (url in urls) {
+        htmlText = htmlText.replace(url, """<a href="$url">$url</a>""")
+    }
+
+    return htmlText.map {
+        if (it.code > 127) "&#${it.code};"
+        else if (it == '\n') "<br/>"
+        else it.toString()
+    }.joinToString(
+        separator = "",
+        prefix = """<p dir="ltr">""",
+        postfix = "</p>"
+    )
+}
 
 
-
+//fun main() {
+//    val text = "https://www.baidu.com中国\n\n中过"
+//    val urls = text.extractUrls()
+//    println(urls)
+//}
 

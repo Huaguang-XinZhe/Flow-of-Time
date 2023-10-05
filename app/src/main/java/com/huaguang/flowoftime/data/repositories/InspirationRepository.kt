@@ -37,4 +37,9 @@ class InspirationRepository(private val dao: InspirationDao) {
             dao.insertAll(inspirations)
         }
     }
+
+    suspend fun getAllInspirations() =
+        withContext(Dispatchers.IO) {
+            dao.getAllInspirations()
+        }
 }
