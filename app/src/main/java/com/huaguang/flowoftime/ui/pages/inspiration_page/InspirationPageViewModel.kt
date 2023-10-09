@@ -1,7 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.inspiration_page
 
 import android.content.Context
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.models.tables.Inspiration
@@ -9,8 +8,6 @@ import com.huaguang.flowoftime.data.repositories.InspirationRepository
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.copyToClipboard
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.text.ParseException
 import java.time.LocalDate
@@ -21,18 +18,25 @@ class InspirationPageViewModel @Inject constructor(
     val repository: InspirationRepository,
     val sharedState: SharedState,
 ): ViewModel() {
-    private val _allInspirations = MutableStateFlow(listOf<Inspiration>())
-    val allInspirations: StateFlow<List<Inspiration>> = _allInspirations
-    val itemCount = mutableIntStateOf(0)
+//    private val _allInspirations = MutableStateFlow(listOf<Inspiration>())
+//    val allInspirations: StateFlow<List<Inspiration>> = _allInspirations
+    val tabMap = mapOf(
+        0 to "开发",
+        1 to "抗性",
+        2 to null,
+        3 to "探索",
+        4 to "资源",
+    )
+    val dateDisplayTabs = listOf("抗性", "开发")
 
-    init {
-        viewModelScope.launch {
-            repository.getAllInspirationsFlow().collect { inspirations ->
-                itemCount.intValue = inspirations.size
-                _allInspirations.value = inspirations
-            }
-        }
-    }
+//    init {
+//        viewModelScope.launch {
+//            repository.getAllInspirationsFlow().collect { inspirations ->
+//                itemCount.intValue = inspirations.size
+//                _allInspirations.value = inspirations
+//            }
+//        }
+//    }
 
     fun onDeleteButtonClick(id: Long) {
         viewModelScope.launch {
@@ -64,8 +68,8 @@ class InspirationPageViewModel @Inject constructor(
         }
     }
 
-    fun export(context: Context) {
-        val exportText = _allInspirations.value.joinToString(
+    fun export(context: Context, inspirations: List<Inspiration>) {
+        val exportText = inspirations.joinToString(
             separator = "$=$"
         ) { inspiration ->
             "${inspiration.date}===${inspiration.text}"
@@ -73,6 +77,12 @@ class InspirationPageViewModel @Inject constructor(
 
         copyToClipboard(context, exportText)
         sharedState.toastMessage.value = "数据已复制到剪贴板"
+    }
+
+    fun getInspirations(category: String?) = repository.getInspirationByCategoryFlow(category)
+
+    suspend fun updateCategory(id: Long, newCategory: String) {
+        repository.updateCategoryById(id, newCategory)
     }
 
 }

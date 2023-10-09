@@ -12,7 +12,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -36,6 +38,7 @@ fun MyApp(appViewModels: AppViewModels) {
 //    val selectedTab = remember { mutableStateOf(tabs[0]) }
     val selectedTab = rememberSaveable { mutableStateOf(tabs[0]) } // 配置更改或被系统杀内存时将保存这个状态（里边类型需要 Parcelable）
     val datePickerState = rememberDatePickerState(initialDate = getAdjustedDate().minusDays(1))
+    val selectedTabIndex = remember { mutableIntStateOf(0) }
 
     Scaffold(
         bottomBar = { BottomBar(selectedTab) },
@@ -64,7 +67,7 @@ fun MyApp(appViewModels: AppViewModels) {
                         StatisticsPage(datePickerState)
                     }
                     Page.Category -> Text(text = "类属页，敬请期待")
-                    Page.Inspiration -> InspirationPage()
+                    Page.Inspiration -> InspirationPage(selectedTabIndex)
                 }
             }
 

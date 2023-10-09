@@ -42,4 +42,13 @@ class InspirationRepository(private val dao: InspirationDao) {
         withContext(Dispatchers.IO) {
             dao.getAllInspirations()
         }
+
+    fun getInspirationByCategoryFlow(category: String?) =
+        dao.getInspirationsByCategoryFlow(category)
+
+    suspend fun updateCategoryById(id: Long, newCategory: String) {
+        withContext(Dispatchers.IO) {
+            dao.updateCategoryById(id, newCategory)
+        }
+    }
 }

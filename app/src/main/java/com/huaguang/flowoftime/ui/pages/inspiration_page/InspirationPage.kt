@@ -2,6 +2,8 @@ package com.huaguang.flowoftime.ui.pages.inspiration_page
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.ExperimentalFoundationApi
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -23,9 +25,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,15 +48,39 @@ import com.google.accompanist.web.rememberWebViewState
 import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.data.models.tables.Inspiration
 import com.huaguang.flowoftime.separator
+import com.huaguang.flowoftime.ui.pages.display_list.DateItem
 import com.huaguang.flowoftime.ui.widget.Category
 import com.huaguang.flowoftime.utils.toAnnotatedString
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun InspirationPage(viewModel: InspirationPageViewModel = viewModel()) {
-    val allInspirations by viewModel.allInspirations.collectAsState()
-    val itemCount by viewModel.itemCount
+fun InspirationPage(
+    selectedTabIndex: MutableIntState,
+    viewModel: InspirationPageViewModel = viewModel(),
+) {
+//    val allInspirations by viewModel.allInspirations.collectAsState()
     val webViewShow = remember { mutableStateOf(false) }
     val dialogShow = remember { mutableStateOf(false) }
+    val tabMap = remember { viewModel.tabMap }
+    val dateDisplayTitles = remember { viewModel.dateDisplayTabs }
+    val currentTitle = tabMap[selectedTabIndex.intValue]
+    val itemCount = remember { mutableIntStateOf(0) }
+    val inspirations = remember { mutableStateListOf<Inspiration>() }
+    val groupedInspirations by produceState(emptyMap(), currentTitle) {
+        viewModel.getInspirations(currentTitle).collect { _inspirations ->
+            if (currentTitle == null) {
+                _inspirations.forEach { inspiration ->
+                    val newCategory = viewModel.sharedState.classify2(inspiration.text)
+                    newCategory?.let { viewModel.updateCategory(inspiration.id, it) }
+                }
+            }
+
+            itemCount.intValue = _inspirations.size
+            inspirations.addAll(_inspirations)
+
+            value = _inspirations.groupBy { it.date }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -59,44 +88,33 @@ fun InspirationPage(viewModel: InspirationPageViewModel = viewModel()) {
     ) {
         item {
             Text(
-                text = "现有 $itemCount 条",
+                text = "现有 ${itemCount.intValue} 条",
                 fontSize = 18.sp,
                 modifier = Modifier.padding(10.dp)
             )
         }
 
-        items(allInspirations) { item ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 5.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 2.dp
-                )
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    FormattedText(item)
+        // TODO: 当有多个吸顶项存在时，只会显示一个（下面那个），怎么解决？ 
+        stickyHeader {
+            MyTabRow(
+                tabTitles = tabMap.values.map { it ?: "null" },
+                selectedTabIndex = selectedTabIndex,
+                modifier = Modifier.padding(bottom = 10.dp)
+            )
+        }
 
-                    TextButton(
-                        onClick = { viewModel.onDeleteButtonClick(item.id) },
-                    ) {
-                        Text("del")
-                    }
+        if (dateDisplayTitles.contains(currentTitle)) { // 允许显示吸顶日期
+            groupedInspirations.forEach { (date, inspirationList) ->
+                stickyHeader {
+                    DateItem(date = date)
                 }
-
-                Category(
-                    name = item.category ?: "null",
-                    modifier = Modifier.padding(10.dp),
-                    onClick = { s: String, dashType: DashType ->
-
-                    }
-                )
+                items(inspirationList) { inspiration ->
+                    InspirationCard(inspiration)
+                }
+            }
+        } else { // 不允许显示吸顶日期
+            items(inspirations) { item: Inspiration ->
+                InspirationCard(inspiration = item)
             }
         }
 
@@ -115,7 +133,9 @@ fun InspirationPage(viewModel: InspirationPageViewModel = viewModel()) {
 
                 Spacer(modifier = Modifier.width(10.dp))
 
-                Button(onClick = { viewModel.export(context) }) {
+                Button(onClick = {
+                    viewModel.export(context, inspirations)
+                }) {
                     Text(text = "导出")
                 }
 
@@ -141,6 +161,47 @@ fun InspirationPage(viewModel: InspirationPageViewModel = viewModel()) {
         )
     }
 
+}
+
+
+
+@Composable
+fun InspirationCard(
+    inspiration: Inspiration, 
+    viewModel: InspirationPageViewModel = viewModel()
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FormattedText(inspiration)
+
+            TextButton(
+                onClick = { viewModel.onDeleteButtonClick(inspiration.id) },
+            ) {
+                Text("del")
+            }
+        }
+
+        Category(
+            name = inspiration.category ?: "null",
+            modifier = Modifier.padding(10.dp),
+            onClick = { s: String, dashType: DashType ->
+                
+            }
+        )
+    }
 }
 
 @Composable

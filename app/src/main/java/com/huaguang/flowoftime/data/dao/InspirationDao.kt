@@ -32,8 +32,13 @@ interface InspirationDao {
     fun getAllInspirationsFlow(): Flow<List<Inspiration>>
 
     // 根据类属查询灵感记录
-    @Query("SELECT * FROM inspirations WHERE category = :category")
-    suspend fun getInspirationsByCategory(category: String): List<Inspiration>
+    @Query("""
+        SELECT * 
+        FROM inspirations 
+        WHERE (:category IS NOT NULL AND category = :category) OR (:category IS NULL AND category IS NULL)
+        ORDER BY id DESC
+    """)
+    fun getInspirationsByCategoryFlow(category: String?): Flow<List<Inspiration>>
 
     // 根据日期查询灵感记录
     @Query("SELECT * FROM inspirations WHERE date BETWEEN :fromDate AND :toDate")
@@ -51,4 +56,7 @@ interface InspirationDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(inspirations: List<Inspiration>)
+
+    @Query("UPDATE inspirations SET category = :newCategory WHERE id = :id")
+    fun updateCategoryById(id: Long, newCategory: String)
 }
