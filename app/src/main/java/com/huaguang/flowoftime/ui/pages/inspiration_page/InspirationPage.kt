@@ -35,7 +35,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
@@ -43,11 +45,11 @@ import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.data.models.tables.Inspiration
 import com.huaguang.flowoftime.separator
 import com.huaguang.flowoftime.ui.pages.display_list.DateItem
-import com.huaguang.flowoftime.ui.widget.Category
+import com.huaguang.flowoftime.ui.widget.CategoryRow
+import com.huaguang.flowoftime.ui.widget.InputAlertDialog
 import com.huaguang.flowoftime.utils.toAnnotatedString
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -58,7 +60,7 @@ fun InspirationPage(
 ) {
 //    val allInspirations by viewModel.allInspirations.collectAsState()
     val webViewShow = remember { mutableStateOf(false) }
-    val dialogShow = remember { mutableStateOf(false) }
+    val importDialogShow = remember { mutableStateOf(false) }
     val tabMap = remember { viewModel.tabMap }
     val dateDisplayTitles = remember { viewModel.dateDisplayTabs }
     val currentTitle = tabMap[selectedTabIndex.intValue]
@@ -121,7 +123,7 @@ fun InspirationPage(
             ) {
                 val context = LocalContext.current
 
-                Button(onClick = { dialogShow.value = true }) {
+                Button(onClick = { importDialogShow.value = true }) {
                     Text(text = "导入")
                 }
 
@@ -146,24 +148,27 @@ fun InspirationPage(
         WebViewCompose()
     }
 
-    if (dialogShow.value) {
+    if (importDialogShow.value) {
         ImportDialog(
-            onDismiss = { dialogShow.value = false },
+            onDismiss = { importDialogShow.value = false },
             onImport = { inputText ->
                 viewModel.import(inputText)
             }
         )
     }
 
+    CategoryInputDialog()
+
 }
-
-
+    
 
 @Composable
 fun InspirationCard(
     inspiration: Inspiration, 
     viewModel: InspirationPageViewModel = viewModel()
 ) {
+    val name = inspiration.category ?: "null"
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -188,11 +193,34 @@ fun InspirationCard(
             }
         }
 
-        Category(
-            name = inspiration.category ?: "null",
-            modifier = Modifier.padding(10.dp),
-            onClick = { s: String, dashType: DashType ->
-                
+        CategoryRow(
+            name = name,
+            modifier = Modifier.padding(start = 15.dp, bottom = 10.dp, top = 5.dp)
+        ) {
+            viewModel.categoryLabelState.apply {
+                id = inspiration.id
+                category = name
+                show.value = true
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryInputDialog(
+    viewModel: InspirationPageViewModel = viewModel()
+) {
+    viewModel.categoryLabelState.apply {
+        val onDismiss = { show.value = false }
+
+        InputAlertDialog(
+            show = show.value,
+            title = "更改类属",
+            initialValue = TextFieldValue(category, TextRange(0, category.length)),
+            onDismiss = onDismiss,
+            onConfirm = {
+                viewModel.onCategoryDialogConfirmButtonClick(id, it)
+                onDismiss()
             }
         )
     }

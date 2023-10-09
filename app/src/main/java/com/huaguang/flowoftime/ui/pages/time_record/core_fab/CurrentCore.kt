@@ -79,7 +79,7 @@ fun CoreNameInputAlertDialog(viewModel: CurrentCoreViewModel = viewModel()) {
             )
         },
         iconRes = R.drawable.current_core,
-        labelText = "设置/更新名称",
+        inputTip = "设置/更新名称",
     )
 
 }

@@ -20,6 +20,7 @@ import com.huaguang.flowoftime.data.sources.SPHelper
 import com.huaguang.flowoftime.other.AlarmHelper
 import com.huaguang.flowoftime.other.LocalDateTimeSerializer
 import com.huaguang.flowoftime.ui.state.ButtonsState
+import com.huaguang.flowoftime.ui.state.CategoryLabelState
 import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.LabelState
@@ -187,7 +188,11 @@ object AppModule {
         return InspirationRepository(dao)
     }
 
-
+    @Singleton
+    @Provides
+    fun provideCategoryLabelState(): CategoryLabelState {
+        return CategoryLabelState()
+    }
 
 }
 

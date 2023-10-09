@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.models.tables.Inspiration
 import com.huaguang.flowoftime.data.repositories.InspirationRepository
+import com.huaguang.flowoftime.ui.state.CategoryLabelState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.copyToClipboard
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,7 @@ import javax.inject.Inject
 class InspirationPageViewModel @Inject constructor(
     val repository: InspirationRepository,
     val sharedState: SharedState,
+    val categoryLabelState: CategoryLabelState,
 ): ViewModel() {
 //    private val _allInspirations = MutableStateFlow(listOf<Inspiration>())
 //    val allInspirations: StateFlow<List<Inspiration>> = _allInspirations
@@ -81,8 +83,17 @@ class InspirationPageViewModel @Inject constructor(
 
     fun getInspirations(category: String?) = repository.getInspirationByCategoryFlow(category)
 
-    suspend fun updateCategory(id: Long, newCategory: String) {
-        repository.updateCategoryById(id, newCategory)
+    fun onCategoryDialogConfirmButtonClick(id: Long, text: String) {
+        val newCategory = text.trim()
+
+        if (newCategory.isEmpty()) {
+            sharedState.toastMessage.value = "类属不能为空哦😊"
+            return
+        }
+
+        viewModelScope.launch {
+            repository.updateCategoryById(id, newCategory)
+        }
     }
 
 }

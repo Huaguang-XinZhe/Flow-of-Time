@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.widget
 
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -17,16 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,10 +30,8 @@ fun InputAlertDialog(
     initialValue: TextFieldValue,
     onDismiss: () -> Unit,
     onConfirm: (newText: String) -> Unit,
-    inputHeight: Dp = 56.dp,
     iconRes: Int? = null,
-    titlePrefix: String? = null,
-    labelText: String? = null
+    inputTip: String? = null
 ) {
     if (!show) return
 
@@ -64,31 +56,16 @@ fun InputAlertDialog(
            }
         },
         title = {
-            val annotatedString = buildAnnotatedString {
-                if (titlePrefix != null) {
-                    withStyle(
-                        style = SpanStyle(
-                            color = Color.DarkGray.copy(alpha = 0.8f),
-                        )
-                    ) {
-                        append("$titlePrefix ")
-                    }
-                }
-                append(title) // 细节 Bug，title 不应该放在 titlePrefix 非空块下！
-            }
-            Text(text = annotatedString)
+            Text(text = title)
         },
         text = {
             OutlinedTextField(
                 value = textFieldValue.value,
                 onValueChange = { textFieldValue.value = it },
-                maxLines = 2,
-                modifier = Modifier
-                    .height(inputHeight)
-                    .focusRequester(focusRequester),
+                modifier = Modifier.focusRequester(focusRequester),
                 label = {
-                    if (labelText != null) {
-                        Text(labelText)
+                    if (inputTip != null) {
+                        Text(inputTip)
                     }
                 }
             )
@@ -103,6 +80,7 @@ fun InputAlertDialog(
                 Text("确认")
             }
         },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }
 

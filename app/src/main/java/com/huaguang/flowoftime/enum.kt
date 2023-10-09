@@ -41,19 +41,7 @@ enum class Mode {
 }
 
 
-enum class DashType {
-    TAG,
-    CATEGORY_CHANGE,
-    MIXED_ADD;
 
-    fun isTag() = this == TAG
-
-    fun isAdd() = this == MIXED_ADD
-
-    fun isCategory() = this == CATEGORY_CHANGE
-
-
-}
 
 
 
