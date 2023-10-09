@@ -43,11 +43,9 @@ import androidx.core.text.HtmlCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.accompanist.web.WebView
 import com.google.accompanist.web.rememberWebViewState
-import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.data.models.tables.Inspiration
 import com.huaguang.flowoftime.separator
 import com.huaguang.flowoftime.ui.pages.display_list.DateItem
-import com.huaguang.flowoftime.ui.widget.Category
 import com.huaguang.flowoftime.utils.toAnnotatedString
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -188,13 +186,13 @@ fun InspirationCard(
             }
         }
 
-        Category(
-            name = inspiration.category ?: "null",
-            modifier = Modifier.padding(10.dp),
-            onClick = { s: String, dashType: DashType ->
-                
-            }
-        )
+//        Category(
+//            name = inspiration.category ?: "null",
+//            modifier = Modifier.padding(10.dp),
+//            onClick = { s: String, dashType: DashType ->
+//
+//            }
+//        )
     }
 }
 

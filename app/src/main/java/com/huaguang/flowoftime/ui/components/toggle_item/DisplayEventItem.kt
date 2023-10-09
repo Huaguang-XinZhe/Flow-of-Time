@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.huaguang.flowoftime.DashType
+
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -39,9 +39,7 @@ import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.category_dialog.CategoryViewModel
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.state.ItemState
-import com.huaguang.flowoftime.ui.widget.Category
-import com.huaguang.flowoftime.ui.widget.CategoryRow
-import com.huaguang.flowoftime.ui.widget.TagsRow
+
 import com.huaguang.flowoftime.utils.formatDurationInText
 import java.time.Duration
 
@@ -121,29 +119,29 @@ fun LabelRow(
     dashButtonShow: MutableState<Boolean>,
     viewModel: CategoryViewModel = viewModel(),
 ) {
-    if (category == null && tags == null) {
-        Category(
-            onClick = { _, type ->
-                viewModel.onClassNameClick(id, "", type)
-            },
-            modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
-        )
-    } else { // 若 category 为 null（tags 也一定为 null）就一定会走上面的设置，所以下边的一定为非 null
-        CategoryRow(
-            category = category!!,
-            addDashButton = dashButtonShow.value
-        ) { name, type ->
-            viewModel.onClassNameClick(id, name, type, listOf(category))
-        }
-
-        TagsRow(
-            tags = tags, // 就算 category 不为 null，tags 依然可能为 null
-            addDashButton = dashButtonShow.value,
-            modifier = Modifier.padding(bottom = 10.dp)
-        ) { name ->
-            viewModel.onClassNameClick(id, name, DashType.TAG, tags)
-        }
-    }
+//    if (category == null && tags == null) {
+//        Category(
+//            onClick = { _, type ->
+//                viewModel.onClassNameClick(id, "", type)
+//            },
+//            modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
+//        )
+//    } else { // 若 category 为 null（tags 也一定为 null）就一定会走上面的设置，所以下边的一定为非 null
+//        CategoryRow(
+//            category = category!!,
+//            addDashButton = dashButtonShow.value
+//        ) { name, type ->
+//            viewModel.onClassNameClick(id, name, type, listOf(category))
+//        }
+//
+//        TagsRow(
+//            tags = tags, // 就算 category 不为 null，tags 依然可能为 null
+//            addDashButton = dashButtonShow.value,
+//            modifier = Modifier.padding(bottom = 10.dp)
+//        ) { name ->
+//            viewModel.onClassNameClick(id, name, DashType.TAG, tags)
+//        }
+//    }
 }
 
 @Composable

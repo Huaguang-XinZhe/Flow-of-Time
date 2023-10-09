@@ -3,7 +3,6 @@ package com.huaguang.flowoftime.ui.components.category_dialog
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
-import com.huaguang.flowoftime.DashType
 import com.huaguang.flowoftime.data.models.EventCategoryUpdate
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.LabelState
@@ -23,7 +22,6 @@ class CategoryViewModel @Inject constructor(
     fun onClassNameClick(
         id: Long,
         name: String,
-        type: DashType,
         names: List<String>? = null
     ) {
         if (name.isEmpty()) { // 没有指定 name（数据库的类属为 null 才不指定 name），即为 + 或 *
@@ -31,7 +29,6 @@ class CategoryViewModel @Inject constructor(
                 eventId.value = id
                 show.value = true
                 this.name.value = name
-                this.type.value = type
                 this.names = names
             }
         } else {
@@ -44,26 +41,11 @@ class CategoryViewModel @Inject constructor(
         labelState.show.value = false
     }
 
-    fun onClassNameDialogConfirm(eventId: Long, type: DashType, newText: String) {
+    fun onClassNameDialogConfirm(eventId: Long, newText: String) {
         val labels = processInputText(newText) ?: return
 
         viewModelScope.launch {
-            when(type) {
-                DashType.TAG -> {
-                    // 全是标签，存入数据库
-                    repository.updateTags(eventId, labels)
-                }
-                DashType.CATEGORY_CHANGE -> {
-                    // 只取第一个作为类属，其余无视
-                    val newCategory = labels.first()
-                    sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, newCategory)
-                    delay(50)
-                    repository.updateCategory(eventId, newCategory) // 之后才能更新类属
-                }
-                DashType.MIXED_ADD -> {
-                    updateMixed(eventId, labels)
-                }
-            }
+            updateMixed(eventId, labels)
         }
 
         onClassNameDialogDismiss()

@@ -6,7 +6,7 @@ import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.huaguang.flowoftime.ui.widget.Tag
+
 
 @Composable
 fun TagsRow(
@@ -19,7 +19,7 @@ fun TagsRow(
     Layout(
         content = {
             tags?.forEach { tagName -> // 如果为空，就不绘制了，也不需要绘制（复合新增按钮会解决这个问题）
-                Tag(name = tagName,onClick = onClick)
+//                Tag(name = tagName,onClick = onClick)
             }
         },
         modifier = modifier

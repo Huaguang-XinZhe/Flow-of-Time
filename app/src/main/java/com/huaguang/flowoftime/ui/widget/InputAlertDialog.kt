@@ -1,6 +1,5 @@
 package com.huaguang.flowoftime.ui.widget
 
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -23,10 +22,9 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.delay
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +34,6 @@ fun InputAlertDialog(
     initialValue: TextFieldValue,
     onDismiss: () -> Unit,
     onConfirm: (newText: String) -> Unit,
-    inputHeight: Dp = 56.dp,
     iconRes: Int? = null,
     titlePrefix: String? = null,
     labelText: String? = null
@@ -83,9 +80,7 @@ fun InputAlertDialog(
                 value = textFieldValue.value,
                 onValueChange = { textFieldValue.value = it },
                 maxLines = 2,
-                modifier = Modifier
-                    .height(inputHeight)
-                    .focusRequester(focusRequester),
+                modifier = Modifier.focusRequester(focusRequester),
                 label = {
                     if (labelText != null) {
                         Text(labelText)
@@ -103,6 +98,7 @@ fun InputAlertDialog(
                 Text("确认")
             }
         },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
     )
 }
 
