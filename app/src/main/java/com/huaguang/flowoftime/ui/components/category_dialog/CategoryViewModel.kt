@@ -2,7 +2,6 @@ package com.huaguang.flowoftime.ui.components.category_dialog
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.data.models.EventCategoryUpdate
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.LabelState
@@ -21,31 +20,46 @@ class CategoryViewModel @Inject constructor(
 
     fun onClassNameClick(
         id: Long,
-        name: String,
-        names: List<String>? = null
+        name: String
     ) {
-        if (name.isEmpty()) { // 没有指定 name（数据库的类属为 null 才不指定 name），即为 + 或 *
-            labelState.apply {
-                eventId.value = id
-                show.value = true
-                this.name.value = name
-                this.names = names
-            }
-        } else {
-            // 打开搜索页，进行搜索
-            sharedState.toastMessage.value = "打开搜索页，进行搜索"
+        // 打开搜索页，进行搜索
+        sharedState.toastMessage.value = "打开搜索页，进行搜索"
+    }
+
+    fun onDashButtonClick(
+        id: Long,
+        category: String?,
+        tags: List<String>?
+    ) {
+        labelState.apply {
+            eventId = id
+            dialogShow.value = true
+            this.category.value = category
+            this.tags = tags
         }
     }
 
     fun onClassNameDialogDismiss() {
-        labelState.show.value = false
+        labelState.dialogShow.value = false
     }
 
     fun onClassNameDialogConfirm(eventId: Long, newText: String) {
         val labels = processInputText(newText) ?: return
 
         viewModelScope.launch {
-            updateMixed(eventId, labels)
+            val category = labels.removeAt(0)  // Remove and get the first element
+            val tags = if (labels.isEmpty()) null else labels
+
+            // 触发类属统计更新（必须放在前边，否则以前的类属获取不到）
+            sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, category)
+
+            delay(50) // 延迟一下，防止以前的类属还没获取到就更新了
+
+            repository.updateClassName(
+                id = eventId,
+                category = category,
+                tags = tags
+            )
         }
 
         onClassNameDialogDismiss()
@@ -75,25 +89,6 @@ class CategoryViewModel @Inject constructor(
         }
 
         return labels
-    }
-
-    private suspend fun updateMixed(
-        eventId: Long,
-        labels: MutableList<String>,
-    ) {
-        val category = labels.removeAt(0)  // Remove and get the first element
-        val tags = if (labels.isEmpty()) null else labels
-
-        // 触发类属统计更新（必须放在前边，否则以前的类属获取不到）
-        sharedState.categoryUpdate.value = EventCategoryUpdate(eventId, category)
-
-        delay(50) // 延迟一下，防止以前的类属还没获取到就更新了
-        RDALogger.info("类属更新")
-        repository.updateClassName(
-            id = eventId,
-            category = category,
-            tags = tags
-        )
     }
 
 }

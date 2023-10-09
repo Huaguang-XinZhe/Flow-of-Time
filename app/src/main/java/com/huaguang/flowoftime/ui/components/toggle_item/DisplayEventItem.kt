@@ -47,8 +47,7 @@ fun DisplayEventItem(
     modifier: Modifier = Modifier,
     combinedEvent: CombinedEvent?,
     itemState: ItemState,
-    inputViewModel: EventInputViewModel = viewModel(),
-    categoryViewModel: CategoryViewModel = viewModel()
+    viewModel: EventInputViewModel = viewModel(),
 ) {
     val event = combinedEvent?.event ?: return
     if (event.duration == null) return // 不显示没有间隔的事件
@@ -61,7 +60,7 @@ fun DisplayEventItem(
             .clip(CardDefaults.shape) // 加上这一句虽然解决了波纹范围非圆角的问题，但也把阴影弄没了
             .combinedClickable(
                 onClick = {},
-                onDoubleClick = { inputViewModel.onDisplayItemDoubleClick(itemState) },
+                onDoubleClick = { viewModel.onDisplayItemDoubleClick(itemState) },
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(bounded = true)
             ),
@@ -79,7 +78,7 @@ fun DisplayEventItem(
             CategoryIconButton(
                 category = event.category,
                 withContent = event.withContent,
-                iconRepository = inputViewModel.iconRepository
+                iconRepository = viewModel.iconRepository
             )
 
             TailLayout(
@@ -98,19 +97,33 @@ fun DisplayEventItem(
                 itemState = itemState,
             )
 
-            LabelBlock(
-                category = event.category,
-                tags = event.tags,
-                onLabelClick = {  },
-                modifier = Modifier.padding(bottom = 5.dp).fillMaxWidth()
-            ) {
-                categoryViewModel.labelState.show.value = true
-            }
+            LabelRow(id = event.id, category = event.category, tags = event.tags)
         }
     }
 }
 
+@Composable
+fun LabelRow(
+    id: Long,
+    category: String?,
+    tags: List<String>?,
+    viewModel: CategoryViewModel = viewModel()
+) {
 
+    LabelBlock(
+        category = category,
+        tags = tags,
+        onLabelClick = {
+            viewModel.onClassNameClick(id, category!!) // 能点击得到，就一定不为空
+        },
+        modifier = Modifier
+            .padding(bottom = 5.dp)
+            .fillMaxWidth()
+    ) {
+        viewModel.onDashButtonClick(id, category, tags)
+    }
+
+}
 
 @Composable
 fun CategoryIconButton(
