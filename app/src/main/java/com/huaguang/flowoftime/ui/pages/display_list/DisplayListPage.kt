@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -97,7 +98,7 @@ fun DisplayListPage(
 }
 
 @Composable
-fun DateItem(date: LocalDate) {
+fun DateItem(date: LocalDate, topPadding: Dp = 0.dp) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -110,7 +111,7 @@ fun DateItem(date: LocalDate) {
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.SemiBold,
             fontStyle = FontStyle.Italic,
-            modifier = Modifier.padding(bottom = 10.dp),
+            modifier = Modifier.padding(bottom = 10.dp, top = topPadding),
         )
 
         Spacer(

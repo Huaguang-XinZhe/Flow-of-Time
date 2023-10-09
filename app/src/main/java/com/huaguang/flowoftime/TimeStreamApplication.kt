@@ -113,7 +113,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
 
         val routine = listOf("煮吃", "洗澡", "洗漱", "厕", "外吃", "热吃", "吃晚饭", "买菜", "晾衣", "拿快递", "理发")
         val family = listOf("老妈", "爷爷")
-        val rest = listOf("睡", "躺歇", "眯躺")
+        val rest = listOf("睡", "躺歇", "眯躺", "远观")
         val exercise = listOf("慢跑", "俯卧撑")
         val communication = listOf("聊天", "通话", "鸿", "铮", "师父", "小洁", "小聚",)
         val frame = listOf("财务", "收集库", "时间统计", "清整", "规划", "省思", "统析", "仓库", "预算",

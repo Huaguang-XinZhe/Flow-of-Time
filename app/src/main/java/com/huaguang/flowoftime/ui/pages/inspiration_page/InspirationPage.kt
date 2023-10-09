@@ -3,7 +3,6 @@ package com.huaguang.flowoftime.ui.pages.inspiration_page
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -28,7 +27,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -65,20 +63,18 @@ fun InspirationPage(
     val dateDisplayTitles = remember { viewModel.dateDisplayTabs }
     val currentTitle = tabMap[selectedTabIndex.intValue]
     val itemCount = remember { mutableIntStateOf(0) }
-    val inspirations = remember { mutableStateListOf<Inspiration>() }
     val groupedInspirations by produceState(emptyMap(), currentTitle) {
-        viewModel.getInspirations(currentTitle).collect { _inspirations ->
-            if (currentTitle == null) {
-                _inspirations.forEach { inspiration ->
-                    val newCategory = viewModel.sharedState.classify2(inspiration.text)
-                    newCategory?.let { viewModel.updateCategory(inspiration.id, it) }
-                }
-            }
+        viewModel.getInspirations(currentTitle).collect { inspirations ->
+//            if (currentTitle == null) {
+//                inspirations.forEach { inspiration ->
+//                    val newCategory = viewModel.sharedState.classify2(inspiration.text)
+//                    newCategory?.let { viewModel.updateCategory(inspiration.id, it) }
+//                }
+//            }
 
-            itemCount.intValue = _inspirations.size
-            inspirations.addAll(_inspirations)
+            itemCount.intValue = inspirations.size
 
-            value = _inspirations.groupBy { it.date }
+            value = inspirations.groupBy { it.date }
         }
     }
 
@@ -99,24 +95,22 @@ fun InspirationPage(
             MyTabRow(
                 tabTitles = tabMap.values.map { it ?: "null" },
                 selectedTabIndex = selectedTabIndex,
-                modifier = Modifier.padding(bottom = 10.dp)
             )
         }
 
-        if (dateDisplayTitles.contains(currentTitle)) { // 允许显示吸顶日期
-            groupedInspirations.forEach { (date, inspirationList) ->
+
+        groupedInspirations.forEach { (date, inspirationList) ->
+            if (dateDisplayTitles.contains(currentTitle)) { // 允许显示吸顶日期
                 stickyHeader {
-                    DateItem(date = date)
-                }
-                items(inspirationList) { inspiration ->
-                    InspirationCard(inspiration)
+                    DateItem(date = date, topPadding = 5.dp)
                 }
             }
-        } else { // 不允许显示吸顶日期
-            items(inspirations) { item: Inspiration ->
-                InspirationCard(inspiration = item)
+
+            items(inspirationList) { inspiration ->
+                InspirationCard(inspiration)
             }
         }
+
 
         item {
             Row(
@@ -134,7 +128,7 @@ fun InspirationPage(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Button(onClick = {
-                    viewModel.export(context, inspirations)
+                    viewModel.export(context, groupedInspirations.values.flatten())
                 }) {
                     Text(text = "导出")
                 }
