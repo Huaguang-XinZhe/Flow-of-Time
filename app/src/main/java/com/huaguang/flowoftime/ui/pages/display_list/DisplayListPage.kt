@@ -81,7 +81,6 @@ fun DisplayListPage(
                         modifier = Modifier.padding(bottom = 5.dp),
                         itemState = toggleMap[item!!.event.id] ?: ItemState.initialDisplay(),
                         combinedEvent = item,
-                        dashButtonShow = dashButtonShow,
                     )
                 }
             }

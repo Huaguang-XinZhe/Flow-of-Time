@@ -14,7 +14,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.R
 import com.huaguang.flowoftime.data.models.CombinedEvent
@@ -39,7 +37,7 @@ import com.huaguang.flowoftime.data.repositories.IconMappingRepository
 import com.huaguang.flowoftime.ui.components.category_dialog.CategoryViewModel
 import com.huaguang.flowoftime.ui.components.event_input.EventInputViewModel
 import com.huaguang.flowoftime.ui.state.ItemState
-
+import com.huaguang.flowoftime.ui.widget.LabelBlock
 import com.huaguang.flowoftime.utils.formatDurationInText
 import java.time.Duration
 
@@ -49,8 +47,8 @@ fun DisplayEventItem(
     modifier: Modifier = Modifier,
     combinedEvent: CombinedEvent?,
     itemState: ItemState,
-    dashButtonShow: MutableState<Boolean>,
-    viewModel: EventInputViewModel = viewModel()
+    inputViewModel: EventInputViewModel = viewModel(),
+    categoryViewModel: CategoryViewModel = viewModel()
 ) {
     val event = combinedEvent?.event ?: return
     if (event.duration == null) return // 不显示没有间隔的事件
@@ -63,7 +61,7 @@ fun DisplayEventItem(
             .clip(CardDefaults.shape) // 加上这一句虽然解决了波纹范围非圆角的问题，但也把阴影弄没了
             .combinedClickable(
                 onClick = {},
-                onDoubleClick = { viewModel.onDisplayItemDoubleClick(itemState) },
+                onDoubleClick = { inputViewModel.onDisplayItemDoubleClick(itemState) },
                 interactionSource = remember { MutableInteractionSource() },
                 indication = rememberRipple(bounded = true)
             ),
@@ -81,7 +79,7 @@ fun DisplayEventItem(
             CategoryIconButton(
                 category = event.category,
                 withContent = event.withContent,
-                iconRepository = viewModel.iconRepository
+                iconRepository = inputViewModel.iconRepository
             )
 
             TailLayout(
@@ -100,49 +98,19 @@ fun DisplayEventItem(
                 itemState = itemState,
             )
 
-            LabelRow(
-                id = event.id,
+            LabelBlock(
                 category = event.category,
                 tags = event.tags,
-                dashButtonShow = dashButtonShow,
-//                tags = event.tags?.apply { add("") }, // 加一个虚框添加按钮，也不能在这里加，会频闪！
-            )
+                onLabelClick = {  },
+                modifier = Modifier.padding(bottom = 5.dp).fillMaxWidth()
+            ) {
+                categoryViewModel.labelState.show.value = true
+            }
         }
     }
 }
 
-@Composable
-fun LabelRow(
-    id: Long,
-    category: String?,
-    tags: MutableList<String>?,
-    dashButtonShow: MutableState<Boolean>,
-    viewModel: CategoryViewModel = viewModel(),
-) {
-//    if (category == null && tags == null) {
-//        Category(
-//            onClick = { _, type ->
-//                viewModel.onClassNameClick(id, "", type)
-//            },
-//            modifier = Modifier.padding(top = 5.dp, bottom = 10.dp)
-//        )
-//    } else { // 若 category 为 null（tags 也一定为 null）就一定会走上面的设置，所以下边的一定为非 null
-//        CategoryRow(
-//            category = category!!,
-//            addDashButton = dashButtonShow.value
-//        ) { name, type ->
-//            viewModel.onClassNameClick(id, name, type, listOf(category))
-//        }
-//
-//        TagsRow(
-//            tags = tags, // 就算 category 不为 null，tags 依然可能为 null
-//            addDashButton = dashButtonShow.value,
-//            modifier = Modifier.padding(bottom = 10.dp)
-//        ) { name ->
-//            viewModel.onClassNameClick(id, name, DashType.TAG, tags)
-//        }
-//    }
-}
+
 
 @Composable
 fun CategoryIconButton(

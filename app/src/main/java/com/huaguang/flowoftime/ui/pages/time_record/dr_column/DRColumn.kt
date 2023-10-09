@@ -7,8 +7,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,7 +26,6 @@ fun DRColumn(
     val dynamicHeight = if (viewModel.inputState.show.value) 340.dp else 460.dp
     val displayItemState = LocalDisplayItemState.current
     val recordingItemState = LocalRecordingItemState.current
-    val dashButtonShow = remember { mutableStateOf(true) }
 
 //    LaunchedEffect(viewModel.scrollTrigger.value) {
 //        val offset = viewModel.scrollOffset.floatValue
@@ -49,7 +46,6 @@ fun DRColumn(
             DRToggleItem(
                 itemState = displayItemState,
                 combinedEvent = secondLatestCombinedEvent,
-                dashButtonShow = dashButtonShow,
             )
         }
 
@@ -57,7 +53,6 @@ fun DRColumn(
             DRToggleItem(
                 itemState = recordingItemState,
                 combinedEvent = combinedEvent,
-                dashButtonShow = dashButtonShow,
             )
         }
 

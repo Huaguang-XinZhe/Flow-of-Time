@@ -46,6 +46,7 @@ import com.google.accompanist.web.rememberWebViewState
 import com.huaguang.flowoftime.data.models.tables.Inspiration
 import com.huaguang.flowoftime.separator
 import com.huaguang.flowoftime.ui.pages.display_list.DateItem
+import com.huaguang.flowoftime.ui.widget.CategoryRow
 import com.huaguang.flowoftime.utils.toAnnotatedString
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -186,13 +187,12 @@ fun InspirationCard(
             }
         }
 
-//        Category(
-//            name = inspiration.category ?: "null",
-//            modifier = Modifier.padding(10.dp),
-//            onClick = { s: String, dashType: DashType ->
-//
-//            }
-//        )
+        CategoryRow(
+            name = inspiration.category ?: "null",
+            modifier = Modifier.padding(start = 15.dp, bottom = 10.dp, top = 5.dp)
+        ) {
+
+        }
     }
 }
 

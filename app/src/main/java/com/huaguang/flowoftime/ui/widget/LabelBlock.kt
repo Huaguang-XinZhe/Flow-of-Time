@@ -27,7 +27,7 @@ import com.huaguang.flowoftime.LabelType
 import com.huaguang.flowoftime.utils.dashBorder
 
 @Composable
-fun CategoryBlock(
+fun LabelBlock(
     modifier: Modifier = Modifier,
     category: String? = null,
     tags: List<String>? = null,
@@ -58,7 +58,7 @@ fun Test() {
     Box(
         modifier = Modifier.padding(10.dp)
     ) {
-        CategoryBlock(
+        LabelBlock(
             category = "核心",
             tags = listOf("时光流", "Spring", "现金流", "灵光", "灵感", "框架", "财务", "沉默"),
             onLabelClick = { RDALogger.info("类属或 tag 标签点击") }
@@ -70,12 +70,14 @@ fun Test() {
 
 @Composable
 fun CategoryRow(
+    modifier: Modifier = Modifier,
     name: String = "",
     onLabelClick: (() -> Unit)? = null,
     onDashClick: () -> Unit
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
     ) {
         if (name.isNotEmpty()) {
             Label(
