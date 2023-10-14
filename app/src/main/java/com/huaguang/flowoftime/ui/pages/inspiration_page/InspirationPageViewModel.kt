@@ -83,6 +83,10 @@ class InspirationPageViewModel @Inject constructor(
 
     fun getInspirations(category: String?) = repository.getInspirationByCategoryFlow(category)
 
+    suspend fun updateCategory(id: Long, newCategory: String) {
+        repository.updateCategoryById(id, newCategory)
+    }
+
     fun onCategoryDialogConfirmButtonClick(id: Long, text: String) {
         val newCategory = text.trim()
 

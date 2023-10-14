@@ -68,7 +68,7 @@ fun TimeRegulator(
 
         PauseButton(viewModel = viewModel)
 
-        TimeAdjustIconButton(1, R.drawable.add)
+        TimeAdjustIconButton(1, R.drawable.add_circle)
 
         TimeAdjustButton(5, "+5m")
     }
