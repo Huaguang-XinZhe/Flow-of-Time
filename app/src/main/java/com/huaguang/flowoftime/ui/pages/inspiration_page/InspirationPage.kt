@@ -67,12 +67,12 @@ fun InspirationPage(
     val itemCount = remember { mutableIntStateOf(0) }
     val groupedInspirations by produceState(emptyMap(), currentTitle) {
         viewModel.getInspirations(currentTitle).collect { inspirations ->
-//            if (currentTitle == null) {
-//                inspirations.forEach { inspiration ->
-//                    val newCategory = viewModel.sharedState.classify2(inspiration.text)
-//                    newCategory?.let { viewModel.updateCategory(inspiration.id, it) }
-//                }
-//            }
+            if (currentTitle == null) {
+                inspirations.forEach { inspiration ->
+                    val newCategory = viewModel.sharedState.classify2(inspiration.text)
+                    newCategory?.let { viewModel.updateCategory(inspiration.id, it) }
+                }
+            }
 
             itemCount.intValue = inspirations.size
 
