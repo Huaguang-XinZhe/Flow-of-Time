@@ -2,6 +2,7 @@ package com.huaguang.flowoftime.ui.pages.time_record
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.ardakaplan.rdalogger.RDALogger
 import com.huaguang.flowoftime.EventType
 import com.huaguang.flowoftime.InputIntent
@@ -20,6 +21,7 @@ import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
 import com.huaguang.flowoftime.utils.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -287,14 +289,14 @@ class EventControlViewModel @Inject constructor(
     }
 
     fun onMenuClick() {
-//        viewModelScope.launch {
-//            // 清除统计表中的所有数据
-//            dailyStatRepository.deleteAll()
-//
-//            val allEvents = repository.getAllEvents()
-//            dailyStatRepository.initializeDailyStatistics(allEvents)
-//
-//        }
+        viewModelScope.launch {
+            // 清除统计表中的所有数据
+            dailyStatRepository.deleteAll()
+
+            val allEvents = repository.getAllEvents()
+            dailyStatRepository.initializeDailyStatistics(allEvents)
+
+        }
         requestPermissionSignal.value = Unit
 
     }

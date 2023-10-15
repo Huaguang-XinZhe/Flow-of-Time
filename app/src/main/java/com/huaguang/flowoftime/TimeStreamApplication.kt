@@ -111,7 +111,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
     private fun initializeClassifier(): KeywordClassifier {
         val classifier = KeywordClassifier()
 
-        val routine = listOf("煮吃", "洗澡", "洗漱", "厕", "外吃", "热吃", "吃晚饭", "买菜", "晾衣", "拿快递", "理发")
+        val routine = listOf("煮吃", "买吃", "洗澡", "洗漱", "厕", "外吃", "热吃", "吃晚饭", "买菜", "晾衣", "拿快递", "理发")
         val family = listOf("老妈", "爷爷")
         val rest = listOf("睡", "躺歇", "眯躺", "远观")
         val exercise = listOf("慢跑", "俯卧撑")
@@ -125,6 +125,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
             "刷手机", "躺思", "刷抖音", "动态", "贪观")
         val masturbation = listOf("xxx", "泄", "淫",)
         val entertainment = listOf("续观", "看电影")
+        val explore = listOf("探索", "逛鱼皮星球", )
 
         classifier.apply {
             insert(routine, "常务")
@@ -137,7 +138,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
             insert(underlyingTech, "底层")
             insert("spring", "Spring")
             insert("时光流", "时光流")
-            insert("探索", "探索")
+            insert(explore, "探索")
             insert(fallow, "休闲")
             insert(breach, "违破")
             insert(masturbation, "xxx")
@@ -154,10 +155,10 @@ class TimeStreamApplication @Inject constructor() : Application() {
             "当前核心", "开发", "时光流", "伴随", "bug", "列表项", "日期", "内存", "隐藏",
             "插入", "间隙", "按钮", "事项", "事件", "配置", "个人", "数据库", "弹窗", "自定义",
             "Android", "类属", "模块", "饼图", "重构", "崩溃", "建个表", "板块", "网址", "输入框",
-            "检测", "点击", "上传", "扩展", "切换"
+            "检测", "点击", "上传", "扩展", "切换", "驼峰", "滑动", "网址",
         )
         val resistanceToInertia = listOf(
-            "抗性", "惯性", "泄", "触碰",
+            "抗性", "惯性", "泄", "触碰", "拨弄",
         )
 
         classifier.apply {
