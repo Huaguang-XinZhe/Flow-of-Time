@@ -410,4 +410,9 @@ class EventRepository(
             eventDao.getDateDurationById(id)
         }
 
+    suspend fun getXXXEvents() =
+        withContext(Dispatchers.IO) {
+            eventDao.getEventsByCategory("xxx")
+        }
+
 }

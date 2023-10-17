@@ -19,16 +19,16 @@ class TimeStreamApplication @Inject constructor() : Application() {
         const val NOTIFICATION_CHANNEL_ID = "my_service_channel"
 
         // Migration
-        val MIGRATION_3_4 = object : Migration(3, 4) {
+        val MIGRATION_1_4 = object : Migration(1, 4) {
             override fun migrate(database: SupportSQLiteDatabase) {
-                database.execSQL("""
-                    CREATE TABLE inspirations (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-                        text TEXT NOT NULL, 
-                        date TEXT NOT NULL,  -- 使用 TEXT 类型存储 LocalDate
-                        category TEXT -- 允许 category 为 NULL
-                    )
-                """.trimIndent())
+//                database.execSQL("""
+//                    CREATE TABLE inspirations (
+//                        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+//                        text TEXT NOT NULL,
+//                        date TEXT NOT NULL,  -- 使用 TEXT 类型存储 LocalDate
+//                        category TEXT -- 允许 category 为 NULL
+//                    )
+//                """.trimIndent())
             }
         }
     }
@@ -39,7 +39,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
             klass = EventDatabase::class.java,
             name = "event_database"
         )
-            .addMigrations(MIGRATION_3_4)
+            .addMigrations(MIGRATION_1_4)
             .build()
     }
 
@@ -126,6 +126,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
         val masturbation = listOf("xxx", "泄", "淫",)
         val entertainment = listOf("续观", "看电影")
         val explore = listOf("探索", "逛鱼皮星球", )
+        val spring = listOf("spring", "SV", "Spring", "sv")
 
         classifier.apply {
             insert(routine, "常务")
@@ -136,7 +137,7 @@ class TimeStreamApplication @Inject constructor() : Application() {
             insert(frame, "框架")
             insert(frontEnd, "前端")
             insert(underlyingTech, "底层")
-            insert("spring", "Spring")
+            insert(spring, "Spring")
             insert("时光流", "时光流")
             insert(explore, "探索")
             insert(fallow, "休闲")

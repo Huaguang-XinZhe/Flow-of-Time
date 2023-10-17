@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.core.text.getSpans
 import com.huaguang.flowoftime.coreEventKeyWords
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 
 fun space(num: Int): String {
@@ -154,3 +156,16 @@ fun String.convertToHtml(urls: List<String>): String {
 //    println(urls)
 //}
 
+/**
+ * 通过计算第一个日期和最后一个日期之间的间隔（总）来计算平均间隔
+ */
+fun averageDateInterval(dates: List<String>): Float {
+    if (dates.size <= 1) return 0f
+
+    val sortedDates = dates.map { LocalDate.parse(it, DateTimeFormatter.ISO_LOCAL_DATE) }
+        .sorted()
+
+    val totalDays = sortedDates.last().toEpochDay() - sortedDates.first().toEpochDay()
+
+    return (totalDays / (dates.size - 1)).toFloat()
+}
