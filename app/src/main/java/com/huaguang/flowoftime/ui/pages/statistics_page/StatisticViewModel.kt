@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.statistics_page
 
+import android.content.Context
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,8 +9,10 @@ import androidx.lifecycle.viewModelScope
 import com.huaguang.flowoftime.data.repositories.DailyStatisticsRepository
 import com.huaguang.flowoftime.data.repositories.EventRepository
 import com.huaguang.flowoftime.ui.state.SharedState
+import com.huaguang.flowoftime.utils.averageDateInterval
+import com.huaguang.flowoftime.utils.copyToClipboard
+import com.huaguang.flowoftime.utils.formatDurationInText
 import com.huaguang.flowoftime.utils.getAdjustedDate
-
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,6 +58,8 @@ class StatisticViewModel @Inject constructor(
 
     private val _nextWakeUpTime = MutableStateFlow<LocalDateTime?>(null)
     val nextWakeUpTime: StateFlow<LocalDateTime?> = _nextWakeUpTime
+
+    val displayXxxText = mutableStateOf("")
 
     init {
         viewModelScope.launch {
@@ -134,6 +139,32 @@ class StatisticViewModel @Inject constructor(
         viewModelScope.launch {
 
         }
+    }
+
+    fun getXXXData() {
+        viewModelScope.launch {
+            val xxxEvents = eventRepository.getXXXEvents()
+            // 计算平均间隔
+            val dates = xxxEvents.map { event ->
+                event.eventDate!!.toString()
+            }
+            val averageInterval = averageDateInterval(dates)
+            // 计算平均时长
+            val averageDuration = xxxEvents.map { it.duration!!.toMillis() }.average()
+            // 组装每条要显示的记录
+            val xxxRecords = xxxEvents.map { event ->
+                "${event.eventDate} ${event.name} ${formatDurationInText(event.duration!!)}"
+            }
+            // 组装最终要显示的文本
+            displayXxxText.value = "平均间隔 $averageInterval 天\n" +
+                    "平均每次耗时 ${formatDurationInText(Duration.ofMillis(averageDuration.toLong()))}\n" +
+                    xxxRecords.joinToString("\n")
+
+        }
+    }
+
+    fun copyXXXData(context: Context) {
+        copyToClipboard(context, displayXxxText.value)
     }
 
 

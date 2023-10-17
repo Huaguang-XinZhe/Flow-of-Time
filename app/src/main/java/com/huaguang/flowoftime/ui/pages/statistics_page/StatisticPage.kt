@@ -1,9 +1,13 @@
 package com.huaguang.flowoftime.ui.pages.statistics_page
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,6 +16,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -26,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -99,6 +105,9 @@ fun StatisticsColumn(
     val sumDuration by viewModel.sumDuration.collectAsState()
     val data by viewModel.data.collectAsState()
     val referenceValue by viewModel.referenceValue.collectAsState()
+    val displayXxxText by viewModel.displayXxxText
+    val context = LocalContext.current
+
 
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -129,6 +138,31 @@ fun StatisticsColumn(
 
         item {
             DateDurationColumn()
+        }
+
+        item {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Button(onClick = { viewModel.getXXXData() }) {
+                        Text(text = "获取 xxx 数据")
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Button(onClick = { viewModel.copyXXXData(context) }) {
+                        Text(text = "复制抗性数据")
+                    }
+                }
+
+                Text(text = displayXxxText)
+            }
         }
 
 //        item {
