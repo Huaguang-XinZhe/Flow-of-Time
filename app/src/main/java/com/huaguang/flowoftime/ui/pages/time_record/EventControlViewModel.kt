@@ -45,9 +45,14 @@ class EventControlViewModel @Inject constructor(
     val requestPermissionSignal = MutableLiveData<Unit>()
 
     val eventControl = object : EventControl {
-        override suspend fun startEvent(startTime: LocalDateTime, name: String, eventType: EventType) {
+        override suspend fun startEvent(
+            startTime: LocalDateTime,
+            name: String,
+            eventType: EventType,
+            category: String?
+        ) {
             val autoId = updateInputState(name, eventType) {
-                updateDBOnStart(startTime, name, eventType)
+                updateDBOnStart(startTime, name, eventType, category)
             }
 
             addOperationToUndoStack(
@@ -92,8 +97,9 @@ class EventControlViewModel @Inject constructor(
         startTime: LocalDateTime,
         name: String,
         eventType: EventType,
+        category: String?,
     ): Long {
-        val newEvent = createCurrentEvent(startTime, name, eventType) // type 由用户与 UI 的交互自动决定
+        val newEvent = createCurrentEvent(startTime, name, eventType, category) // type 由用户与 UI 的交互自动决定
         val autoId = repository.insertEvent(newEvent) // 存入数据库
 
         if (hasParent(eventType)) { // 如果当前新开始的事件有父事件，那么父事件的 withContent 应当为 true
@@ -132,7 +138,7 @@ class EventControlViewModel @Inject constructor(
 
         repository.updateThree(eventId, duration, pauseInterval)
 
-        if (eventType == EventType.SUBJECT) { // 只有主题事件需要更新每日统计数据
+        if (eventType != EventType.STEP) {
             stopRequire.apply {
                 dailyStatRepository.upsertDailyStatistics(eventDate, category, duration)
             }
@@ -209,12 +215,14 @@ class EventControlViewModel @Inject constructor(
         startTime: LocalDateTime,
         name: String,
         type: EventType,
+        category: String?,
     ) = Event(
         startTime = startTime,
         name = name,
         eventDate = getEventDate(startTime),
         parentEventId = getParentEventId(type),
         type = type,
+        category = category,
     )
 
 

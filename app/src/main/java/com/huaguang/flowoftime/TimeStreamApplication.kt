@@ -55,6 +55,10 @@ class TimeStreamApplication @Inject constructor() : Application() {
         initializeClassifier2()
     }
 
+    val classifier3: KeywordClassifier by lazy {
+        initializeClassifier3()
+    }
+
     override fun onCreate() {
         super.onCreate()
 
@@ -166,6 +170,27 @@ class TimeStreamApplication @Inject constructor() : Application() {
             insert(dev, "开发")
             insert("探索", "探索")
             insert(resistanceToInertia, "抗性")
+        }
+
+        return classifier
+    }
+
+    private fun initializeClassifier3(): KeywordClassifier {
+        val classifier = KeywordClassifier()
+        // 二级分类
+        val myFrame = listOf("框架", "锻炼", "休闲", "抗性", "整理", "探索")
+        val breach = listOf("违破", "xxx")
+        val programming = listOf("MySQL", "时光流", "底层", "Spring", "前端", "网络")
+        val nonDiscretionaryTime = listOf("常务", "休息", "家人", "应对")
+        // 一级分类
+//        val myFreeTime = listOf("框架", "违破", "编程")
+
+        classifier.apply {
+            insert(myFrame, "框架")
+            insert(breach, "违破")
+            insert(programming, "编程")
+            insert(nonDiscretionaryTime, "不可支配")
+//            insert(myFreeTime, "自由支配")
         }
 
         return classifier
