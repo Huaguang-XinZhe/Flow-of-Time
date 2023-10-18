@@ -7,7 +7,8 @@ interface EventControl {
     suspend fun startEvent(
         startTime: LocalDateTime = LocalDateTime.now(),
         name: String = "",
-        eventType: EventType = EventType.SUBJECT
+        eventType: EventType = EventType.SUBJECT,
+        category: String? = null,
     )
 
     suspend fun stopEvent(eventType: EventType = EventType.SUBJECT)

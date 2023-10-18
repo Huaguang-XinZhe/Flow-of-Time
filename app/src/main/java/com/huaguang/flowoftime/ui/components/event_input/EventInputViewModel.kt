@@ -63,7 +63,7 @@ class EventInputViewModel @Inject constructor(
 
             show.value = false
 
-            val category = if (eventType.value == EventType.SUBJECT) { // 类属
+            val category = if (eventType.value != EventType.STEP) {
                 sharedState.classify(text) // 这里的类属不成功也会返回 null
             } else null
 

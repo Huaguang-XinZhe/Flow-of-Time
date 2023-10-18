@@ -31,5 +31,9 @@ class SharedState @Inject constructor(
         return (application as TimeStreamApplication).classifier2.classify(name)
     }
 
+    fun classify3(name: String): String? {
+        return (application as TimeStreamApplication).classifier3.classify(name)
+    }
+
 
 }

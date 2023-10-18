@@ -44,11 +44,6 @@ class StatisticViewModel @Inject constructor(
     private val _sumDuration = MutableStateFlow(Duration.ZERO)
     val sumDuration: StateFlow<Duration> = _sumDuration
 
-    private val _data = MutableStateFlow(listOf<Pair<String?, Float>>())
-    val data: StateFlow<List<Pair<String?, Float>>> = _data
-
-    private val _referenceValue = MutableStateFlow(0f)
-    val referenceValue: StateFlow<Float> = _referenceValue
 
     private val _wakeUpTime = MutableStateFlow<LocalDateTime?>(null)
     val wakeUpTime: StateFlow<LocalDateTime?> = _wakeUpTime
@@ -60,6 +55,7 @@ class StatisticViewModel @Inject constructor(
     val nextWakeUpTime: StateFlow<LocalDateTime?> = _nextWakeUpTime
 
     val displayXxxText = mutableStateOf("")
+    val map = mutableStateMapOf<String?, List<Pair<String?, Float>>>()
 
     init {
         viewModelScope.launch {
@@ -76,13 +72,19 @@ class StatisticViewModel @Inject constructor(
                     return@collect
                 }
 
-                _data.value = categoryData
+                // 类属分组，还要用上现有的组件，就得构建出这样的数据结构：
+                // Map<String, List<Pair<String?, Float>>>
+                // 分组应该用 groupBy，而不是 associateBy，那样不会指向列表，而会指向元素
+                val _map = categoryData
                     .filterNot { it.totalDuration == Duration.ZERO } // 时长为 0 的条目筛出，不展示
                     .map { it.category to it.totalDuration.toMinutes().toFloat() }
+                    .groupBy { pair ->
+                        sharedState.classify3(pair.first ?: "")
+                    }
+                map.putAll(_map)
                 _sumDuration.value = categoryData
                     .map { it.totalDuration }
                     .fold(Duration.ZERO) { acc, duration -> acc + duration }
-                _referenceValue.value = data.value.first().second
                 categoryDurationMap.putAll(
                     categoryData.associate { it.category to it.totalDuration }
                 )
@@ -112,10 +114,6 @@ class StatisticViewModel @Inject constructor(
 
     private fun resetBarData() {
         // 置空条形统计相关的重要状态值
-        _sumDuration.value = Duration.ZERO
-        _data.value = listOf()
-        _referenceValue.value = 0f
-
         _wakeUpTime.value = null
         _sleepTime.value = null
         _nextWakeUpTime.value = null

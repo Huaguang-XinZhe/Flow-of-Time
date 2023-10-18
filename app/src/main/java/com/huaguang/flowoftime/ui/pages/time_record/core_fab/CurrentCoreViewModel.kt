@@ -54,7 +54,8 @@ class CurrentCoreViewModel @Inject constructor(
 
             eventControl.startEvent(
                 name = coreName,
-                eventType = type
+                eventType = type,
+                category = "前端", // TODO: 这里以后肯定是要变动的，这里写死了
             )
 
             if (hasSubjectExist()) {

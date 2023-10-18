@@ -103,11 +103,9 @@ fun StatisticsColumn(
     onBarClick: (category: String?) -> Unit
 ) {
     val sumDuration by viewModel.sumDuration.collectAsState()
-    val data by viewModel.data.collectAsState()
-    val referenceValue by viewModel.referenceValue.collectAsState()
+    val map = viewModel.map
     val displayXxxText by viewModel.displayXxxText
     val context = LocalContext.current
-
 
     LazyColumn(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -118,12 +116,24 @@ fun StatisticsColumn(
         }
 
         item {
-            HorizontalBarChart( // 这是完整的一块，已经包含所有的条目了，不能放在 items 里边，否则会有很多很多个！！！
-                data = data,
-                referenceValue = referenceValue,
-                maxValue = sumDuration.toMinutes().toFloat(),
-            ) { category ->
-                onBarClick(category)
+            map.keys.forEach { key ->
+                val data = map[key] ?: return@forEach
+                val maxValue = data.map { pair -> pair.second }.sum()
+                val totalDurationStr = formatDurationInText(Duration.ofMinutes(maxValue.toLong()))
+
+                Text(
+                    text = "${key ?: "❓"}：$totalDurationStr",
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                HorizontalBarChart(
+                    // 这是完整的一块，已经包含所有的条目了，不能放在 items 里边，否则会有很多很多个！！！
+                    data = data,
+                    referenceValue = data.first().second, // TODO: 既然是固定的逻辑，那为什么不隐入组件内部？
+                    maxValue = maxValue,
+                ) { category ->
+                    onBarClick(category)
+                }
             }
         }
 
