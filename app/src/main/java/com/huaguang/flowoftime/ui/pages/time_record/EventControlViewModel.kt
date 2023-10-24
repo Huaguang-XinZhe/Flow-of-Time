@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.ui.pages.time_record
 
+import android.content.Context
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,6 +20,7 @@ import com.huaguang.flowoftime.ui.state.IdState
 import com.huaguang.flowoftime.ui.state.InputState
 import com.huaguang.flowoftime.ui.state.PauseState
 import com.huaguang.flowoftime.ui.state.SharedState
+import com.huaguang.flowoftime.utils.exportToCsv
 import com.huaguang.flowoftime.utils.getEventDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -296,15 +298,22 @@ class EventControlViewModel @Inject constructor(
         }
     }
 
-    fun onMenuClick() {
+    fun onMenuClick(context: Context) {
+//        viewModelScope.launch {
+//            // 清除统计表中的所有数据
+//            dailyStatRepository.deleteAll()
+//
+//            val allEvents = repository.getAllEvents()
+//            dailyStatRepository.initializeDailyStatistics(allEvents)
+//
+//        }
+        // 把昨天的数据导出到 CSV 文件
         viewModelScope.launch {
-            // 清除统计表中的所有数据
-            dailyStatRepository.deleteAll()
-
-            val allEvents = repository.getAllEvents()
-            dailyStatRepository.initializeDailyStatistics(allEvents)
-
+            val data = repository.getYesterdayEvents()
+            exportToCsv(context, data, "events.csv")
+            sharedState.toastMessage.value = "成功导出昨日数据的 CSV 文件"
         }
+
         requestPermissionSignal.value = Unit
 
     }

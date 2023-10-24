@@ -12,3 +12,4 @@ data class DailyStatistics(
     val category: String?, // 无需更新，也存储未类属的
     var totalDuration: Duration,
 )
+

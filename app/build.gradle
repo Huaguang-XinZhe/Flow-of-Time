@@ -159,6 +159,9 @@ dependencies {
     // 在 Android 内部打开网页
     implementation "com.google.accompanist:accompanist-webview:0.30.1"
 
+    // 反射库
+    implementation "org.jetbrains.kotlin:kotlin-reflect:1.6.21"
+
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

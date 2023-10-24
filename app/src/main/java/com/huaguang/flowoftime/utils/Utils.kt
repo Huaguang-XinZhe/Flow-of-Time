@@ -1,5 +1,6 @@
 package com.huaguang.flowoftime.utils
 
+import android.content.Context
 import android.graphics.Typeface
 import android.text.Editable
 import android.text.Spanned
@@ -20,9 +21,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.core.text.getSpans
 import com.huaguang.flowoftime.coreEventKeyWords
+import com.huaguang.flowoftime.data.models.db_returns.CsvOrder
+import java.io.File
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
+import kotlin.reflect.full.findAnnotation
+import kotlin.reflect.full.memberProperties
 
 fun space(num: Int): String {
     var count = 0
@@ -168,4 +173,64 @@ fun averageDateInterval(dates: List<String>): Float {
     val totalDays = sortedDates.last().toEpochDay() - sortedDates.first().toEpochDay()
 
     return (totalDays / (dates.size - 1)).toFloat()
+}
+
+/**
+ * 导出昨天的数据（SimpleEvent 列表）到 CSV 文件
+ */
+//fun exportToCsv(
+//    data: List<SimpleEvent>,
+//    filePath: String = "yesterday_simple_events"
+//) {
+//    val file = File(filePath)
+//    file.bufferedWriter().use { out ->
+//        // Write header
+//        out.write("id,name,duration,category,tags,type,eventDate,parentEventId\n")
+//        // Write data
+//        data.forEach { item ->
+//            out.write("${item.id},${item.name},${item.duration},${item.category}," +
+//                    "${item.tags},${item.type},${item.eventDate},${item.parentEventId}\n")
+//        }
+//    }
+//}
+
+/**
+ * 导出 CSV 文件的通用函数
+ */
+fun <T : Any> exportToCsv(
+    context: Context,
+    data: List<T>,
+    filePath: String = "output.csv"
+) {
+    val file = File(context.filesDir, filePath)
+    file.bufferedWriter().use { out ->
+        // Get the first item's class, or return early if the list is empty
+        val klass = data.firstOrNull()?.javaClass?.kotlin ?: return
+
+        // Sort the properties based on the CsvOrder annotation
+        val sortedProperties = klass.memberProperties.sortedBy {
+            it.findAnnotation<CsvOrder>()?.order ?: Int.MAX_VALUE
+        }
+
+        // Write header
+        val header = sortedProperties.joinToString(",") { it.name }
+        out.write(header + "\n")
+
+        // Write data
+        data.forEach { item ->
+            val row = sortedProperties.joinToString(",") { prop ->
+                prop.call(item)?.toString() ?: ""
+            }
+            out.write(row + "\n")
+        }
+    }
+}
+
+fun main() {
+    // Example usage
+//    val events = listOf(
+//        SimpleEvent(0, "Meeting", "1 hour", "Work", listOf("team", "sync"), "Meeting", "2023-10-23", 1),
+//        // ... other events
+//    )
+//    exportToCsv(events, "events.csv")
 }
