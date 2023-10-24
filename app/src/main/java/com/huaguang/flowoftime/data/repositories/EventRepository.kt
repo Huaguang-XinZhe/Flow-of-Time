@@ -8,6 +8,7 @@ import com.huaguang.flowoftime.data.dao.EventDao
 import com.huaguang.flowoftime.data.models.CombinedEvent
 import com.huaguang.flowoftime.data.models.CustomTime
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
+import com.huaguang.flowoftime.data.models.db_returns.SimpleEvent
 import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 import com.huaguang.flowoftime.data.models.tables.DateDuration
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -414,5 +415,15 @@ class EventRepository(
         withContext(Dispatchers.IO) {
             eventDao.getEventsByCategory("xxx")
         }
+
+    /**
+     * 查询昨天的所有事件，返回 SimpleEvent 列表
+     */
+    suspend fun getYesterdayEvents(): List<SimpleEvent> {
+        val customYesterday = getAdjustedDate().minusDays(1)
+        return withContext(Dispatchers.IO) {
+            eventDao.getYesterdaySimpleEvents(customYesterday)
+        }
+    }
 
 }

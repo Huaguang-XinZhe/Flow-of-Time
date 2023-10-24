@@ -15,6 +15,7 @@ import com.huaguang.flowoftime.data.models.db_returns.EventCategoryInfo
 import com.huaguang.flowoftime.data.models.db_returns.EventTimes
 import com.huaguang.flowoftime.data.models.db_returns.InsertParent
 import com.huaguang.flowoftime.data.models.db_returns.KeyTimePoints
+import com.huaguang.flowoftime.data.models.db_returns.SimpleEvent
 import com.huaguang.flowoftime.data.models.db_returns.StopRequire
 
 import com.huaguang.flowoftime.data.models.tables.Event
@@ -278,5 +279,15 @@ interface EventDao {
 
     @Query("SELECT * FROM events WHERE category = :category")
     suspend fun getEventsByCategory(category: String): List<Event>
+
+    // 查询昨日的全部数据
+    @Query(
+        """
+        select id, name, duration, category, tags, type, eventDate, parentEventId 
+        from events 
+        where eventDate = :date
+    """
+    )
+    suspend fun getYesterdaySimpleEvents(date: LocalDate): List<SimpleEvent>
 
 }

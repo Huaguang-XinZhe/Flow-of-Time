@@ -139,6 +139,7 @@ class StatisticViewModel @Inject constructor(
         }
     }
 
+    // 以下是统计页的“XXX”功能
     fun getXXXData() {
         viewModelScope.launch {
             val xxxEvents = eventRepository.getXXXEvents()
