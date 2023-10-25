@@ -426,4 +426,15 @@ class EventRepository(
         }
     }
 
+    /**
+     * 查询今天之前（小于）的所有数据
+     */
+    suspend fun getEventsBeforeToday(): List<SimpleEvent> {
+        val customToday = getAdjustedDate()
+        return withContext(Dispatchers.IO) {
+            eventDao.getSimpleEventsBeforeToday(customToday)
+        }
+    }
+
+
 }

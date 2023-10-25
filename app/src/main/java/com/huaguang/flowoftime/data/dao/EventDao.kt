@@ -290,4 +290,14 @@ interface EventDao {
     )
     suspend fun getYesterdaySimpleEvents(date: LocalDate): List<SimpleEvent>
 
+    // 查询今天之前（小于）的所有数据
+    @Query(
+        """
+        select id, name, duration, category, tags, type, eventDate, parentEventId 
+        from events 
+        where eventDate < :date
+    """
+    )
+    suspend fun getSimpleEventsBeforeToday(date: LocalDate): List<SimpleEvent>
+
 }

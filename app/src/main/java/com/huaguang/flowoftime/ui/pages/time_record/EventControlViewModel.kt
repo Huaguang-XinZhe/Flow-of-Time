@@ -309,7 +309,8 @@ class EventControlViewModel @Inject constructor(
 //        }
         // 把昨天的数据导出到 CSV 文件
         viewModelScope.launch {
-            val data = repository.getYesterdayEvents()
+//            val data = repository.getYesterdayEvents()
+            val data = repository.getEventsBeforeToday()
             exportToCsv(context, data, "events.csv")
             sharedState.toastMessage.value = "成功导出昨日数据的 CSV 文件"
         }
