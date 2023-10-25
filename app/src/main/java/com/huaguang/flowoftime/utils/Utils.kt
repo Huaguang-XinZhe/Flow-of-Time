@@ -219,12 +219,16 @@ fun <T : Any> exportToCsv(
         // Write data
         data.forEach { item ->
             val row = sortedProperties.joinToString(",") { prop ->
-                prop.call(item)?.toString() ?: ""
+                when (val value = prop.call(item)) {
+                    is List<*> -> "\"${value.joinToString(",") { it.toString() }}\""  // Quote lists
+                    else -> value?.toString() ?: ""
+                }
             }
             out.write(row + "\n")
         }
     }
 }
+
 
 fun main() {
     // Example usage
