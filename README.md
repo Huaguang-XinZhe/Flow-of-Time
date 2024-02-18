@@ -7,38 +7,23 @@
 
 这是第一版：
 
-<p align="center">
-      <a
-        href="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900105.jpg"
-        target="_blank"
-      >
-        <img
-          src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900105.jpg"
-          alt="#"
-          width="200"
-        />
-      </a>
-      <a
-        href="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900311.jpg"
-        target="_blank"
-      >
-        <img
-          src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900311.jpg"
-          alt="#"
-          width="200"
-        />
-      </a>
-      <a
-        href="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091899874.jpg"
-        target="_blank"
-      >
-        <img
-          src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091899874.jpg"
-          alt="#"
-          width="200"
-        />
-      </a>
-    </p>
+<div style="display: flex; justify-content: space-around">
+  <img
+    src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900105.jpg"
+    alt="#"
+    width="200"
+  />
+  <img
+    src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900311.jpg"
+    alt="#"
+    width="200"
+  />
+  <img
+    src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091899874.jpg"
+    alt="#"
+    width="200"
+  />
+</div>
 
 这是第二版，也是现在在用的：
 
@@ -75,17 +60,17 @@
 
 在确定开发（二版）之前，也曾想过这样的设计（不过没有采用）：
 
-<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900523.png" alt="mmexport1708091900523" style="zoom: 33%;" />
+<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900523.png" alt="mmexport1708091900523" width="400" />
 
 现在呢，已经酝酿并构建好了第三版的设计（代码效果呈现，非设计稿），但还来不及开发：
 
-<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900797.jpg" alt="mmexport1708091900797" style="zoom:33%;" />
+<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900797.jpg" alt="mmexport1708091900797" width="400" />
 
 > Tip：请关注上图的样式，内容是随意输入的。
 
 附下载地址：
 
-<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/image-20240218232357054.png" alt="image-20240218232357054" style="zoom:67%;" />
+<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/image-20240218232357054.png" alt="image-20240218232357054" width="400" />
 
 
 
@@ -101,12 +86,12 @@
   <img
     src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/Screenshot_2024-02-17-07-56-24-33_31f4652e2987e4ef63b6ca8eda686377.jpg"
     alt="#"
-    style="zoom: 28%;"
+    width="400"
   />
   <img
     src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/Screenshot_2024-02-17-07-56-58-78_31f4652e2987e4ef63b6ca8eda686377.jpg"
     alt="#"
-    style="zoom: 28%;"
+    width="400"
   />
 </div>
 
@@ -135,7 +120,7 @@
 
 统计、分析也是（后期实现）。
 
-<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/image-20240218195125638.png" alt="image-20240218195125638" style="zoom: 67%;" />
+<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/image-20240218195125638.png" alt="image-20240218195125638" width="400" />
 
 这极大地提高了时间记录、统析的效率。
 
@@ -154,6 +139,9 @@
 Excel 记录、统析的方式一直持续到 23 年 5 月，彼时我已经处于独立、稳定的生活状态，正在学习 Compose（一个新的 Android 声明式 UI 框架），刚刚结束「[吃什么](https://mp.weixin.qq.com/s/FA-S0EcZ1MIhuvz-pseeaA)」程序的开发。
 
 至此，我终于有能力尝试「时光流」的开发了。
+
+
+
 
 
 
