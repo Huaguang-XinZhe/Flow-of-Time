@@ -68,6 +68,10 @@
 
 > Tip：请关注上图的样式，内容是随意输入的。
 
+附下载地址：
+
+<img src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/image-20240218232357054.png" alt="image-20240218232357054" style="zoom:67%;" />
+
 
 
 它是一个时间记录、分析工具，可以自由地记录（24h，全记录）每天的事项、活动，然后类属分析。
@@ -135,4 +139,6 @@
 Excel 记录、统析的方式一直持续到 23 年 5 月，彼时我已经处于独立、稳定的生活状态，正在学习 Compose（一个新的 Android 声明式 UI 框架），刚刚结束「[吃什么](https://mp.weixin.qq.com/s/FA-S0EcZ1MIhuvz-pseeaA)」程序的开发。
 
 至此，我终于有能力尝试「时光流」的开发了。
+
+
 
