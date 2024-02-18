@@ -7,23 +7,23 @@
 
 这是第一版：
 
-<div style="display: flex; justify-content: space-around">
+<p align="center">
   <img
     src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900105.jpg"
     alt="#"
-    style="width: 200px"
+    width="200"
   />
   <img
     src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091900311.jpg"
     alt="#"
-    style="width: 200px"
+    width="200"
   />
   <img
     src="https://image-bed-1315938829.cos.ap-nanjing.myqcloud.com/mmexport1708091899874.jpg"
     alt="#"
-    style="width: 200px"
+    width="200"
   />
-</div>
+</p>
 
 这是第二版，也是现在在用的：
 
